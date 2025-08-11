@@ -17,9 +17,6 @@ let currentCropContext = null; // Holds {name, previewId, removeId, fileInput} d
 let signatureContext = null; // Holds canvas context for signature
 let isDrawing = false; // Signature drawing state
 let pendingRegistrationData = null; // Stores form data before commitment
-let manualVerification = false; // Tracks if verification was done manually
-let registrationLocationErrorCount = 0; // Đếm lỗi định vị đăng ký
-let summitLocationErrorCount = 0; // Đếm lỗi định vị chứng nhận
 
 // --- DOM Elements (sẽ được khởi tạo trong DOMContentLoaded) ---
 let registrationForm, registerBtn, registerSpinner, groupSizeInput, memberListInput, safetyCommitCheckbox, safetyCommitError;
@@ -229,9 +226,6 @@ async function handleRegistrationSubmit(event) {
 
     if (!navigator.geolocation) {
         showMessage('Trình duyệt không hỗ trợ định vị. Vui lòng sử dụng thiết bị khác.', 'error');
-        setTimeout(() => {
-            showManualLocationConfirmation();
-        }, 2000);
         return;
     }
 
@@ -310,185 +304,39 @@ function handleLocationCheckForRegistration(position) {
 
         setTimeout(() => showCommitmentModal(), 2000);
     } else {
-        showMessage(`Vị trí không hợp lệ (cách ${distance.toFixed(0)}m). Bạn có thể đăng ký thủ công nếu đang ở đúng địa điểm.`, 'error', 10000);
-        
-        // Tăng biến đếm lỗi khi vị trí không hợp lệ
-        registrationLocationErrorCount++;
-        
-        // Hiện nút thủ công và ẩn nút chính nếu lỗi >=3 lần
-        if (registrationLocationErrorCount >= 3) {
-            // Ẩn nút đăng ký chính
-            if (registerBtn) {
-                registerBtn.classList.add('hidden');
-            }
-            
-            // Hiện nút đăng ký thủ công
-            const manualBtn = document.getElementById('manualRegisterBtn');
-            if (manualBtn) {
-                manualBtn.classList.remove('hidden');
-            }
-        }
+        showMessage(`Vị trí không hợp lệ (cách ${distance.toFixed(0)}m). Vui lòng di chuyển đến đúng địa điểm đăng ký và thử lại.`, 'error', 10000);
     }
 }
 
 // Xử lý lỗi định vị cho đăng ký
 function handleLocationErrorForRegistration(error) {
-    registrationLocationErrorCount++;
     let errorMsg = 'Lỗi định vị: ';
     let detailedMsg = '';
-    let showManualOption = false;
     
     switch (error.code) {
         case error.PERMISSION_DENIED: 
             errorMsg += 'Quyền truy cập bị từ chối.';
-            detailedMsg = 'Bạn có thể đăng ký thủ công nếu đang ở đúng địa điểm.';
-            showManualOption = true;
+            detailedMsg = 'Vui lòng cấp quyền truy cập vị trí và thử lại.';
             break;
         case error.POSITION_UNAVAILABLE: 
             errorMsg += 'Thông tin vị trí không khả dụng.';
-            detailedMsg = 'Không thể xác định vị trí. Vui lòng kiểm tra GPS hoặc đăng ký thủ công.';
-            showManualOption = true;
+            detailedMsg = 'Không thể xác định vị trí. Vui lòng kiểm tra GPS và thử lại.';
             break;
         case error.TIMEOUT: 
             errorMsg += 'Yêu cầu vị trí hết thời gian chờ.';
-            detailedMsg = 'Vui lòng thử lại hoặc đăng ký thủ công nếu đang ở đúng địa điểm.';
-            showManualOption = true;
+            detailedMsg = 'Vui lòng thử lại sau.';
             break;
         default: 
             errorMsg += `Lỗi không xác định (${error.code}).`;
-            detailedMsg = 'Vui lòng thử lại sau hoặc đăng ký thủ công.';
-            showManualOption = true;
+            detailedMsg = 'Vui lòng thử lại sau.';
             break;
     }
     
     const fullMessage = detailedMsg ? `${errorMsg} ${detailedMsg}` : errorMsg;
     showMessage(fullMessage, 'error', 12000);
-    
-    // Hiện nút thủ công và ẩn nút chính nếu lỗi >=3 lần
-    if (registrationLocationErrorCount >= 3) {
-        // Ẩn nút đăng ký chính
-        if (registerBtn) {
-            registerBtn.classList.add('hidden');
-        }
-        
-        // Hiện nút đăng ký thủ công
-        const manualBtn = document.getElementById('manualRegisterBtn');
-        if (manualBtn) {
-            manualBtn.classList.remove('hidden');
-        }
-    }
 }
 
-// Hiển thị modal xác nhận vị trí thủ công
-function showManualLocationConfirmation() {
-    // Tạo modal HTML nếu chưa tồn tại
-    let manualLocationModal = document.getElementById('manualLocationModal');
-    if (!manualLocationModal) {
-        manualLocationModal = document.createElement('div');
-        manualLocationModal.id = 'manualLocationModal';
-        manualLocationModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[400] hidden';
-        manualLocationModal.innerHTML = `
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Xác nhận vị trí thủ công</h3>
-                    <button id="closeManualLocationBtn" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
-                </div>
-                <div class="mb-4">
-                    <p class="text-gray-700 mb-3">Bạn có chắc chắn rằng mình đang ở đúng địa điểm đăng ký không?</p>
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                        <p class="text-sm text-blue-800 font-medium">Địa điểm đăng ký:</p>
-                        <p class="text-sm text-blue-700">Khu vực Cột Điện - Núi Bà Đen</p>
-                        <p class="text-xs text-blue-600 mt-1">Bán kính cho phép: ${REGISTRATION_RADIUS_METERS}m</p>
-                    </div>
-                    <p class="text-sm text-gray-600">Lưu ý: Việc đăng ký sai vị trí có thể ảnh hưởng đến quy trình xử lý.</p>
-                </div>
-                <div class="flex space-x-3">
-                    <button id="cancelManualLocationBtn" class="flex-1 px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition duration-150">
-                        Hủy bỏ
-                    </button>
-                    <button id="confirmManualLocationBtn" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-150">
-                        Xác nhận đăng ký
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(manualLocationModal);
-        
-        // Thêm event listeners
-        document.getElementById('closeManualLocationBtn').addEventListener('click', hideManualLocationConfirmation);
-        document.getElementById('cancelManualLocationBtn').addEventListener('click', hideManualLocationConfirmation);
-        document.getElementById('confirmManualLocationBtn').addEventListener('click', handleManualLocationConfirmation);
-    }
-    
-    manualLocationModal.classList.remove('hidden');
-}
 
-// Ẩn modal xác nhận vị trí thủ công
-function hideManualLocationConfirmation() {
-    const modal = document.getElementById('manualLocationModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-}
-
-// Xử lý xác nhận vị trí thủ công
-function handleManualLocationConfirmation() {
-    hideManualLocationConfirmation();
-    
-    // Lưu lại dữ liệu form để dùng cho bước cam kết
-    const formData = new FormData(registrationForm);
-    pendingRegistrationData = {
-        leaderName: formData.get('leaderName'),
-        birthday: formData.get('birthday'),
-        phoneNumber: formData.get('phoneNumber'),
-        cccd: formData.get('cccd'),
-        address: formData.get('address'),
-        groupSize: formData.get('groupSize'),
-        email: formData.get('email'),
-        climbDate: formData.get('climbDate'),
-        climbTime: formData.get('climbTime'),
-        safetyCommit: safetyCommitCheckbox.checked,
-        memberList: formData.get('memberList').trim(),
-        manualLocation: true // Đánh dấu đăng ký thủ công
-    };
-
-    showMessage('Đã xác nhận vị trí thủ công. Đang chuẩn bị cam kết...', 'success', 2000);
-    setTimeout(() => showCommitmentModal(), 2000);
-}
-
-// Xử lý đăng ký thủ công (từ nút "Đăng ký thủ công")
-function handleManualRegistration() {
-    if (safetyCommitError) safetyCommitError.classList.add('hidden');
-
-    if (!registrationForm.checkValidity()) {
-        registrationForm.reportValidity();
-        if (safetyCommitCheckbox && !safetyCommitCheckbox.checked && safetyCommitError) {
-            safetyCommitError.classList.remove('hidden');
-        }
-        showMessage('Vui lòng điền đủ thông tin (*) và xác nhận cam kết.', 'error');
-        return;
-    }
-    
-    // Lưu lại dữ liệu form để dùng cho bước cam kết
-    const formData = new FormData(registrationForm);
-    pendingRegistrationData = {
-        leaderName: formData.get('leaderName'),
-        birthday: formData.get('birthday'),
-        phoneNumber: formData.get('phoneNumber'),
-        cccd: formData.get('cccd'),
-        address: formData.get('address'),
-        groupSize: formData.get('groupSize'),
-        email: formData.get('email'),
-        climbDate: formData.get('climbDate'),
-        climbTime: formData.get('climbTime'),
-        safetyCommit: safetyCommitCheckbox.checked,
-        memberList: formData.get('memberList').trim(),
-        manualLocation: true // Đánh dấu đăng ký thủ công
-    };
-
-    showMessage('Đang chuẩn bị cam kết đăng ký thủ công...', 'success', 2000);
-    setTimeout(() => showCommitmentModal(), 2000);
-}
 
 // --- Commitment Modal Functions ---
 
@@ -649,12 +497,6 @@ function hideCommitmentModal() {
     }
     pendingRegistrationData = null;
     clearSignature();
-    registrationLocationErrorCount = 0;
-    
-    // Khôi phục trạng thái nút đăng ký
-    const manualRegisterBtn = document.getElementById('manualRegisterBtn');
-    if (manualRegisterBtn) manualRegisterBtn.classList.add('hidden');
-    if (registerBtn) registerBtn.classList.remove('hidden');
 }
 
 // --- Certification Flow Functions ---
@@ -709,159 +551,38 @@ function handleLocationSuccessForVerification(position, phoneNumber) {
         showMessage(`Vị trí hợp lệ. Đang tải danh sách...`, 'info', 0);
         fetchMembersListForSelection(phoneNumber);
     } else {
-        showMessage(`Vị trí không hợp lệ (cách đỉnh ~${distance.toFixed(0)}m). Cần trong phạm vi ${ALLOWED_RADIUS_METERS}m.`, 'error', 12000);
+        showMessage(`Vị trí không hợp lệ (cách đỉnh ~${distance.toFixed(0)}m). Cần trong phạm vi ${ALLOWED_RADIUS_METERS}m. Vui lòng di chuyển đến đỉnh núi và thử lại.`, 'error', 12000);
         setLoadingState(verifyPhoneBtn, certSpinner, false);
-        
-        // Tăng biến đếm lỗi khi vị trí không hợp lệ
-        summitLocationErrorCount++;
-        
-        // Hiện nút thủ công và ẩn nút chính nếu lỗi >=3 lần
-        if (summitLocationErrorCount >= 3) {
-            // Ẩn nút xác thực chính
-            if (verifyPhoneBtn) {
-                verifyPhoneBtn.classList.add('hidden');
-            }
-            
-            // Hiện nút xác thực thủ công
-            const manualBtn = document.getElementById('manualVerifyBtn');
-            if (manualBtn) {
-                manualBtn.classList.remove('hidden');
-            }
-        }
     }
 }
 
 /** Geolocation error handler specific to the verification step. */
 function handleLocationErrorForVerification(error) {
-    summitLocationErrorCount++;
     let errorMsg = 'Lỗi định vị: ';
-    let showManualOption = false;
     
     switch (error.code) {
         case error.PERMISSION_DENIED: 
             errorMsg += 'Quyền truy cập bị từ chối.';
-            showManualOption = true;
             break;
         case error.POSITION_UNAVAILABLE: 
             errorMsg += 'Thông tin vị trí không khả dụng.';
-            showManualOption = true;
             break;
         case error.TIMEOUT: 
             errorMsg += 'Yêu cầu vị trí hết thời gian chờ.';
-            showManualOption = true;
             break;
         default: 
             errorMsg += `Lỗi không xác định (${error.code}).`;
-            showManualOption = true;
             break;
     }
     
-    const fullMessage = showManualOption ? 
-        `${errorMsg} Bạn có thể xác thực thủ công nếu đang ở đỉnh núi.` : 
-        errorMsg;
+    const fullMessage = `${errorMsg} Vui lòng cấp quyền truy cập vị trí và thử lại.`;
     
     showMessage(fullMessage, 'error', 10000);
     setLoadingState(verifyPhoneBtn, certSpinner, false);
     if (messageBox.classList.contains('info')) hideMessage();
-    
-    // Hiện nút thủ công và ẩn nút chính nếu lỗi >=3 lần
-    if (summitLocationErrorCount >= 3) {
-        // Ẩn nút xác thực chính
-        if (verifyPhoneBtn) {
-            verifyPhoneBtn.classList.add('hidden');
-        }
-        
-        // Hiện nút xác thực thủ công
-        const manualBtn = document.getElementById('manualVerifyBtn');
-        if (manualBtn) {
-            manualBtn.classList.remove('hidden');
-        }
-    }
 }
 
-// Hiển thị modal xác nhận đỉnh núi thủ công
-function showManualSummitConfirmation() {
-    // Tạo modal HTML nếu chưa tồn tại
-    let manualSummitModal = document.getElementById('manualSummitModal');
-    if (!manualSummitModal) {
-        manualSummitModal = document.createElement('div');
-        manualSummitModal.id = 'manualSummitModal';
-        manualSummitModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[400] hidden';
-        manualSummitModal.innerHTML = `
-            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900">Xác thực đỉnh núi thủ công</h3>
-                    <button id="closeManualSummitBtn" class="text-gray-400 hover:text-gray-600 text-xl">&times;</button>
-                </div>
-                <div class="mb-4">
-                    <p class="text-gray-700 mb-3">Bạn có chắc chắn rằng mình đang ở đỉnh Núi Bà Đen không?</p>
-                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                        <p class="text-sm text-blue-800 font-medium">Đỉnh Núi Bà Đen:</p>
-                        <p class="text-sm text-blue-700">Độ cao: 986m</p>
-                        <p class="text-xs text-blue-600 mt-1">Bán kính cho phép: ${ALLOWED_RADIUS_METERS}m</p>
-                    </div>
-                    <p class="text-sm text-gray-600">Lưu ý: Chỉ xác thực khi bạn thực sự đã chinh phục đỉnh núi.</p>
-                </div>
-                <div class="flex space-x-3">
-                    <button id="cancelManualSummitBtn" class="flex-1 px-4 py-2 text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition duration-150">
-                        Hủy bỏ
-                    </button>
-                    <button id="confirmManualSummitBtn" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-150">
-                        Xác nhận đỉnh núi
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(manualSummitModal);
-        
-        // Thêm event listeners
-        document.getElementById('closeManualSummitBtn').addEventListener('click', hideManualSummitConfirmation);
-        document.getElementById('cancelManualSummitBtn').addEventListener('click', hideManualSummitConfirmation);
-        document.getElementById('confirmManualSummitBtn').addEventListener('click', handleManualSummitConfirmation);
-    }
-    
-    manualSummitModal.classList.remove('hidden');
-}
 
-// Ẩn modal xác nhận đỉnh núi thủ công
-function hideManualSummitConfirmation() {
-    const modal = document.getElementById('manualSummitModal');
-    if (modal) {
-        modal.classList.add('hidden');
-    }
-}
-
-// Xử lý xác nhận đỉnh núi thủ công
-function handleManualSummitConfirmation() {
-    hideManualSummitConfirmation();
-    
-    const phoneNumber = verifyPhoneNumberInput.value.trim();
-    if (!phoneNumber) {
-        showMessage('Lỗi: Không tìm thấy số điện thoại.', 'error');
-        return;
-    }
-    
-    // Đánh dấu xác thực thủ công
-    manualVerification = true;
-    
-    showMessage('Đã xác nhận đỉnh núi thủ công. Đang tải danh sách...', 'success', 2000);
-    setTimeout(() => {
-        fetchMembersListForSelection(phoneNumber);
-    }, 2000);
-}
-
-// Xử lý xác thực thủ công (từ nút "Xác thực thủ công")
-function handleManualVerification() {
-    const phoneNumber = verifyPhoneNumberInput.value.trim();
-    if (!phoneNumber || !/^[0-9]{10,11}$/.test(phoneNumber)) {
-        showMessage('Vui lòng nhập SĐT đã đăng ký (10-11 số).', 'error');
-        verifyPhoneNumberInput.focus();
-        return;
-    }
-    
-    // Hiển thị modal xác nhận đỉnh núi thủ công
-    showManualSummitConfirmation();
-}
 
 /** Fetches the member list from Google Apps Script for selection. */
 async function fetchMembersListForSelection(phoneNumber) {
@@ -1130,7 +851,7 @@ async function handleGenerateSelectedCertificates() {
         action: 'generateCertificatesWithPhotos', 
         phone: verifiedPhoneNumber, 
         members: selectedMembersData,
-        verificationMethod: manualVerification ? 'manual' : 'gps'
+        verificationMethod: 'gps'
     };
 
     try {
@@ -1210,13 +931,6 @@ function resetVerificationProcess() {
     if(verifyPhoneNumberInput) verifyPhoneNumberInput.value = '';
     verifiedPhoneNumber = null;
     uploadedPhotos = {};
-    manualVerification = false; // Reset manual verification flag
-    summitLocationErrorCount = 0;
-    
-    // Khôi phục trạng thái nút xác thực
-    const manualVerifyBtn = document.getElementById('manualVerifyBtn');
-    if (manualVerifyBtn) manualVerifyBtn.classList.add('hidden');
-    if (verifyPhoneBtn) verifyPhoneBtn.classList.remove('hidden');
     
     setLoadingState(verifyPhoneBtn, certSpinner, false);
     setLoadingState(generateSelectedBtn, generateSpinner, false);
@@ -1290,7 +1004,7 @@ async function handleConfirmCommitment() {
             action: 'register',
             ...pendingRegistrationData,
             signatureData: signatureData,
-            locationMethod: pendingRegistrationData.manualLocation ? 'manual' : 'gps'
+            locationMethod: 'gps'
         };
 
         showMessage('Đang gửi thông tin đăng ký...', 'info', 0);
@@ -1431,14 +1145,6 @@ function initializeDOMElements() {
 // Hàm thiết lập event listeners
 function setupEventListeners() {
     if (registrationForm) registrationForm.addEventListener('submit', handleRegistrationSubmit);
-    
-    // Nút đăng ký thủ công
-    const manualRegisterBtn = document.getElementById('manualRegisterBtn');
-    if (manualRegisterBtn) manualRegisterBtn.addEventListener('click', handleManualRegistration);
-    
-    // Nút xác thực thủ công
-    const manualVerifyBtn = document.getElementById('manualVerifyBtn');
-    if (manualVerifyBtn) manualVerifyBtn.addEventListener('click', handleManualVerification);
     
     if (verifyPhoneBtn) verifyPhoneBtn.addEventListener('click', handleVerifyPhoneAndLocation);
     if (generateSelectedBtn) generateSelectedBtn.addEventListener('click', handleGenerateSelectedCertificates);

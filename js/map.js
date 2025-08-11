@@ -358,7 +358,7 @@ async function loadPoiData() {
                 }
                 const data = await response.json();
                 return data.map(poi => {
-                    let t = poi.type?.toLowerCase().trim();
+                    let t = poi.category?.toLowerCase().trim();
                     if (t === 'religion') t = 'religious';
                     return {
                         ...poi,
@@ -546,6 +546,14 @@ function renderCategoryFilters() {
     if (!filterCategoriesContainer) return;
     filterCategoriesContainer.innerHTML = '';
 
+    // Đếm số lượng POI cho mỗi category
+    const categoryCounts = {};
+    poiData.forEach(poi => {
+        if (poi && poi.type) {
+            categoryCounts[poi.type] = (categoryCounts[poi.type] || 0) + 1;
+        }
+    });
+
     // Định nghĩa thứ tự ưu tiên
     const orderedKeys = [
         'religious', // Tâm linh
@@ -554,23 +562,23 @@ function renderCategoryFilters() {
         'viewpoint', // Ngắm cảnh
         'food' // Ẩm thực
     ];
-    // Các loại còn lại
-    const otherKeys = Object.keys(POI_CATEGORIES).filter(k => !orderedKeys.includes(k));
-    const finalOrder = [...orderedKeys, ...otherKeys];
+    // Các loại còn lại (chỉ những category có POI)
+    const otherKeys = Object.keys(categoryCounts).filter(k => !orderedKeys.includes(k));
+    const finalOrder = [...orderedKeys.filter(k => categoryCounts[k]), ...otherKeys];
 
     // Nút Tất cả
     const allBtn = document.createElement('button');
-    allBtn.innerHTML = `<i class="fas fa-th-large mr-1.5 text-xs"></i> ${getUIText('allCategories')}`;
+    allBtn.innerHTML = `<i class="fas fa-th-large mr-1.5 text-xs"></i> ${getUIText('allCategories')} (${poiData.length})`;
     allBtn.className = `flex items-center px-2.5 py-1.5 text-xs sm:text-sm rounded-full transition-colors duration-200 whitespace-nowrap ${!activeCategory ? 'bg-primary-500 text-white' : 'bg-gray-200 hover:bg-gray-300'}`;
     allBtn.onclick = () => { activeCategory = null; renderPoiMarkers(); renderCategoryFilters(); };
     filterCategoriesContainer.appendChild(allBtn);
 
-    // Theo thứ tự mong muốn
+    // Theo thứ tự mong muốn (chỉ hiển thị category có POI)
     finalOrder.forEach(categoryKey => {
         const categoryInfo = POI_CATEGORIES[categoryKey];
-        if (!categoryInfo) return;
+        if (!categoryInfo || !categoryCounts[categoryKey]) return;
         const btn = document.createElement('button');
-        btn.innerHTML = `<i class="fas ${categoryInfo.icon} mr-1.5 text-xs"></i> ${getUIText(categoryInfo.nameKey)}`;
+        btn.innerHTML = `<i class="fas ${categoryInfo.icon} mr-1.5 text-xs"></i> ${getUIText(categoryInfo.nameKey)} (${categoryCounts[categoryKey]})`;
         btn.className = `flex items-center px-2.5 py-1.5 text-xs sm:text-sm rounded-full transition-colors duration-200 whitespace-nowrap ${activeCategory === categoryKey ? 'bg-primary-500 text-white' : 'bg-gray-200 hover:bg-gray-300'}`;
         btn.onclick = () => { activeCategory = categoryKey; renderPoiMarkers(); renderCategoryFilters(); };
         filterCategoriesContainer.appendChild(btn);
@@ -1339,7 +1347,8 @@ function checkOperationalStatus(poiId, currentTime = new Date()) {
         }
     }
     if (!hoursData) {
-        if (poi.type === 'transport') return { operational: false, message: t('statusMissingData') };
+        // Mặc định cho phép tìm đường qua các POI không có dữ liệu giờ hoạt động
+        // Chỉ chặn khi thực sự đóng cửa hoặc có lỗi dữ liệu
         return { operational: true, message: '' };
     }
 
