@@ -2335,7 +2335,7 @@ function drawCableRoutes() {
     };
 
     // Get all transport POIs
-    const transportPOIs = poiData.filter(poi => poi.type === 'transport');
+    const transportPOIs = poiData.filter(poi => poi.category === 'transport');
 
     // Draw each cable route
     Object.keys(cableRouteColors).forEach(routeName => {
@@ -2376,7 +2376,7 @@ function drawCableRoutes() {
 
 // Helper function to check if a POI is a cable station
 function isCableStation(poi) {
-    if (!poi || poi.type !== 'transport') return false;
+    if (!poi || poi.category !== 'transport') return false;
     const routes = String(poi.cable_route || '').split(',').map(r => r.trim()).filter(r => r);
     return routes.length > 0 && (
         routes.includes(CABLE_ROUTE_NAME_TAM_AN) ||
