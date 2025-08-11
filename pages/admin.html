@@ -54,24 +54,24 @@
 
     <!-- Header -->
     <header class="gradient-bg shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center">
-                    <i class="fas fa-tachometer-alt text-white text-2xl mr-3"></i>
-                    <h1 class="text-xl font-bold text-white">Bảng điều khiển Quản trị - Núi Bà Đen</h1>
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+            <div class="flex items-center justify-between h-14 sm:h-16">
+                <div class="flex items-center min-w-0 flex-1">
+                    <i class="fas fa-tachometer-alt text-white text-lg sm:text-2xl mr-2 sm:mr-3 flex-shrink-0"></i>
+                    <h1 class="text-sm sm:text-xl font-bold text-white truncate">Bảng điều khiển Quản trị - Núi Bà Đen</h1>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-white text-sm">
-                        <i class="fas fa-calendar-alt mr-2"></i>
+                <div class="flex items-center space-x-2 sm:space-x-4 ml-2">
+                    <span class="text-white text-xs sm:text-sm hidden sm:block">
+                        <i class="fas fa-calendar-alt mr-1 sm:mr-2"></i>
                         <span id="currentDate"></span>
                     </span>
                     <button 
                         onclick="logout()" 
-                        class="text-white hover:text-red-200 transition-colors px-3 py-1 rounded-lg hover:bg-white/10"
+                        class="text-white hover:text-red-200 transition-colors px-2 sm:px-3 py-1 rounded-lg hover:bg-white/10 text-xs sm:text-sm"
                         title="Đăng xuất"
                     >
                         <i class="fas fa-sign-out-alt mr-1"></i>
-                        Đăng xuất
+                        <span class="hidden sm:inline">Đăng xuất</span>
                     </button>
                 </div>
             </div>
@@ -79,135 +79,135 @@
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-8">
         
         <!-- Welcome Section -->
-        <div class="mb-8">
-            <h2 class="text-3xl font-bold text-slate-800 mb-2">Chào mừng đến với Bảng điều khiển</h2>
-            <p class="text-slate-600">Quản lý dữ liệu và nội dung cho Khu du lịch Núi Bà Đen</p>
+        <div class="mb-6 sm:mb-8">
+            <h2 class="text-xl sm:text-3xl font-bold text-slate-800 mb-2">Chào mừng đến với Bảng điều khiển</h2>
+            <p class="text-sm sm:text-base text-slate-600">Quản lý dữ liệu và nội dung cho Khu du lịch Núi Bà Đen</p>
         </div>
 
         <!-- Quick Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+        <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+            <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-slate-200">
                 <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-                        <i class="fas fa-map-marker-alt text-xl"></i>
+                    <div class="p-2 sm:p-3 rounded-full bg-blue-100 text-blue-600 flex-shrink-0">
+                        <i class="fas fa-map-marker-alt text-lg sm:text-xl"></i>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-slate-600">Tổng POI</p>
-                        <p class="text-2xl font-bold text-slate-900" id="totalPoi">-</p>
+                    <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm font-medium text-slate-600 truncate">Tổng POI</p>
+                        <p class="text-lg sm:text-2xl font-bold text-slate-900" id="totalPoi">-</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+            <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-slate-200">
                 <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-green-100 text-green-600">
-                        <i class="fas fa-route text-xl"></i>
+                    <div class="p-2 sm:p-3 rounded-full bg-green-100 text-green-600 flex-shrink-0">
+                        <i class="fas fa-route text-lg sm:text-xl"></i>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-slate-600">Tours</p>
-                        <p class="text-2xl font-bold text-slate-900" id="totalTours">-</p>
-                    </div>
+                    <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm font-medium text-slate-600 truncate">Tours</p>
+                        <p class="text-lg sm:text-2xl font-bold text-slate-900" id="totalTours">-</p>
                     </div>
                 </div>
+            </div>
                 
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+            <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-slate-200">
                 <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
-                        <i class="fas fa-hotel text-xl"></i>
+                    <div class="p-2 sm:p-3 rounded-full bg-purple-100 text-purple-600 flex-shrink-0">
+                        <i class="fas fa-hotel text-lg sm:text-xl"></i>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-slate-600">Lưu trú</p>
-                        <p class="text-2xl font-bold text-slate-900" id="totalAccommodations">-</p>
+                    <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm font-medium text-slate-600 truncate">Lưu trú</p>
+                        <p class="text-lg sm:text-2xl font-bold text-slate-900" id="totalAccommodations">-</p>
                     </div>
                 </div>
             </div>
             
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+            <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-slate-200">
                 <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-orange-100 text-orange-600">
-                        <i class="fas fa-utensils text-xl"></i>
+                    <div class="p-2 sm:p-3 rounded-full bg-orange-100 text-orange-600 flex-shrink-0">
+                        <i class="fas fa-utensils text-lg sm:text-xl"></i>
                     </div>
-                    <div class="ml-4">
-                        <p class="text-sm font-medium text-slate-600">Nhà hàng</p>
-                        <p class="text-2xl font-bold text-slate-900" id="totalRestaurants">-</p>
+                    <div class="ml-3 sm:ml-4 min-w-0 flex-1">
+                        <p class="text-xs sm:text-sm font-medium text-slate-600 truncate">Nhà hàng</p>
+                        <p class="text-lg sm:text-2xl font-bold text-slate-900" id="totalRestaurants">-</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Management Cards -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 mb-6 sm:mb-8">
             
             <!-- POI Management Card -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden card-hover">
-                <div class="gradient-bg p-6">
+                <div class="gradient-bg p-4 sm:p-6">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <i class="fas fa-map-marked-alt text-white text-3xl mr-4"></i>
-                            <div>
-                                <h3 class="text-xl font-bold text-white">Quản lý POI</h3>
-                                <p class="text-blue-100">Điểm tham quan & Giờ hoạt động</p>
+                        <div class="flex items-center min-w-0 flex-1">
+                            <i class="fas fa-map-marked-alt text-white text-2xl sm:text-3xl mr-3 sm:mr-4 flex-shrink-0"></i>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-lg sm:text-xl font-bold text-white truncate">Quản lý POI</h3>
+                                <p class="text-blue-100 text-sm sm:text-base truncate">Điểm tham quan & Giờ hoạt động</p>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <div class="text-white text-2xl font-bold" id="poiCount">-</div>
-                            <div class="text-blue-100 text-sm">POI</div>
+                        <div class="text-right flex-shrink-0 ml-2">
+                            <div class="text-white text-xl sm:text-2xl font-bold" id="poiCount">-</div>
+                            <div class="text-blue-100 text-xs sm:text-sm">POI</div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="p-6">
-                    <p class="text-slate-600 mb-6">
+                <div class="p-4 sm:p-6">
+                    <p class="text-sm sm:text-base text-slate-600 mb-4 sm:mb-6">
                         Quản lý các điểm tham quan trên Núi Bà Đen, bao gồm thông tin chi tiết, vị trí, 
                         giờ hoạt động và các thuộc tính khác.
                     </p>
                     
-                    <div class="space-y-3 mb-6">
-                        <div class="flex items-center text-sm text-slate-600">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            Thêm, sửa, xóa điểm tham quan
+                    <div class="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+                        <div class="flex items-center text-xs sm:text-sm text-slate-600">
+                            <i class="fas fa-check-circle text-green-500 mr-2 sm:mr-3 flex-shrink-0"></i>
+                            <span class="truncate">Thêm, sửa, xóa điểm tham quan</span>
                         </div>
-                        <div class="flex items-center text-sm text-slate-600">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            Quản lý giờ hoạt động theo ngày
+                        <div class="flex items-center text-xs sm:text-sm text-slate-600">
+                            <i class="fas fa-check-circle text-green-500 mr-2 sm:mr-3 flex-shrink-0"></i>
+                            <span class="truncate">Quản lý giờ hoạt động theo ngày</span>
                         </div>
-                        <div class="flex items-center text-sm text-slate-600">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            Phân loại theo danh mục và khu vực
+                        <div class="flex items-center text-xs sm:text-sm text-slate-600">
+                            <i class="fas fa-check-circle text-green-500 mr-2 sm:mr-3 flex-shrink-0"></i>
+                            <span class="truncate">Phân loại theo danh mục và khu vực</span>
                         </div>
-                        <div class="flex items-center text-sm text-slate-600">
-                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                            Tích hợp bản đồ để chọn vị trí
+                        <div class="flex items-center text-xs sm:text-sm text-slate-600">
+                            <i class="fas fa-check-circle text-green-500 mr-2 sm:mr-3 flex-shrink-0"></i>
+                            <span class="truncate">Tích hợp bản đồ để chọn vị trí</span>
                         </div>
-                        </div>
+                    </div>
 
-                    <a href="admin/poi/index.html" class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                    <a href="admin/poi/index.html" class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white text-sm sm:text-base font-medium rounded-lg hover:bg-indigo-700 transition-colors duration-200">
                         <i class="fas fa-arrow-right mr-2"></i>
-                        Truy cập Quản lý POI
+                        <span class="truncate">Truy cập Quản lý POI</span>
                     </a>
                 </div>
             </div>
 
             <!-- Guide Management Card -->
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden card-hover">
-                <div class="gradient-bg-secondary p-6">
+                <div class="gradient-bg-secondary p-4 sm:p-6">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <i class="fas fa-book-open text-white text-3xl mr-4"></i>
-                            <div>
-                                <h3 class="text-xl font-bold text-white">Quản lý Cẩm nang</h3>
-                                <p class="text-pink-100">Tours, Lưu trú, Nhà hàng & Đặc sản</p>
+                        <div class="flex items-center min-w-0 flex-1">
+                            <i class="fas fa-book-open text-white text-2xl sm:text-3xl mr-3 sm:mr-4 flex-shrink-0"></i>
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-lg sm:text-xl font-bold text-white truncate">Quản lý Cẩm nang</h3>
+                                <p class="text-pink-100 text-sm sm:text-base truncate">Tours, Lưu trú, Nhà hàng & Đặc sản</p>
                             </div>
                         </div>
-                        <div class="text-right">
-                            <div class="text-white text-2xl font-bold" id="guideCount">-</div>
-                            <div class="text-pink-100 text-sm">Mục</div>
-                            </div>
-                                    </div>
-                                </div>
+                        <div class="text-right flex-shrink-0 ml-2">
+                            <div class="text-white text-xl sm:text-2xl font-bold" id="guideCount">-</div>
+                            <div class="text-pink-100 text-xs sm:text-sm">Mục</div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="p-6">
                     <p class="text-slate-600 mb-6">
@@ -295,34 +295,14 @@
         </div>
 
         <!-- Recent Activity -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-8">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 mt-6 sm:mt-8">
             <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
                 <i class="fas fa-history text-indigo-500 mr-2"></i>
                 Hoạt động gần đây
             </h3>
             
-            <div class="space-y-3">
-                <div class="flex items-center p-3 bg-slate-50 rounded-lg">
-                    <div class="p-2 bg-green-100 rounded-lg mr-3">
-                        <i class="fas fa-check text-green-600"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-medium text-slate-800">Hệ thống đã sẵn sàng</p>
-                        <p class="text-xs text-slate-600">Tất cả dịch vụ đang hoạt động bình thường</p>
-                    </div>
-                    <span class="text-xs text-slate-500">Vừa xong</span>
-    </div>
-
-                <div class="flex items-center p-3 bg-slate-50 rounded-lg">
-                    <div class="p-2 bg-blue-100 rounded-lg mr-3">
-                        <i class="fas fa-database text-blue-600"></i>
-                    </div>
-                    <div class="flex-1">
-                        <p class="text-sm font-medium text-slate-800">Dữ liệu đã đồng bộ</p>
-                        <p class="text-xs text-slate-600">Kết nối với Netlify Blobs thành công</p>
-                    </div>
-                    <span class="text-xs text-slate-500">2 phút trước</span>
-                </div>
+            <div class="space-y-3" id="recentActivities">
+                <!-- Activities will be loaded dynamically -->
             </div>
         </div>
     </main>
@@ -345,63 +325,7 @@
         </div>
     </footer>
 
-    <script>
-        // Set current date and year
-        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('vi-VN', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        document.getElementById('currentYear').textContent = new Date().getFullYear();
-
-        // Load statistics
-        async function loadStatistics() {
-            try {
-                // Load POI count
-                const poiResponse = await fetch('/.netlify/functions/data-blobs?file=POI.json');
-                if (poiResponse.ok) {
-                    const poiData = await poiResponse.json();
-                    const poiCount = Array.isArray(poiData) ? poiData.length : 0;
-                    document.getElementById('totalPoi').textContent = poiCount;
-                    document.getElementById('poiCount').textContent = poiCount;
-                }
-
-                // Load Guide counts
-                const guideFiles = ['Tours.json', 'Accommodations.json', 'Restaurants.json', 'Specialties.json'];
-                const guideCounts = {};
-                let totalGuideCount = 0;
-
-                for (const file of guideFiles) {
-                    const response = await fetch(`/.netlify/functions/data-blobs?file=${file}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        const count = Array.isArray(data) ? data.length : 0;
-                        guideCounts[file.replace('.json', '')] = count;
-                        totalGuideCount += count;
-                    }
-                }
-
-                // Update guide statistics
-                document.getElementById('totalTours').textContent = guideCounts['Tours'] || 0;
-                document.getElementById('totalAccommodations').textContent = guideCounts['Accommodations'] || 0;
-                document.getElementById('totalRestaurants').textContent = guideCounts['Restaurants'] || 0;
-                document.getElementById('guideCount').textContent = totalGuideCount;
-
-                // Update individual counts
-                document.getElementById('toursCount').textContent = guideCounts['Tours'] || 0;
-                document.getElementById('accommodationsCount').textContent = guideCounts['Accommodations'] || 0;
-                document.getElementById('restaurantsCount').textContent = guideCounts['Restaurants'] || 0;
-                document.getElementById('specialtiesCount').textContent = guideCounts['Specialties'] || 0;
-
-            } catch (error) {
-                console.error('Error loading statistics:', error);
-            }
-        }
-
-        // Load statistics when page loads
-        document.addEventListener('DOMContentLoaded', loadStatistics);
-    </script>
+    <script src="../js/admin.js"></script>
 
     <!-- Admin Security Check -->
     <script>
