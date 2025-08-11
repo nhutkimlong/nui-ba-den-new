@@ -1,0 +1,56 @@
+[
+  {
+    "id":"RES001",
+    "name":"Nhà Hàng Bò Tơ Tây Ninh Năm Sánh",
+    "image":"https:\/\/dulichnghimat.com\/wp-content\/uploads\/2025\/02\/dia-chi-bo-to-5-sanh.jpg",
+    "address":"QL22B, Hiệp Trường, Hoà Thành, Tây Ninh",
+    "cuisine":"Bò tơ, đặc sản",
+    "mapLink":"https:\/\/maps.app.goo.gl\/LXDufwBwdezDMFtVA",
+    "isActive":true
+  },
+  {
+    "id":"RES002",
+    "name":"Buffet Vân Sơn",
+    "image":"https:\/\/www.nuibaden.vn\/wp-content\/uploads\/2025\/03\/buffet-van-son-nui-ba-den-6-1067x800.jpg",
+    "address":"Đỉnh núi Bà ",
+    "cuisine":"Buffet Á, Âu",
+    "mapLink":"https:\/\/maps.app.goo.gl\/hQ7gJchUfSrzS2Lx5",
+    "isActive":true
+  },
+  {
+    "id":"RES003",
+    "name":"Ẩm thực chay - Phước Lạc Viên",
+    "image":"https:\/\/diemdenantoan.sgtiepthi.vn\/wp-content\/uploads\/2021\/10\/13133248_258344314519620_1941939386147489580_n.jpg",
+    "address":"Số 482, Điện Biên Phủ, KP. Hiệp Thạnh, Phường Hiệp Ninh, Thành phố Tây Ninh, Tây Ninh",
+    "cuisine":"Chuyên các món ăn thuần chay.",
+    "mapLink":"https:\/\/maps.app.goo.gl\/AMxBTUYH8w9JbfMs6",
+    "isActive":true
+  },
+  {
+    "id":"RES004",
+    "name":"Nhà hàng Hầm rượu Sông Cầu",
+    "image":"https:\/\/daithuanphat.com.vn\/thumbs\/1280x960x2\/upload\/news\/6d90a8ee894955170c58-7575.jpg",
+    "address":"10a Nguyễn Văn Bạch, Khu phố 1, Tây Ninh",
+    "cuisine":"Nhà hàng với không gian riêng, menu đa dạng.",
+    "mapLink":"https:\/\/maps.app.goo.gl\/YNWg9T5aoL3bDccM7",
+    "isActive":true
+  },
+  {
+    "id":"RES005",
+    "name":"Nhà hàng Sông Quê",
+    "image":"https:\/\/www.tourdulichbentre.com\/images\/stories\/virtuemart\/product\/nha-hang-song-que-tay-ninh.jpg",
+    "address":"169 Trần Hưng Đạo, TP. Tây Ninh, Tây Ninh",
+    "cuisine":"Ẩm thực thuần Việt, đa dạng.",
+    "mapLink":"https:\/\/maps.app.goo.gl\/MfqwoaQxGh675jgX7",
+    "isActive":true
+  },
+  {
+    "id":"RES006",
+    "name":"Ẩm thực sinh thái Phương Linh Garden",
+    "image":"https:\/\/phuonglinhgarden.com\/datafiles\/44423\/upload\/files\/h%C3%ACnh%20%E1%BA%A3nh%20nh%C3%A0%20h%C3%A0ng.jpg",
+    "address":"134D Bời Lời, Ninh Sơn, Tây Ninh.",
+    "cuisine":"Với không gian rộng rãi, sức chứa 1000 quý thực khách,thực đơn đa dạng.",
+    "mapLink":"https:\/\/maps.app.goo.gl\/wAQH4AZMFCkY8hXk9",
+    "isActive":true
+  }
+]

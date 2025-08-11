@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bảng điều khiển Quản trị - Núi Bà Đen">
+    <meta name="author" content="BQL KDL Núi Bà Đen">
+    <title>Bảng điều khiển Quản trị - Núi Bà Đen</title>
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    
+    <!-- Critical CSS first -->
+    <link rel="stylesheet" href="../css/admin.css">
+    
+    <!-- Fonts with optimized loading -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome - Load asynchronously -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer"></noscript>
+    
+    <!-- Tailwind CSS - Load synchronously to ensure configuration works -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* slate-100 */
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .gradient-bg-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        .gradient-bg-success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        .gradient-bg-warning {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="gradient-bg shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-tachometer-alt text-white text-2xl mr-3"></i>
+                    <h1 class="text-xl font-bold text-white">Bảng điều khiển Quản trị - Núi Bà Đen</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-white text-sm">
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        <span id="currentDate"></span>
+                    </span>
+                    <button 
+                        onclick="logout()" 
+                        class="text-white hover:text-red-200 transition-colors px-3 py-1 rounded-lg hover:bg-white/10"
+                        title="Đăng xuất"
+                    >
+                        <i class="fas fa-sign-out-alt mr-1"></i>
+                        Đăng xuất
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Welcome Section -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-slate-800 mb-2">Chào mừng đến với Bảng điều khiển</h2>
+            <p class="text-slate-600">Quản lý dữ liệu và nội dung cho Khu du lịch Núi Bà Đen</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                        <i class="fas fa-map-marker-alt text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-slate-600">Tổng POI</p>
+                        <p class="text-2xl font-bold text-slate-900" id="totalPoi">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i class="fas fa-route text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-slate-600">Tours</p>
+                        <p class="text-2xl font-bold text-slate-900" id="totalTours">-</p>
+                    </div>
+                    </div>
+                </div>
+                
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                        <i class="fas fa-hotel text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-slate-600">Lưu trú</p>
+                        <p class="text-2xl font-bold text-slate-900" id="totalAccommodations">-</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-orange-100 text-orange-600">
+                        <i class="fas fa-utensils text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-slate-600">Nhà hàng</p>
+                        <p class="text-2xl font-bold text-slate-900" id="totalRestaurants">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Management Cards -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            
+            <!-- POI Management Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden card-hover">
+                <div class="gradient-bg p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-map-marked-alt text-white text-3xl mr-4"></i>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Quản lý POI</h3>
+                                <p class="text-blue-100">Điểm tham quan & Giờ hoạt động</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-white text-2xl font-bold" id="poiCount">-</div>
+                            <div class="text-blue-100 text-sm">POI</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6">
+                    <p class="text-slate-600 mb-6">
+                        Quản lý các điểm tham quan trên Núi Bà Đen, bao gồm thông tin chi tiết, vị trí, 
+                        giờ hoạt động và các thuộc tính khác.
+                    </p>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="flex items-center text-sm text-slate-600">
+                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                            Thêm, sửa, xóa điểm tham quan
+                        </div>
+                        <div class="flex items-center text-sm text-slate-600">
+                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                            Quản lý giờ hoạt động theo ngày
+                        </div>
+                        <div class="flex items-center text-sm text-slate-600">
+                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                            Phân loại theo danh mục và khu vực
+                        </div>
+                        <div class="flex items-center text-sm text-slate-600">
+                            <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                            Tích hợp bản đồ để chọn vị trí
+                        </div>
+                        </div>
+
+                    <a href="admin/poi/index.html" class="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                        <i class="fas fa-arrow-right mr-2"></i>
+                        Truy cập Quản lý POI
+                    </a>
+                </div>
+            </div>
+
+            <!-- Guide Management Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden card-hover">
+                <div class="gradient-bg-secondary p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-book-open text-white text-3xl mr-4"></i>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Quản lý Cẩm nang</h3>
+                                <p class="text-pink-100">Tours, Lưu trú, Nhà hàng & Đặc sản</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-white text-2xl font-bold" id="guideCount">-</div>
+                            <div class="text-pink-100 text-sm">Mục</div>
+                            </div>
+                                    </div>
+                                </div>
+
+                <div class="p-6">
+                    <p class="text-slate-600 mb-6">
+                        Quản lý thông tin cẩm nang du lịch bao gồm tours, nơi lưu trú, nhà hàng 
+                        và đặc sản địa phương.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-50 rounded-lg p-3">
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-route text-blue-500 mr-2"></i>
+                                <span class="font-medium">Tours</span>
+                                <span class="ml-auto text-slate-500" id="toursCount">-</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-3">
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-hotel text-purple-500 mr-2"></i>
+                                <span class="font-medium">Lưu trú</span>
+                                <span class="ml-auto text-slate-500" id="accommodationsCount">-</span>
+                            </div>
+                                </div>
+                        <div class="bg-slate-50 rounded-lg p-3">
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-utensils text-orange-500 mr-2"></i>
+                                <span class="font-medium">Nhà hàng</span>
+                                <span class="ml-auto text-slate-500" id="restaurantsCount">-</span>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 rounded-lg p-3">
+                            <div class="flex items-center text-sm">
+                                <i class="fas fa-pepper-hot text-red-500 mr-2"></i>
+                                <span class="font-medium">Đặc sản</span>
+                                <span class="ml-auto text-slate-500" id="specialtiesCount">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <a href="admin/guide/index.html" class="inline-flex items-center px-6 py-3 bg-pink-600 text-white font-medium rounded-lg hover:bg-pink-700 transition-colors duration-200">
+                        <i class="fas fa-arrow-right mr-2"></i>
+                        Truy cập Quản lý Cẩm nang
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                <i class="fas fa-bolt text-yellow-500 mr-2"></i>
+                Hành động nhanh
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <a href="data-editor.html" class="flex items-center p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors duration-200">
+                    <div class="p-2 bg-blue-100 rounded-lg mr-3">
+                        <i class="fas fa-code text-blue-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-slate-800">Chỉnh sửa JSON</h4>
+                        <p class="text-sm text-slate-600">Chỉnh sửa trực tiếp file dữ liệu</p>
+                    </div>
+                </a>
+                
+                <a href="map.html" target="_blank" class="flex items-center p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors duration-200">
+                    <div class="p-2 bg-green-100 rounded-lg mr-3">
+                        <i class="fas fa-map text-green-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-slate-800">Xem Bản đồ</h4>
+                        <p class="text-sm text-slate-600">Kiểm tra hiển thị POI trên bản đồ</p>
+                    </div>
+                </a>
+                
+                <a href="guide.html" target="_blank" class="flex items-center p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors duration-200">
+                    <div class="p-2 bg-purple-100 rounded-lg mr-3">
+                        <i class="fas fa-book text-purple-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-slate-800">Xem Cẩm nang</h4>
+                        <p class="text-sm text-slate-600">Kiểm tra hiển thị cẩm nang</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-8">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                <i class="fas fa-history text-indigo-500 mr-2"></i>
+                Hoạt động gần đây
+            </h3>
+            
+            <div class="space-y-3">
+                <div class="flex items-center p-3 bg-slate-50 rounded-lg">
+                    <div class="p-2 bg-green-100 rounded-lg mr-3">
+                        <i class="fas fa-check text-green-600"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-slate-800">Hệ thống đã sẵn sàng</p>
+                        <p class="text-xs text-slate-600">Tất cả dịch vụ đang hoạt động bình thường</p>
+                    </div>
+                    <span class="text-xs text-slate-500">Vừa xong</span>
+    </div>
+
+                <div class="flex items-center p-3 bg-slate-50 rounded-lg">
+                    <div class="p-2 bg-blue-100 rounded-lg mr-3">
+                        <i class="fas fa-database text-blue-600"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-slate-800">Dữ liệu đã đồng bộ</p>
+                        <p class="text-xs text-slate-600">Kết nối với Netlify Blobs thành công</p>
+                    </div>
+                    <span class="text-xs text-slate-500">2 phút trước</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-white py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <i class="fas fa-mountain text-2xl mr-3 text-indigo-400"></i>
+                    <div>
+                        <h4 class="font-semibold">BQL KDL Núi Bà Đen</h4>
+                        <p class="text-sm text-slate-400">Hệ thống quản lý thông tin du lịch</p>
+                    </div>
+                </div>
+                <div class="text-sm text-slate-400">
+                    © <span id="currentYear"></span> BQL KDL Núi Bà Đen. Tất cả quyền được bảo lưu.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Set current date and year
+        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('vi-VN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+        // Load statistics
+        async function loadStatistics() {
+            try {
+                // Load POI count
+                const poiResponse = await fetch('/.netlify/functions/data-blobs?file=POI.json');
+                if (poiResponse.ok) {
+                    const poiData = await poiResponse.json();
+                    const poiCount = Array.isArray(poiData) ? poiData.length : 0;
+                    document.getElementById('totalPoi').textContent = poiCount;
+                    document.getElementById('poiCount').textContent = poiCount;
+                }
+
+                // Load Guide counts
+                const guideFiles = ['Tours.json', 'Accommodations.json', 'Restaurants.json', 'Specialties.json'];
+                const guideCounts = {};
+                let totalGuideCount = 0;
+
+                for (const file of guideFiles) {
+                    const response = await fetch(`/.netlify/functions/data-blobs?file=${file}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const count = Array.isArray(data) ? data.length : 0;
+                        guideCounts[file.replace('.json', '')] = count;
+                        totalGuideCount += count;
+                    }
+                }
+
+                // Update guide statistics
+                document.getElementById('totalTours').textContent = guideCounts['Tours'] || 0;
+                document.getElementById('totalAccommodations').textContent = guideCounts['Accommodations'] || 0;
+                document.getElementById('totalRestaurants').textContent = guideCounts['Restaurants'] || 0;
+                document.getElementById('guideCount').textContent = totalGuideCount;
+
+                // Update individual counts
+                document.getElementById('toursCount').textContent = guideCounts['Tours'] || 0;
+                document.getElementById('accommodationsCount').textContent = guideCounts['Accommodations'] || 0;
+                document.getElementById('restaurantsCount').textContent = guideCounts['Restaurants'] || 0;
+                document.getElementById('specialtiesCount').textContent = guideCounts['Specialties'] || 0;
+
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // Load statistics when page loads
+        document.addEventListener('DOMContentLoaded', loadStatistics);
+    </script>
+
+    <!-- Admin Security Check -->
+    <script>
+        // Check authentication before loading admin panel
+        function checkAdminAuth() {
+            const token = localStorage.getItem('adminToken');
+            const loginTime = localStorage.getItem('adminLoginTime');
+            
+            // Check if token exists and is not expired (24 hours)
+            if (!token || !loginTime) {
+                window.location.href = 'admin-login.html';
+                return;
+            }
+            
+            const now = Date.now();
+            const loginTimeNum = parseInt(loginTime);
+            const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
+            
+            if (now - loginTimeNum > sessionDuration) {
+                // Session expired
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminLoginTime');
+                window.location.href = 'admin-login.html';
+                return;
+            }
+            
+            // Valid session, continue loading admin panel
+            loadAdminScripts();
+        }
+        
+        function loadAdminScripts() {
+            // Load admin scripts only after authentication
+            const adminScript = document.createElement('script');
+            adminScript.src = '../js/admin.js';
+            document.head.appendChild(adminScript);
+        }
+        
+        // Check auth on page load
+        checkAdminAuth();
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminLoginTime');
+            window.location.href = 'admin-login.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+[
+  {
+    "id":"tour001",
+    "name":"TÂY NINH - CÁP TREO SUNWORLD BÀ ĐEN TÒA THÁNH TÂY NINH - CHÙA GÒ KÉN",
+    "image":"https:\/\/www.saigontourist.net\/media\/private\/PIgm7G\/Anrp6F\/dc23011e.jpg",
+    "description":"Trải nghiệm tuyến cáp treo Chùa Hang, Hòa Đồng - Tâm An, chiêm bái tượng Phật Bà “Tây Bổ Đà Sơn”, vãn cảnh vườn Vô Ngã, Tòa Thánh Tây Ninh.",
+    "duration":"1 Ngày",
+    "activities":"- viếng chùa , chụp ảnh, ngắm cảnh",
+    "detailsLink":"https:\/\/www.saigontourist.net\/tour\/tay-ninh-cap-treo-sunworld-ba-den-toa-thanh-tay-ninh-chua-go-ken-2592",
+    "buttonText":"Xem chi tiết",
+    "isActive":true
+  },
+  {
+    "id":"tour002",
+    "name":"TÂY NINH - TÒA THÁNH - VƯỜN DÂU TẰM BA PHONG - CÁP TREO SUNWORLD BÀ ĐEN",
+    "image":"https:\/\/www.saigontourist.net\/media\/private\/PIgm7G\/Anrp6F\/fcbf4846.jpg",
+    "description":"- Tham quan chùa Thiền Lâm (chùa Gò Kén), vườn dâu tằm Ba Phong.\n- Trải nghiệm tuyến cáp treo Chùa Hang, Đình Đồng - Tâm An, chiêm bái tượng Phật Bà “Tây Bổ Đà Sơn”, vãn cảnh vườn Vô Ngã.\n- Tham quan và mua sắm tại cơ sở trà Hoàn Ngọc 7 Nga.",
+    "duration":"2 Ngày 1 Đêm",
+    "activities":"- viếng chùa , chụp ảnh, ngắm cảnh",
+    "detailsLink":"https:\/\/www.saigontourist.net\/tour\/tay-ninh-toa-thanh-vuon-dau-tam-ba-phong-cap-treo-sunworld-ba-den-2355#",
+    "buttonText":"Xem chi tiết",
+    "isActive":true
+  }
+]

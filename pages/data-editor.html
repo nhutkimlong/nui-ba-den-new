@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản trị dữ liệu JSON động</title>
+  <!-- Preconnect to external domains -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  
+  <!-- Critical CSS first -->
+  <link rel="stylesheet" href="../css/data-editor.css">
+  
+  <!-- Font Awesome - Load asynchronously -->
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"></noscript>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f1f5f9; margin: 0; }
+    .container { max-width: 900px; margin: 40px auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+    h1 { font-size: 2rem; color: #2563eb; margin-bottom: 16px; }
+    label { font-weight: 500; }
+    select, textarea, button { margin-top: 8px; }
+    select, textarea { width: 100%; }
+    textarea { min-height: 120px; font-family: monospace; font-size: 1rem; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1; }
+    .actions { margin-top: 16px; display: flex; gap: 12px; }
+    button { padding: 10px 18px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    .btn-load { background: #0ea5e9; color: #fff; }
+    .btn-save { background: #22c55e; color: #fff; }
+    .btn-validate { background: #f59e42; color: #fff; }
+    .btn-add { background: #6366f1; color: #fff; }
+    .status { margin-top: 18px; padding: 12px; border-radius: 6px; font-size: 1rem; }
+    .status.success { background: #dcfce7; color: #166534; }
+    .status.error { background: #fee2e2; color: #991b1b; }
+    .status.warning { background: #fef9c3; color: #92400e; }
+    table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+    th, td { border: 1px solid #e5e7eb; padding: 8px 10px; text-align: left; }
+    th { background: #f1f5f9; }
+    tr:nth-child(even) { background: #f9fafb; }
+    .table-actions button { margin-right: 6px; }
+    .modal-bg { position: fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center; z-index:1000; }
+    .modal { background:#fff; border-radius:8px; padding:24px; min-width:320px; box-shadow:0 2px 8px #0002; }
+    .modal label { display:block; margin-top:10px; }
+    .modal input, .modal textarea { width:100%; margin-top:4px; margin-bottom:8px; }
+    .modal-actions { margin-top:12px; text-align:right; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1><i class="fas fa-database"></i> Quản trị dữ liệu JSON động</h1>
+    <label for="fileSelect">Chọn file dữ liệu:</label>
+    <select id="fileSelect">
+      <option value="">-- Chọn file --</option>
+      <option value="POI.json">POI.json (Điểm tham quan)</option>
+      <option value="Tours.json">Tours.json (Tour du lịch)</option>
+      <option value="Accommodations.json">Accommodations.json (Chỗ ở)</option>
+      <option value="Restaurants.json">Restaurants.json (Nhà hàng)</option>
+      <option value="Specialties.json">Specialties.json (Đặc sản)</option>
+      <option value="GioHoatDong.json">GioHoatDong.json (Giờ hoạt động)</option>
+    </select>
+    <div class="actions">
+      <button class="btn-load" id="btnLoad"><i class="fas fa-download"></i> Tải dữ liệu</button>
+      <button class="btn-add" id="btnAdd"><i class="fas fa-plus"></i> Thêm mới</button>
+      <button class="btn-save" id="btnSave"><i class="fas fa-save"></i> Lưu toàn bộ</button>
+      <button class="btn-validate" id="btnValidate"><i class="fas fa-check-circle"></i> Kiểm tra JSON</button>
+    </div>
+    <div id="tableArea"></div>
+    <label for="jsonEditor">(Chỉnh raw JSON nếu muốn):</label>
+    <textarea id="jsonEditor" placeholder="Dữ liệu JSON sẽ hiển thị ở đây..."></textarea>
+    <div id="status" class="status" style="display:none"></div>
+  </div>
+  <div id="modalBg" class="modal-bg" style="display:none">
+    <div class="modal" id="modalForm"></div>
+  </div>
+  <script>
+    const fileSelect = document.getElementById('fileSelect');
+    const btnLoad = document.getElementById('btnLoad');
+    const btnSave = document.getElementById('btnSave');
+    const btnValidate = document.getElementById('btnValidate');
+    const btnAdd = document.getElementById('btnAdd');
+    const jsonEditor = document.getElementById('jsonEditor');
+    const statusDiv = document.getElementById('status');
+    const tableArea = document.getElementById('tableArea');
+    const modalBg = document.getElementById('modalBg');
+    const modalForm = document.getElementById('modalForm');
+    let currentFile = '';
+    let dataArr = [];
+    let headers = [];
+
+    function showStatus(type, msg) {
+      statusDiv.className = 'status ' + type;
+      statusDiv.textContent = msg;
+      statusDiv.style.display = 'block';
+    }
+    function clearStatus() { statusDiv.style.display = 'none'; }
+
+    function renderTable() {
+      tableArea.innerHTML = '';
+      if (!Array.isArray(dataArr) || dataArr.length === 0) {
+        tableArea.innerHTML = '<p style="color:#888; margin-top:16px;">Không có dữ liệu để hiển thị.</p>';
+        return;
+      }
+      // Lấy headers từ keys của object đầu tiên
+      headers = Object.keys(dataArr[0]);
+      let html = '<table><thead><tr>';
+      headers.forEach(h => html += `<th>${h}</th>`);
+      html += '<th>Hành động</th></tr></thead><tbody>';
+      dataArr.forEach((item, idx) => {
+        html += '<tr>';
+        headers.forEach(h => html += `<td>${item[h] !== undefined ? item[h] : ''}</td>`);
+        html += `<td class="table-actions">
+          <button onclick="editItem(${idx})"><i class='fas fa-edit'></i> Sửa</button>
+          <button onclick="deleteItem(${idx})"><i class='fas fa-trash'></i> Xóa</button>
+        </td></tr>`;
+      });
+      html += '</tbody></table>';
+      tableArea.innerHTML = html;
+      // Cập nhật lại textarea raw
+      jsonEditor.value = JSON.stringify(dataArr, null, 2);
+    }
+
+    // Sửa/thêm item (hiện modal)
+    window.editItem = function(idx) {
+      const item = dataArr[idx];
+      let formHtml = `<h3>Sửa mục</h3>`;
+      headers.forEach(h => {
+        formHtml += `<label>${h}<input type="text" name="${h}" value="${item[h] !== undefined ? item[h] : ''}"></label>`;
+      });
+      formHtml += `<div class="modal-actions">
+        <button onclick="saveEdit(${idx})" style="background:#22c55e;color:#fff;">Lưu</button>
+        <button onclick="closeModal()" style="background:#e5e7eb;">Hủy</button>
+      </div>`;
+      modalForm.innerHTML = formHtml;
+      modalBg.style.display = 'flex';
+    }
+    window.saveEdit = function(idx) {
+      const inputs = modalForm.querySelectorAll('input');
+      inputs.forEach(input => {
+        dataArr[idx][input.name] = input.value;
+      });
+      renderTable();
+      closeModal();
+    }
+    window.deleteItem = function(idx) {
+      if (confirm('Bạn có chắc chắn muốn xóa mục này?')) {
+        dataArr.splice(idx, 1);
+        renderTable();
+      }
+    }
+    btnAdd.onclick = function() {
+      if (!headers.length) {
+        showStatus('warning', 'Hãy tải dữ liệu trước để xác định cấu trúc!');
+        return;
+      }
+      let formHtml = `<h3>Thêm mục mới</h3>`;
+      headers.forEach(h => {
+        formHtml += `<label>${h}<input type="text" name="${h}" value=""></label>`;
+      });
+      formHtml += `<div class="modal-actions">
+        <button onclick="saveAdd()" style="background:#6366f1;color:#fff;">Thêm</button>
+        <button onclick="closeModal()" style="background:#e5e7eb;">Hủy</button>
+      </div>`;
+      modalForm.innerHTML = formHtml;
+      modalBg.style.display = 'flex';
+    }
+    window.saveAdd = function() {
+      const inputs = modalForm.querySelectorAll('input');
+      const newItem = {};
+      inputs.forEach(input => {
+        newItem[input.name] = input.value;
+      });
+      dataArr.push(newItem);
+      renderTable();
+      closeModal();
+    }
+    window.closeModal = function() {
+      modalBg.style.display = 'none';
+      modalForm.innerHTML = '';
+    }
+
+    btnLoad.onclick = async () => {
+      clearStatus();
+      const file = fileSelect.value;
+      if (!file) {
+        showStatus('warning', 'Vui lòng chọn file dữ liệu!');
+        return;
+      }
+      currentFile = file;
+      showStatus('warning', 'Đang tải dữ liệu...');
+      try {
+        const res = await fetch(`/.netlify/functions/data-blobs?file=${encodeURIComponent(file)}`);
+        if (!res.ok) throw new Error('Không tìm thấy hoặc lỗi server!');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          dataArr = data;
+          renderTable();
+          showStatus('success', 'Đã tải dữ liệu thành công!');
+        } else {
+          dataArr = [];
+          tableArea.innerHTML = '<p style="color:#888; margin-top:16px;">File không phải là mảng JSON!</p>';
+          jsonEditor.value = JSON.stringify(data, null, 2);
+          showStatus('warning', 'File không phải là mảng JSON!');
+        }
+      } catch (e) {
+        dataArr = [];
+        tableArea.innerHTML = '';
+        jsonEditor.value = '';
+        showStatus('error', 'Lỗi tải dữ liệu: ' + e.message);
+      }
+    };
+
+    btnSave.onclick = async () => {
+      clearStatus();
+      if (!currentFile) {
+        showStatus('warning', 'Vui lòng chọn file và tải dữ liệu trước!');
+        return;
+      }
+      // Lưu theo dataArr (ưu tiên bảng)
+      let parsed;
+      try {
+        parsed = JSON.parse(jsonEditor.value);
+      } catch (e) {
+        parsed = dataArr;
+      }
+      showStatus('warning', 'Đang lưu dữ liệu...');
+      try {
+        const res = await fetch(`/.netlify/functions/data-blobs?file=${encodeURIComponent(currentFile)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dataArr)
+        });
+        if (!res.ok) throw new Error('Lỗi server khi lưu!');
+        showStatus('success', 'Đã lưu thành công lên server!');
+      } catch (e) {
+        showStatus('error', 'Lỗi khi lưu: ' + e.message);
+      }
+    };
+
+    btnValidate.onclick = () => {
+      clearStatus();
+      try {
+        JSON.parse(jsonEditor.value);
+        showStatus('success', 'JSON hợp lệ!');
+      } catch (e) {
+        showStatus('error', 'JSON không hợp lệ: ' + e.message);
+      }
+    };
+
+    // Khi sửa textarea raw, cập nhật lại dataArr nếu hợp lệ
+    jsonEditor.oninput = function() {
+      try {
+        const val = JSON.parse(jsonEditor.value);
+        if (Array.isArray(val)) {
+          dataArr = val;
+          renderTable();
+        }
+      } catch {}
+    }
+  </script>
+  <script src="../js/data-editor.js" defer></script>
+</body>
+</html>

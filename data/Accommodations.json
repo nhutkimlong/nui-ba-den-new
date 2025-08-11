@@ -1,0 +1,52 @@
+[
+  {
+    "id":"ACC001",
+    "name":"Vinpearl Hotel",
+    "image":"https:\/\/lh3.googleusercontent.com\/p\/AF1QipOc-nY_uD_uSQ6FphO0-Y9TbX-zmd7mRKlj_2C4=s680-w680-h510-rw",
+    "stars":5,
+    "address":"90A Đường 30\/4, Phường 3, Tây Ninh",
+    "phone":"0276 3822 888",
+    "mapLink":"https:\/\/maps.app.goo.gl\/CDHpxSMcRmc31Bof7",
+    "isActive":true
+  },
+  {
+    "id":"ACC002",
+    "name":"Victory Hotel",
+    "image":"https:\/\/owa.bestprice.vn\/images\/hotels\/uploads\/victory-hotel-tay-ninh-62c50c88eb71a.jpeg",
+    "stars":3,
+    "address":"255 đường 30\/4, Phường 3, Tây Ninh",
+    "phone":"0276 3823 828",
+    "mapLink":"https:\/\/maps.app.goo.gl\/KptnQuMBdEV7E1iR9",
+    "isActive":true
+  },
+  {
+    "id":"ACC003",
+    "name":"Mai Vy Hotel",
+    "image":"https:\/\/cf.bstatic.com\/xdata\/images\/hotel\/max1024x768\/482451302.jpg?k=0fa4f7a93141d0d0d7f7e6f0abc743097ac7118dfa1a05f207f864bb2507cfb0&o=&hp=1",
+    "stars":3,
+    "address":"150 Đường 30\/4, KP4, Tây Ninh",
+    "phone":"0941 556 998",
+    "mapLink":"https:\/\/maps.app.goo.gl\/TNBaw6FB3Y3PZ6d46",
+    "isActive":true
+  },
+  {
+    "id":"ACC004",
+    "name":"Sunrise Hotel",
+    "image":"https:\/\/cf.bstatic.com\/xdata\/images\/hotel\/max1024x768\/95138867.jpg?k=a56bca3478eab25798d347208bfad3de5e612fe8b5944e7fda53cfba813f4a26&o=&hp=1",
+    "stars":3,
+    "address":"81 Hoàng Lê Kha, Phường 3, Tây Ninh, Việt Nam",
+    "phone":"02763 714 714",
+    "mapLink":"https:\/\/maps.app.goo.gl\/7P1FjUpyU9RMpHyD7",
+    "isActive":true
+  },
+  {
+    "id":"ACC005",
+    "name":"New City Hotel",
+    "image":"https:\/\/lh3.googleusercontent.com\/p\/AF1QipPiscKkjXCXqmJ2oNpG0iiMwyUlksk8fPWx88Bq=w426-h240-k-no",
+    "stars":2,
+    "address":"PG1-18,19 số 444 đường 30\/4, Khu phố 1, Phường 3, TP. Tây Ninh",
+    "phone":"0276 3759 789",
+    "mapLink":"https:\/\/maps.app.goo.gl\/yuVSt1yYixMosTEx6",
+    "isActive":true
+  }
+]

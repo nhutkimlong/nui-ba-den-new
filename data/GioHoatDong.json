@@ -1,0 +1,130 @@
+[
+  {
+    "id":6,
+    "operating_hours":"{\"default\":\"06:00-20:00\",\"sat\":\"05:30-21:00\",\"sun\":\"05:30-21:00\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Ga Bà Đen (Chung cho Vân Sơn\/Chùa Hang)"
+  },
+  {
+    "id":41,
+    "operating_hours":"{\"default\":\"06:00-20:00\",\"sat\":\"05:30-21:00\",\"sun\":\"05:30-21:00\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Ga Vân Sơn"
+  },
+  {
+    "id":23,
+    "operating_hours":"{\"default\":\"06:00-20:00\",\"sat\":\"05:30-21:00\",\"sun\":\"05:30-21:00\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Ga Chùa Hang"
+  },
+  {
+    "id":33,
+    "operating_hours":"{\"default\":\"closed\",\"sat\":\"06:00-19:00\",\"sun\":\"06:00-19:00\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Ga Hoà Đồng (Tuyến Tâm An)"
+  },
+  {
+    "id":43,
+    "operating_hours":"{\"default\":\"closed\",\"sat\":\"06:00-19:00\",\"sun\":\"06:00-19:00\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Ga Tâm An"
+  },
+  {
+    "id":61,
+    "operating_hours":"{\"default\":\"closed\",\"sat\":\"06:00-19:00\",\"sun\":\"06:00-19:00\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Quầy vé Tuyến tâm An"
+  },
+  {
+    "id":18,
+    "operating_hours":"{\"default\":\"08:00-17:00\",\"mon\":\"closed\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Máng trượt ống - Kết thúc"
+  },
+  {
+    "id":24,
+    "operating_hours":"{\"default\":\"08:00-17:00\",\"mon\":\"closed\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Máng trượt ống - Bắt đầu"
+  },
+  {
+    "id":4,
+    "operating_hours":"{\"default\":\"05:00-21:00\",\"sat\":\"04:30-22:00\",\"sun\":\"04:30-22:00\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Cổng chính Khu du lịch"
+  },
+  {
+    "id":60,
+    "operating_hours":"{\"default\":\"05:30-21:00\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Quầy bán vé chính"
+  },
+  {
+    "id":13,
+    "operating_hours":"{\"default\":\"07:30-17:30\",\"sat\":\"closed\",\"sun\":\"closed\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Ban Quản lý KDL"
+  },
+  {
+    "id":19,
+    "operating_hours":"{\"default\":\"07:30-17:30\", \"sat\":\"closed\", \"sun\":\"closed\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Công ty cáp treo"
+  },
+  {
+    "id":49,
+    "operating_hours":"{\"default\":\"07:00-17:00\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Trạm xe điện Ga Bà Đen"
+  },
+  {
+    "id":50,
+    "operating_hours":"{\"default\":\"07:00-17:00\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Trạm xe điện Chùa Trung"
+  },
+  {
+    "id":51,
+    "operating_hours":"{\"default\":\"07:00-17:00\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Trạm xe điện Máng trượt"
+  },
+  {
+    "id":46,
+    "operating_hours":"{\"default\":\"10:30-15:00\"}",
+    "closed_dates":null,
+    "status_message":null,
+    "status_message_en":null,
+    "Ghi chú POI (Để tham khảo)":"Nhà hàng Tâm An (Buffet)"
+  }
+]

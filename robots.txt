@@ -1,0 +1,18 @@
+User-agent: *
+Disallow: /pages/admin/
+Disallow: /netlify/
+Disallow: /data/
+Disallow: /.git/
+Disallow: /node_modules/
+
+# Allow access to public pages
+Allow: /
+Allow: /map.html
+Allow: /guide.html
+Allow: /climb.html
+Allow: /assets/
+Allow: /css/
+Allow: /js/
+
+# Sitemap location
+Sitemap: https://nuibaden-test.netlify.app/sitemap.xml 

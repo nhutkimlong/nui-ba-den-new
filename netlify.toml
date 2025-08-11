@@ -1,0 +1,119 @@
+[build]
+  publish = "."
+  command = "npm install"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+[functions]
+  directory = "netlify/functions"
+
+# Functions are automatically accessible at /.netlify/functions/
+# No redirect needed for functions
+
+# Admin protection - redirect admin.html to login if not authenticated
+[[redirects]]
+  from = "/pages/admin.html"
+  to = "/pages/admin-login.html"
+  status = 302
+  conditions = {Role = ["admin"]}
+
+# Catch-all redirect for SPA (must come AFTER functions redirect)
+[[redirects]]
+  from = "/*"
+  to = "/home.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=*, geolocation=*"
+    Content-Security-Policy = "default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self' https:;"
+    Cache-Control = "public, max-age=60"
+    Accept-Encoding = "gzip, br"
+    Vary = "Accept-Encoding"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=300"
+    Content-Type = "application/javascript"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Content-Security-Policy = "default-src 'self'"
+    Brotli-Compression = "true"
+    Gzip-Compression = "true"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=300"
+    Content-Type = "text/css"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Content-Security-Policy = "default-src 'self'"
+    Brotli-Compression = "true"
+    Gzip-Compression = "true"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Content-Security-Policy = "default-src 'self'"
+    Brotli-Compression = "true"
+    Gzip-Compression = "true"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=300"
+    Content-Type = "text/html; charset=utf-8"
+    Brotli-Compression = "true"
+    Gzip-Compression = "true"
+
+[[headers]]
+  for = "/*.xml"
+  [headers.values]
+    Content-Type = "application/xml; charset=utf-8"
+    Brotli-Compression = "true"
+    Gzip-Compression = "true"
+
+[[headers]]
+  for = "/*.{jpg,jpeg,png,gif,webp,svg}"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+    Brotli-Compression = "true"
+    Gzip-Compression = "true"
+
+[[headers]]
+  for = "/*.{woff,woff2,ttf,otf,eot}"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+    Brotli-Compression = "true"
+    Gzip-Compression = "true"
+
+# Error pages (Netlify will automatically use these for 404, 403, 500 errors)
+# No need for explicit redirects - Netlify automatically serves 404.html for 404 errors
+
+[[headers]]
+  for = "/robots.txt"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+    Content-Type = "text/plain"
+
+[[headers]]
+  for = "/sitemap.xml"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
+    Content-Type = "application/xml" 

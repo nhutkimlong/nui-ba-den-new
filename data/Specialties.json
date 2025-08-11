@@ -1,0 +1,42 @@
+[
+  {
+    "id":"SPE001",
+    "name":"Bánh Tráng Phơi Sương",
+    "image":"https:\/\/dacsantayninh.info\/wp-content\/uploads\/2015\/06\/banh-trang-phoi-suong-ngoc-han-2.jpg",
+    "description":"Bánh tráng mỏng, dẻo, được phơi sương đêm, dùng để cuốn với nhiều món ăn khác.",
+    "purchaseLocation":"Chợ Tây Ninh, các cửa hàng đặc sản Trảng Bàng.",
+    "isActive":true
+  },
+  {
+    "id":"SPE002",
+    "name":"Muối Tôm Tây Ninh",
+    "image":"https:\/\/banhtrangtayninh.com\/wp-content\/uploads\/2023\/12\/MUOI-TOM-TAY-NINH.jpg",
+    "description":"Muối tôm rang cay, thơm ngon, dùng để chấm trái cây hoặc nêm nếm món ăn.",
+    "purchaseLocation":"Chợ Tây Ninh, các cửa hàng đặc sản, siêu thị.",
+    "isActive":true
+  },
+  {
+    "id":"SPE003",
+    "name":"Bánh Canh Trảng Bàng",
+    "image":"https:\/\/nld.mediacdn.vn\/thumb_w\/698\/291774122806476800\/2021\/11\/29\/banh-canh-trang-bang-tay-ninh-3-1638157139032179923495.jpg",
+    "description":"Bánh canh sợi to, nước dùng ngọt thanh, ăn kèm với giò heo.",
+    "purchaseLocation":"Các quán bánh canh Trảng Bàng, chợ Tây Ninh.",
+    "isActive":true
+  },
+  {
+    "id":"SPE004",
+    "name":"Mãng Cầu Bà Đen",
+    "image":"https:\/\/imgcdn.tapchicongthuong.vn\/thumb\/w_1920\/tcct-media\/23\/10\/6\/nuc-tieng-san-vat-mang-cau-ba-den_651fc5faeaa0a.jpg",
+    "description":"Mãng cầu dai, ngọt, thơm, đặc sản nổi tiếng của vùng núi Bà Đen.",
+    "purchaseLocation":"Các sạp trái cây ở chân núi Bà Đen, chợ Tây Ninh.",
+    "isActive":true
+  },
+  {
+    "id":"SPE005",
+    "name":"Bò Tơ Tây Ninh",
+    "image":"https:\/\/ticotravel.com.vn\/wp-content\/uploads\/2023\/09\/bo_to_tay_ninh_1.jpg",
+    "description":"Thịt bò tơ mềm, ngọt, được chế biến thành nhiều món ăn hấp dẫn.",
+    "purchaseLocation":"Các nhà hàng bò tơ, quán ăn đặc sản.",
+    "isActive":true
+  }
+]

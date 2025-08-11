@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý POI Núi Bà Đen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+    <div class="container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
+        <!-- Header Section -->
+        <header class="mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-2 flex items-center">
+                <i class="fas fa-map-marker-alt mr-3 text-indigo-600"></i> Quản lý POI Núi Bà Đen
+            </h1>
+            <p class="text-slate-600">Quản lý và cập nhật thông tin các điểm tham quan trên Núi Bà Đen</p>
+        </header>
+
+        <!-- Status Message -->
+        <div id="statusMessage" class="mb-6 p-4 rounded-lg text-sm font-medium border transition-all duration-300" style="display: none;"></div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="mb-6 text-center py-8" style="display: none;">
+            <div class="loader"></div>
+            <p class="text-sm text-slate-500 mt-3">Đang tải dữ liệu...</p>
+        </div>
+
+        <!-- Quick Actions Section -->
+        <div class="bg-white p-6 rounded-xl shadow-sm mb-8 border border-slate-200">
+            <h2 class="text-xl font-semibold text-slate-700 mb-6 flex items-center">
+                <i class="fas fa-bolt mr-2 text-amber-500"></i> Hành động nhanh
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-transparent mb-2">Ẩn</label>
+                    <button onclick="loadAllPois()" class="w-full px-4 py-3 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors duration-200 flex items-center justify-center">
+                        <i class="fas fa-list mr-2"></i> Tải tất cả POI
+                    </button>
+                </div>
+                <div>
+                    <label for="getPoiId" class="block text-sm font-medium text-slate-700 mb-2">Lấy POI theo ID:</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="getPoiId" placeholder="Nhập ID POI" class="flex-grow px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <button onclick="getPoiById()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label for="deletePoiId" class="block text-sm font-medium text-slate-700 mb-2">Xóa POI theo ID:</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="deletePoiId" placeholder="Nhập ID POI cần xóa" class="flex-grow px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500">
+                        <button onclick="deletePoiById()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Section -->
+        <div class="bg-white p-6 rounded-xl shadow-sm mb-8 border border-slate-200">
+            <h2 class="text-xl font-semibold text-slate-700 mb-6 flex items-center">
+                <i class="fas fa-edit mr-2 text-green-600"></i> Thêm / Cập nhật POI
+            </h2>
+            <form id="poiForm" class="space-y-6">
+                <input type="hidden" id="poiIdHidden" name="id">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Cột trái: Thông tin cơ bản, vị trí, phân loại -->
+                    <div class="space-y-6">
+                        <!-- Thông tin cơ bản -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-medium text-slate-700 mb-3">Thông tin cơ bản</h3>
+                            <div>
+                                <label for="poiIdDisplay" class="block text-sm font-medium text-slate-700 mb-1">ID</label>
+                                <input type="text" id="poiIdDisplay" readonly placeholder="(Tự động)" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg">
+                                <p class="mt-1 text-sm text-slate-500">ID được tạo tự động khi thêm mới.</p>
+                            </div>
+                            <div>
+                                <label for="poiNameInput" class="block text-sm font-medium text-slate-700 mb-1">Tên (name) <span class="text-red-500">*</span></label>
+                                <input type="text" id="poiNameInput" name="name" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label for="poiNameEnInput" class="block text-sm font-medium text-slate-700 mb-1">Tên tiếng Anh (name_en)</label>
+                                <input type="text" id="poiNameEnInput" name="name_en" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <p id="nameEnHint" class="mt-1 text-sm text-indigo-600" style="display: none;">Cân nhắc cập nhật tên tiếng Anh.</p>
+                            </div>
+                        </div>
+                        <!-- Thông tin vị trí -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-medium text-slate-700 mb-3">Thông tin vị trí</h3>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Vị trí (latitude, longitude)</label>
+                                <div class="flex gap-2">
+                                    <input type="number" id="poiLatInput" name="latitude" step="any" placeholder="Vĩ độ" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <input type="number" id="poiLonInput" name="longitude" step="any" placeholder="Kinh độ" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <button type="button" onclick="openMapPicker()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap">Chọn trên bản đồ</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="poiElevInput" class="block text-sm font-medium text-slate-700 mb-1">Độ cao (elevation)</label>
+                                <input type="number" id="poiElevInput" name="elevation" placeholder="Ví dụ: 986" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                        </div>
+                        <!-- Phân loại -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-medium text-slate-700 mb-3">Phân loại</h3>
+                            <div>
+                                <label for="poiCategoryInput" class="block text-sm font-medium text-slate-700 mb-1">Danh mục (category)</label>
+                                <select id="poiCategoryInput" name="category" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required>
+                                    <option value="">-- Chọn danh mục --</option>
+                                    <option value="attraction">Điểm tham quan (attraction)</option>
+                                    <option value="food">Ẩm thực (food)</option>
+                                    <option value="religion">Tôn giáo (religion)</option>
+                                    <option value="parking">Bãi đỗ xe (parking)</option>
+                                    <option value="transport">Vận chuyển (transport)</option>
+                                    <option value="amenities">Tiện ích (amenities)</option>
+                                    <option value="viewpoint">Điểm ngắm cảnh (viewpoint)</option>
+                                    <option value="historical">Di tích lịch sử (historical)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="poiAreaSelect" class="block text-sm font-medium text-slate-700 mb-1">Khu vực (area)</label>
+                                <select id="poiAreaSelect" name="area" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">-- Chọn Khu vực --</option>
+                                    <option value="Chân núi">Chân núi</option>
+                                    <option value="Chùa Bà">Chùa Bà</option>
+                                    <option value="Đỉnh núi">Đỉnh núi</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="poiFeaturedInput" class="block text-sm font-medium text-slate-700 mb-1">Nổi bật (featured)</label>
+                                <select id="poiFeaturedInput" name="featured" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">-- Chọn trạng thái --</option>
+                                    <option value="TRUE">Có (TRUE)</option>
+                                    <option value="FALSE">Không (FALSE)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Cột phải: Media, bổ sung -->
+                    <div class="space-y-6">
+                        <!-- URL Media -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-medium text-slate-700 mb-3">URL Media</h3>
+                            <div>
+                                <label for="poiIconUrlInput" class="block text-sm font-medium text-slate-700 mb-1">URL Biểu tượng (iconurl)</label>
+                                <input type="url" id="poiIconUrlInput" name="iconurl" placeholder="https://..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label for="poiImageUrlInput" class="block text-sm font-medium text-slate-700 mb-1">URL Hình ảnh (imageurl)</label>
+                                <input type="url" id="poiImageUrlInput" name="imageurl" placeholder="https://..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label for="poiAudioUrlInput" class="block text-sm font-medium text-slate-700 mb-1">URL Âm thanh (audio_url)</label>
+                                <input type="url" id="poiAudioUrlInput" name="audio_url" placeholder="https://..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                        </div>
+                        <!-- Thông tin bổ sung -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-medium text-slate-700 mb-3">Thông tin bổ sung</h3>
+                            <div>
+                                <label for="poiAudioUrlEnInput" class="block text-sm font-medium text-slate-700 mb-1">URL Âm thanh EN (audio_url_en)</label>
+                                <input type="url" id="poiAudioUrlEnInput" name="audio_url_en" placeholder="https://..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label for="poiWalkableInput" class="block text-sm font-medium text-slate-700 mb-1">Đi bộ tới (walkable_to)</label>
+                                <input type="text" id="poiWalkableInput" name="walkable_to" placeholder="ID cách nhau bởi dấu phẩy, ví dụ: 2,3,5" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <p class="mt-1 text-sm text-slate-500">Danh sách ID các POI có thể đi bộ đến từ POI này.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Giờ hoạt động -->
+                <div class="col-span-1 md:col-span-2">
+                    <h3 class="text-lg font-medium text-slate-700 mb-3">Giờ hoạt động</h3>
+                    <p class="text-sm text-slate-600 mb-4">Chọn trạng thái cho mỗi ngày và nhập giờ nếu 'Mở cửa'. 'Không áp dụng' sẽ bỏ qua ngày đó.</p>
+                    <div class="operating-hours-grid-wrapper bg-slate-50 p-4 rounded-lg">
+                        <div id="operatingHoursContainer" class="operating-hours-grid"></div>
+                    </div>
+                    <input type="hidden" id="poiOperatingHoursJsonInput" name="operating_hours">
+                </div>
+                <!-- Mô tả -->
+                <div class="col-span-1 md:col-span-2 space-y-4">
+                    <h3 class="text-lg font-medium text-slate-700 mb-3">Mô tả</h3>
+                    <div>
+                        <label for="poiDescInput" class="block text-sm font-medium text-slate-700 mb-1">Mô tả (description)</label>
+                        <textarea id="poiDescInput" name="description" rows="4" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                    </div>
+                    <div>
+                        <label for="poiDescEnInput" class="block text-sm font-medium text-slate-700 mb-1">Mô tả tiếng Anh (description_en)</label>
+                        <textarea id="poiDescEnInput" name="description_en" rows="4" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-4 pt-6 border-t border-slate-200">
+                    <button type="button" onclick="clearForm()" class="px-6 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors duration-200 font-medium">
+                        <i class="fas fa-eraser mr-2"></i> Xóa Form
+                    </button>
+                    <button type="button" onclick="addOrUpdatePoi()" class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-medium">
+                        <i class="fas fa-save mr-2"></i> Lưu (Thêm / Cập nhật)
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- POI List Section -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+            <h2 class="text-xl font-semibold text-slate-700 mb-6 flex items-center">
+                <i class="fas fa-th-list mr-2 text-blue-600"></i> Danh sách POI
+            </h2>
+            <div class="overflow-x-auto">
+                <table id="poiTable" class="min-w-full divide-y divide-slate-200 border border-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th scope="col" class="w-16 px-4 py-3 text-left text-sm font-medium text-slate-700" data-sort-key="id">ID <span class="sort-icon fas ml-1"></span></th>
+                            <th scope="col" class="min-w-[200px] px-4 py-3 text-left text-sm font-medium text-slate-700" data-sort-key="name">Tên <span class="sort-icon fas ml-1"></span></th>
+                            <th scope="col" class="min-w-[150px] px-4 py-3 text-left text-sm font-medium text-slate-700" data-sort-key="category">Danh mục <span class="sort-icon fas ml-1"></span></th>
+                            <th scope="col" class="min-w-[120px] px-4 py-3 text-left text-sm font-medium text-slate-700" data-sort-key="area">Khu vực <span class="sort-icon fas ml-1"></span></th>
+                            <th scope="col" class="min-w-[250px] px-4 py-3 text-left text-sm font-medium text-slate-700">Giờ hoạt động</th>
+                            <th scope="col" class="w-24 px-4 py-3 text-center text-sm font-medium text-slate-700" data-sort-key="featured">Nổi bật <span class="sort-icon fas ml-1"></span></th>
+                            <th scope="col" class="w-28 px-4 py-3 text-center text-sm font-medium text-slate-700">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="poiTableBody" class="bg-white divide-y divide-slate-200">
+                        <tr>
+                            <td colspan="7" class="px-4 py-6 text-center text-sm text-slate-500 italic">Chưa có dữ liệu. Nhấn "Tải tất cả POI" để bắt đầu.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal chọn vị trí trên bản đồ (Leaflet) -->
+    <div id="mapModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-4 relative w-full max-w-2xl h-[500px] flex flex-col">
+            <button onclick="closeMapPicker()" class="absolute top-2 right-2 text-slate-500 hover:text-red-500 text-xl">&times;</button>
+            <h3 class="text-lg font-semibold mb-2">Chọn vị trí trên bản đồ vệ tinh</h3>
+            <div id="leafletMap" class="flex-1 rounded" style="min-height:350px"></div>
+            <div class="mt-4 text-right">
+                <button onclick="closeMapPicker()" class="px-4 py-2 bg-slate-200 rounded hover:bg-slate-300">Đóng</button>
+            </div>
+        </div>
+    </div>
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script src="script.js" defer></script>
+</body>
+</html>
