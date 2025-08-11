@@ -4,6 +4,7 @@ const pageTitles = {
     'json-editor': 'Chỉnh sửa JSON'
 };
 
+// DOM Elements - with null checks
 const sidebar = document.getElementById('sidebar');
 const openSidebarBtn = document.getElementById('open-sidebar-btn');
 const closeSidebarBtn = document.getElementById('close-sidebar-btn');
@@ -33,7 +34,7 @@ let currentJsonData = null;
 let currentJsonFile = null;
 const pageTitleElement = document.getElementById('page-title');
 const sidebarLinks = document.querySelectorAll('aside .sidebar-link');
-let currentVisibleIframe = iframes['poi']; 
+let currentVisibleIframe = iframes['poi'] || null; 
 let currentActiveLink = document.getElementById('link-poi');
 
 let isTransitioning = false;
@@ -48,7 +49,9 @@ function showPage(pageId, clickedElement, categoryKey = null) {
 
     if (iframeLoader) iframeLoader.classList.add('show');
 
-    sidebarLinks.forEach(link => link.classList.remove('active'));
+    if (sidebarLinks && sidebarLinks.length > 0) {
+        sidebarLinks.forEach(link => link.classList.remove('active'));
+    }
 
     if (clickedElement) {
         clickedElement.classList.add('active');
@@ -171,33 +174,33 @@ function toggleGuideMenu(event) {
     }
 }
 
-document.getElementById('currentYear').textContent = new Date().getFullYear();
-
+// Initialize dashboard when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    const initialIframe = iframeContainer.querySelector('iframe.visible');
-    if (!initialIframe) {
-        const poiIframe = document.getElementById('iframe-poi');
-        if (poiIframe) {
-            poiIframe.classList.add('visible');
-            poiIframe.classList.remove('hidden');
+    // Set current year
+    const currentYearElement = document.getElementById('currentYear');
+    if (currentYearElement) {
+        currentYearElement.textContent = new Date().getFullYear();
+    }
+
+    // Initialize iframe container
+    if (iframeContainer) {
+        const initialIframe = iframeContainer.querySelector('iframe.visible');
+        if (!initialIframe) {
+            const poiIframe = document.getElementById('iframe-poi');
+            if (poiIframe) {
+                poiIframe.classList.add('visible');
+                poiIframe.classList.remove('hidden');
+            }
         }
     }
 
-    const currentYearSpan = document.getElementById('currentYear');
-    if (currentYearSpan) {
-        currentYearSpan.textContent = new Date().getFullYear();
-    }
-
+    // Set default active page
     const defaultActiveLink = document.getElementById('link-poi');
     if (defaultActiveLink) {
         showPage('poi', defaultActiveLink);
     }
     
-    const openSidebarBtn = document.getElementById('open-sidebar-btn');
-    const closeSidebarBtn = document.getElementById('close-sidebar-btn');
-    const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebar-overlay');
-
+    // Setup sidebar event listeners
     if (openSidebarBtn && sidebar && sidebarOverlay) {
         openSidebarBtn.addEventListener('click', () => {
             sidebar.classList.remove('-translate-x-full');
@@ -217,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Đảm bảo nút Chỉnh sửa JSON luôn hoạt động
+    // Setup JSON editor link
     const jsonEditorLink = document.getElementById('link-json-editor');
     if (jsonEditorLink) {
         jsonEditorLink.addEventListener('click', function(e) {
@@ -226,6 +229,22 @@ document.addEventListener('DOMContentLoaded', () => {
             showJsonEditor(this);
         });
     }
+
+    // Load dashboard data
+    loadStatistics();
+    loadRecentActivities();
+    
+    // Listen for data update messages from iframes
+    window.addEventListener('message', function(event) {
+        if (event.data && event.data.type === 'dataUpdated') {
+            console.log('[DEBUG] Received data update from:', event.data.source);
+            // Refresh dashboard data when iframes update data
+            setTimeout(() => {
+                loadStatistics();
+                loadRecentActivities();
+            }, 1000); // Wait 1 second for server to process
+        }
+    });
 }); 
 // JSON Editor Functions
 function showJsonEditor(clickedElement) {
@@ -247,7 +266,9 @@ function showJsonEditor(clickedElement) {
     }
     
     // Update active link
-    sidebarLinks.forEach(link => link.classList.remove('active'));
+    if (sidebarLinks && sidebarLinks.length > 0) {
+        sidebarLinks.forEach(link => link.classList.remove('active'));
+    }
     if (clickedElement) {
         clickedElement.classList.add('active');
         currentActiveLink = clickedElement;
@@ -380,6 +401,13 @@ function saveJsonFile() {
     })
     .then(() => {
         showValidationResult('success', `Đã lưu thành công file ${currentJsonFile} lên server!`);
+        
+        // Refresh dashboard data after saving
+        setTimeout(() => {
+            loadStatistics();
+            loadRecentActivities();
+            refreshAdminIframes();
+        }, 1000); // Wait 1 second for server to process
     })
     .catch(error => {
         showValidationResult('error', `Lỗi khi lưu: ${error.message}`);
@@ -626,15 +654,48 @@ async function getSystemActivities() {
     return activities;
 }
 
-// Initialize dashboard when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Set current year
-    const currentYearElement = document.getElementById('currentYear');
-    if (currentYearElement) {
-        currentYearElement.textContent = new Date().getFullYear();
+// Refresh dashboard function (called from HTML button)
+function refreshDashboard() {
+    const refreshBtn = document.querySelector('button[onclick="refreshDashboard()"]');
+    if (refreshBtn) {
+        const originalText = refreshBtn.innerHTML;
+        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang làm mới...';
+        refreshBtn.disabled = true;
+        
+        // Refresh all data
+        Promise.all([
+            loadStatistics(),
+            loadRecentActivities(),
+            refreshAdminIframes()
+        ]).finally(() => {
+            setTimeout(() => {
+                refreshBtn.innerHTML = originalText;
+                refreshBtn.disabled = false;
+            }, 500);
+        });
     }
+}
 
-    // Load dashboard data
-    loadStatistics();
-    loadRecentActivities();
-});
+// Refresh admin iframes to show updated data
+function refreshAdminIframes() {
+    // Refresh POI iframe
+    const poiIframe = document.getElementById('iframe-poi');
+    if (poiIframe && poiIframe.src) {
+        const currentSrc = poiIframe.src;
+        poiIframe.src = '';
+        setTimeout(() => {
+            poiIframe.src = currentSrc;
+        }, 100);
+    }
+    
+    // Refresh Guide iframe
+    const guideIframe = document.getElementById('iframe-guide');
+    if (guideIframe && guideIframe.src) {
+        const currentSrc = guideIframe.src;
+        guideIframe.src = '';
+        setTimeout(() => {
+            guideIframe.src = currentSrc;
+        }, 100);
+    }
+}
+

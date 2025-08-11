@@ -836,8 +836,16 @@ async function addOrUpdatePoi() {
         console.log('[DEBUG] addOrUpdatePoi - No operatingHoursJson to save');
     }
     displayStatus('Đã lưu thành công lên server!', false);
-    displayPoisInTable(currentPoiList);
+    
+    // Reload fresh data from server to ensure consistency
+    await loadAllPoisAndSyncGioHoatDong();
+    
     clearForm();
+    
+    // Notify parent window to refresh dashboard data
+    if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'dataUpdated', source: 'poi' }, '*');
+    }
 }
 
 async function deletePoiById() {
@@ -856,8 +864,16 @@ async function deletePoiFromRow(id, clearInputAfter = false) {
             body: JSON.stringify(currentPoiList)
         });
         displayStatus('Đã xóa và lưu thành công!', false);
-        displayPoisInTable(currentPoiList);
+        
+        // Reload fresh data from server to ensure consistency
+        await loadAllPoisAndSyncGioHoatDong();
+        
         if (clearInputAfter) clearForm();
+        
+        // Notify parent window to refresh dashboard data
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'dataUpdated', source: 'poi' }, '*');
+        }
     }
 }
 

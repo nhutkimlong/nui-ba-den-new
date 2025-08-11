@@ -388,6 +388,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 adminDataCache[currentSheetName].data = data;
                 renderTable(data, headers, currentSheetName);
             }
+            
+            // Reload current tab data to ensure everything is fresh
+            await loadTabData(currentSheetName, false);
+            
+            // Notify parent window to refresh dashboard data
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'dataUpdated', source: 'guide' }, '*');
+            }
         } catch (error) {
             alert('Lỗi khi lưu dữ liệu: ' + error.message);
         } finally {
