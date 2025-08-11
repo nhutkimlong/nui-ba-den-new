@@ -12,6 +12,12 @@
 # Functions are automatically accessible at /.netlify/functions/
 # No redirect needed for functions
 
+# Redirect /pages/ to home page
+[[redirects]]
+  from = "/pages/"
+  to = "/home.html"
+  status = 302
+
 # Admin protection - redirect admin.html to login if not authenticated
 [[redirects]]
   from = "/pages/admin.html"
