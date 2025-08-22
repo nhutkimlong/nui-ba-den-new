@@ -870,8 +870,23 @@ function displayMemberListForSelection(members, phoneNumber) {
 
 // --- Photo Cropping Functions ---
 
+// Fallback loadCropperJS function if not defined in HTML
+if (typeof window.loadCropperJS !== 'function') {
+    window.loadCropperJS = function() {
+        if (window.Cropper) return Promise.resolve();
+        
+        return new Promise((resolve, reject) => {
+            const cropperScript = document.createElement('script');
+            cropperScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js';
+            cropperScript.onload = resolve;
+            cropperScript.onerror = reject;
+            document.head.appendChild(cropperScript);
+        });
+    };
+}
+
 /** Handles photo selection, validates, and opens the cropper modal. */
-function handlePhotoSelection(event) {
+async function handlePhotoSelection(event) {
     const fileInput = event.target;
     const memberName = fileInput.dataset.memberName;
     const previewId = fileInput.dataset.previewId;
@@ -894,25 +909,36 @@ function handlePhotoSelection(event) {
         fileInput.value = ''; return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        imageToCrop.src = e.target.result;
-        currentCropContext = { name: memberName, previewId: previewId, removeId: removeId, fileInput: fileInput };
-        cropModal.classList.remove('hidden');
-        if (cropperInstance) cropperInstance.destroy();
-        cropperInstance = new Cropper(imageToCrop, {
-            aspectRatio: CROP_ASPECT_RATIO, viewMode: 1, dragMode: 'move', background: false,
-            autoCropArea: 0.9, responsive: true, restore: false, checkOrientation: false,
-            modal: true, guides: true, center: true, highlight: false, cropBoxMovable: true,
-            cropBoxResizable: true, toggleDragModeOnDblclick: false,
-        });
-    }
-    reader.onerror = (e) => {
-        showMessage('Lỗi đọc tệp ảnh.', 'error');
+    try {
+        // Ensure Cropper.js is loaded before proceeding
+        if (typeof window.loadCropperJS !== 'function') {
+            throw new Error('loadCropperJS function not available');
+        }
+        await window.loadCropperJS();
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            imageToCrop.src = e.target.result;
+            currentCropContext = { name: memberName, previewId: previewId, removeId: removeId, fileInput: fileInput };
+            cropModal.classList.remove('hidden');
+            if (cropperInstance) cropperInstance.destroy();
+            cropperInstance = new Cropper(imageToCrop, {
+                aspectRatio: CROP_ASPECT_RATIO, viewMode: 1, dragMode: 'move', background: false,
+                autoCropArea: 0.9, responsive: true, restore: false, checkOrientation: false,
+                modal: true, guides: true, center: true, highlight: false, cropBoxMovable: true,
+                cropBoxResizable: true, toggleDragModeOnDblclick: false,
+            });
+        }
+        reader.onerror = (e) => {
+            showMessage('Lỗi đọc tệp ảnh.', 'error');
+            fileInput.value = '';
+            handleCancelCrop();
+        }
+        reader.readAsDataURL(file);
+    } catch (error) {
+        showMessage('Lỗi tải thư viện cắt ảnh.', 'error');
         fileInput.value = '';
-        handleCancelCrop();
     }
-    reader.readAsDataURL(file);
 }
 
 /** Handles clicking the "Cancel" button in the crop modal. */

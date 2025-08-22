@@ -577,11 +577,28 @@
         function loadCropperJS() {
             if (window.Cropper) return Promise.resolve();
             
-            return new Promise((resolve) => {
-                const cropperScript = document.createElement('script');
-                cropperScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js';
-                cropperScript.onload = resolve;
-                document.head.appendChild(cropperScript);
+            return new Promise((resolve, reject) => {
+                // Check if already loading
+                if (window._cropperLoading) {
+                    window._cropperLoading.then(resolve).catch(reject);
+                    return;
+                }
+                
+                window._cropperLoading = new Promise((res, rej) => {
+                    const cropperScript = document.createElement('script');
+                    cropperScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js';
+                    cropperScript.onload = () => {
+                        window._cropperLoading = null;
+                        res();
+                    };
+                    cropperScript.onerror = () => {
+                        window._cropperLoading = null;
+                        rej(new Error('Failed to load Cropper.js'));
+                    };
+                    document.head.appendChild(cropperScript);
+                });
+                
+                window._cropperLoading.then(resolve).catch(reject);
             });
         }
         
