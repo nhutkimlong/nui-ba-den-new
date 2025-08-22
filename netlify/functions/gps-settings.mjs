@@ -1,83 +1,46 @@
 import { getStore } from '@netlify/blobs';
 
-// Initialize store for GPS settings
-const gpsSettingsStore = getStore('climb-gps-settings');
-
 export default async (request, context) => {
   const { method } = request;
   
-  // Add CORS headers for preflight requests
+  // Add CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
+  };
+
+  // Handle preflight requests
   if (method === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
-      }
-    };
+    return new Response(null, { status: 200, headers });
   }
+
+  const store = getStore('climb-gps-settings');
   
   try {
     switch (method) {
       case 'GET':
         // Get current GPS settings
-        const settings = await gpsSettingsStore.get('current');
-        return {
-          statusCode: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
-            'Access-Control-Allow-Headers': 'Content-Type'
-          },
-          body: JSON.stringify(settings ? JSON.parse(settings) : {
-            registrationRadius: 50,
-            certificateRadius: 150,
-            requireGpsRegistration: true,
-            requireGpsCertificate: true
-          })
+        const settings = await store.get('current', { type: 'json' });
+        const defaultSettings = {
+          registrationRadius: 50,
+          certificateRadius: 150,
+          requireGpsRegistration: true,
+          requireGpsCertificate: true
         };
+        return Response.json(settings || defaultSettings, { headers });
 
       case 'POST':
         // Update GPS settings
         const newSettings = await request.json();
-        await gpsSettingsStore.set('current', JSON.stringify(newSettings));
-        
-        return {
-          statusCode: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
-            'Access-Control-Allow-Headers': 'Content-Type'
-          },
-          body: JSON.stringify(newSettings)
-        };
+        await store.setJSON('current', newSettings);
+        return Response.json(newSettings, { headers });
 
       default:
-        return {
-          statusCode: 405,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
-            'Access-Control-Allow-Headers': 'Content-Type'
-          },
-          body: JSON.stringify({ error: 'Method not allowed' })
-        };
+        return new Response('Method not allowed', { status: 405, headers });
     }
   } catch (error) {
     console.error('Error in GPS settings function:', error);
-    return {
-      statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
-        'Access-Control-Allow-Headers': 'Content-Type'
-      },
-      body: JSON.stringify({ error: 'Internal server error' })
-    };
+    return new Response('Internal server error', { status: 500, headers });
   }
 };
