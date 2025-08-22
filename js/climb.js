@@ -1637,10 +1637,13 @@ async function loadAllDataFromAPI() {
                 const gpsChanged = cached.gpsSettings.lastModified !== result.gpsSettings.lastModified;
                 
                 if (!notificationsChanged && !gpsChanged) {
-                    // Use cached data
+                    // Use cached data and update UI
                     GPS_SETTINGS = cached.gpsSettings.data;
                     const notifications = cached.notifications.data.filter(n => n.active);
                     processNotifications(notifications);
+                    // Ensure UI reflects cached settings
+                    updateRegistrationTimeStatus();
+                    updateCertificateRadiusDisplay();
                     return;
                 }
             }
