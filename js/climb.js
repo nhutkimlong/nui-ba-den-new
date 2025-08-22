@@ -324,6 +324,10 @@ async function handleRegistrationSubmit(event) {
         return;
     }
     
+    // Debug: Log current GPS settings
+    console.log('Current GPS Settings:', GPS_SETTINGS);
+    console.log('requireGpsRegistration:', GPS_SETTINGS.requireGpsRegistration);
+    
     // Kiểm tra xem có yêu cầu GPS cho đăng ký không
     if (!GPS_SETTINGS.requireGpsRegistration) {
         // Nếu không yêu cầu GPS, tiếp tục với form data
@@ -1545,6 +1549,13 @@ async function loadAllDataFromAPI() {
                 const notificationsChanged = cached.notifications.lastModified !== result.notifications.lastModified;
                 const gpsChanged = cached.gpsSettings.lastModified !== result.gpsSettings.lastModified;
                 
+                console.log('Cache comparison:', {
+                    notificationsChanged,
+                    gpsChanged,
+                    cachedLastModified: cached.gpsSettings.lastModified,
+                    serverLastModified: result.gpsSettings.lastModified
+                });
+                
                 if (!notificationsChanged && !gpsChanged) {
                     console.log('No changes detected, using cached data');
                     // Use cached data
@@ -1665,12 +1676,21 @@ function initializeNotificationSystem() {
     // Listen for GPS settings changes
     window.addEventListener('storage', function(e) {
         if (e.key === 'gpsSettings') {
-            console.log('GPS settings changed, refreshing...');
+            console.log('GPS settings changed via storage event, refreshing...');
             const newSettings = JSON.parse(e.newValue);
             GPS_SETTINGS = newSettings;
-            console.log('GPS Settings updated:', GPS_SETTINGS);
+            console.log('GPS Settings updated from storage:', GPS_SETTINGS);
             // Update registration time status when GPS settings change
             updateRegistrationTimeStatus();
+        }
+    });
+    
+    // Listen for combined data cache changes
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'combinedDataCache') {
+            console.log('Combined data cache changed, refreshing...');
+            // Force refresh to get latest data
+            loadAllDataFromAPI();
         }
     });
     
@@ -1751,7 +1771,15 @@ function refreshNotifications() {
 // Function to refresh GPS settings (can be called from admin panel)
 async function refreshGpsSettings() {
     console.log('Refreshing GPS settings...');
-    refreshAllData();
+    
+    // Clear cache to force fresh data
+    localStorage.removeItem('combinedDataCache');
+    localStorage.removeItem('gpsSettings');
+    
+    // Load fresh data from API
+    await loadAllDataFromAPI();
+    
+    console.log('GPS Settings refreshed:', GPS_SETTINGS);
 }
 
 // ===== REGISTRATION TIME VALIDATION =====
@@ -1821,6 +1849,22 @@ function validateRegistrationTime() {
     return true;
 }
 
+// Debug function to check GPS settings
+function debugGpsSettings() {
+    console.log('=== GPS Settings Debug ===');
+    console.log('Current GPS_SETTINGS:', GPS_SETTINGS);
+    console.log('requireGpsRegistration:', GPS_SETTINGS.requireGpsRegistration);
+    console.log('localStorage gpsSettings:', localStorage.getItem('gpsSettings'));
+    console.log('localStorage combinedDataCache:', localStorage.getItem('combinedDataCache'));
+    
+    // Check if GPS is required
+    if (GPS_SETTINGS.requireGpsRegistration) {
+        console.log('❌ GPS is REQUIRED for registration');
+    } else {
+        console.log('✅ GPS is NOT required for registration');
+    }
+}
+
 // Export functions for global access
 window.refreshNotifications = refreshNotifications;
 window.dismissNotification = dismissNotification;
@@ -1829,3 +1873,4 @@ window.getGpsSettings = getGpsSettings;
 window.isWithinRegistrationTime = isWithinRegistrationTime;
 window.getRegistrationTimeStatus = getRegistrationTimeStatus;
 window.validateRegistrationTime = validateRegistrationTime;
+window.debugGpsSettings = debugGpsSettings;
