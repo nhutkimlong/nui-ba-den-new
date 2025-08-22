@@ -45,6 +45,68 @@
     
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css"></noscript>
+    
+    <style>
+        /* Custom notification styles */
+        .notification-item {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .notification-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        /* Notification container */
+        #adminNotifications {
+            pointer-events: none;
+        }
+        
+        #adminNotifications .notification-item {
+            pointer-events: auto;
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 640px) {
+            #adminNotifications {
+                left: 8px !important;
+                right: 8px !important;
+                max-width: none !important;
+            }
+            
+            .notification-item {
+                margin-bottom: 8px;
+                padding: 12px !important;
+            }
+        }
+        
+        /* Animation classes */
+        .notification-enter {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+        }
+        
+        .notification-enter-active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .notification-exit {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        
+        .notification-exit-active {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
 
     <script>
         // Wait for Tailwind to be available
@@ -145,7 +207,10 @@
     <div id="messageBox" class="message-box z-[150]"></div>
 
     <!-- Admin Notifications Container -->
-    <div id="adminNotifications" class="fixed top-20 left-4 right-4 z-[160] max-w-md mx-auto"></div>
+    <div id="adminNotifications" class="fixed top-20 left-4 right-4 z-[160] max-w-md mx-auto space-y-3"></div>
+    
+    <!-- Registration Time Status -->
+    <div id="registrationTimeStatus" class="fixed top-32 left-4 right-4 z-[150] max-w-md mx-auto"></div>
 
     <div class="container mx-auto px-4 py-8 md:px-6 md:py-12 max-w-5xl">
 

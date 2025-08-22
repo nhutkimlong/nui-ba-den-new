@@ -14,7 +14,10 @@ let GPS_SETTINGS = {
     registrationRadius: 50,
     certificateRadius: 150,
     requireGpsRegistration: true,
-    requireGpsCertificate: true
+    requireGpsCertificate: true,
+    registrationTimeEnabled: false,
+    registrationStartTime: '06:00',
+    registrationEndTime: '18:00'
 };
 
 // --- State Variables ---
@@ -297,6 +300,11 @@ async function handleRegistrationSubmit(event) {
     event.preventDefault();
     
     if (safetyCommitError) safetyCommitError.classList.add('hidden');
+
+    // Kiểm tra thời gian đăng ký
+    if (!validateRegistrationTime()) {
+        return;
+    }
 
     // Kiểm tra số lượng thành viên nhận chứng nhận không vượt quá số lượng đăng ký
     const groupSize = parseInt(groupSizeInput?.value || '0', 10);
@@ -1368,33 +1376,33 @@ const NOTIFICATION_TYPES = {
     weather: { 
         name: 'Cảnh báo thời tiết', 
         icon: 'fa-cloud-rain', 
-        bgColor: 'bg-blue-50', 
-        borderColor: 'border-blue-200', 
-        textColor: 'text-blue-800',
+        bgColor: 'bg-blue-100', 
+        borderColor: 'border-blue-500', 
+        textColor: 'text-blue-900',
         iconColor: 'text-blue-600'
     },
     maintenance: { 
         name: 'Bảo trì', 
         icon: 'fa-tools', 
-        bgColor: 'bg-yellow-50', 
-        borderColor: 'border-yellow-200', 
-        textColor: 'text-yellow-800',
+        bgColor: 'bg-yellow-100', 
+        borderColor: 'border-yellow-500', 
+        textColor: 'text-yellow-900',
         iconColor: 'text-yellow-600'
     },
     announcement: { 
         name: 'Thông báo chung', 
         icon: 'fa-bullhorn', 
-        bgColor: 'bg-green-50', 
-        borderColor: 'border-green-200', 
-        textColor: 'text-green-800',
+        bgColor: 'bg-green-100', 
+        borderColor: 'border-green-500', 
+        textColor: 'text-green-900',
         iconColor: 'text-green-600'
     },
     emergency: { 
         name: 'Khẩn cấp', 
         icon: 'fa-exclamation-triangle', 
-        bgColor: 'bg-red-50', 
-        borderColor: 'border-red-200', 
-        textColor: 'text-red-800',
+        bgColor: 'bg-red-100', 
+        borderColor: 'border-red-500', 
+        textColor: 'text-red-900',
         iconColor: 'text-red-600'
     }
 };
@@ -1430,24 +1438,26 @@ function createNotificationHTML(notification) {
     const typeInfo = NOTIFICATION_TYPES[notification.type] || NOTIFICATION_TYPES.announcement;
     
     return `
-        <div id="notification-${notification.id}" class="notification-item ${typeInfo.bgColor} ${typeInfo.borderColor} border rounded-lg shadow-lg p-4 mb-3 transform transition-all duration-300 opacity-0 translate-y-2" data-notification-id="${notification.id}">
+        <div id="notification-${notification.id}" class="notification-item notification-enter bg-white border-l-4 ${typeInfo.borderColor} rounded-lg shadow-lg p-4" data-notification-id="${notification.id}">
             <div class="flex items-start justify-between">
                 <div class="flex items-start space-x-3 flex-1">
-                    <div class="flex-shrink-0">
-                        <i class="fas ${typeInfo.icon} ${typeInfo.iconColor} text-xl"></i>
+                    <div class="flex-shrink-0 mt-1">
+                        <div class="w-10 h-10 rounded-full ${typeInfo.bgColor} flex items-center justify-center">
+                            <i class="fas ${typeInfo.icon} ${typeInfo.iconColor} text-lg"></i>
+                        </div>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="flex items-center space-x-2 mb-1">
-                            <h4 class="font-semibold ${typeInfo.textColor} text-sm">${notification.title}</h4>
-                            <span class="px-2 py-1 text-xs ${typeInfo.bgColor} ${typeInfo.textColor} rounded-full border ${typeInfo.borderColor}">
+                        <div class="flex items-center justify-between mb-2">
+                            <h4 class="font-semibold ${typeInfo.textColor} text-base leading-tight">${notification.title}</h4>
+                            <span class="px-3 py-1 text-xs font-medium ${typeInfo.bgColor} ${typeInfo.textColor} rounded-full">
                                 ${typeInfo.name}
                             </span>
                         </div>
-                        <p class="text-sm ${typeInfo.textColor} opacity-90">${notification.message}</p>
+                        <p class="text-sm ${typeInfo.textColor} opacity-90 leading-relaxed">${notification.message}</p>
                     </div>
                 </div>
-                <button onclick="dismissNotification('${notification.id}')" class="flex-shrink-0 ml-3 text-gray-400 hover:text-gray-600 transition-colors">
-                    <i class="fas fa-times"></i>
+                <button onclick="dismissNotification('${notification.id}')" class="flex-shrink-0 ml-3 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100">
+                    <i class="fas fa-times text-sm"></i>
                 </button>
             </div>
         </div>
@@ -1472,10 +1482,18 @@ function showNotification(notification) {
     // Animate in
     const notificationElement = document.getElementById(`notification-${notification.id}`);
     if (notificationElement) {
+        // Force reflow
+        notificationElement.offsetHeight;
+        
         setTimeout(() => {
-            notificationElement.classList.remove('opacity-0', 'translate-y-2');
-            notificationElement.classList.add('opacity-100', 'translate-y-0');
-        }, 100);
+            notificationElement.classList.remove('notification-enter');
+            notificationElement.classList.add('notification-enter-active');
+        }, 50);
+        
+        // Auto-dismiss after 10 seconds
+        setTimeout(() => {
+            dismissNotification(notification.id);
+        }, 10000);
     }
     
     // Auto dismiss after duration
@@ -1492,14 +1510,22 @@ function dismissNotification(notificationId) {
     const notificationElement = document.getElementById(`notification-${notificationId}`);
     if (!notificationElement) return;
     
+    // Mark as seen in localStorage
+    const seenNotifications = JSON.parse(localStorage.getItem('seenNotifications') || '[]');
+    if (!seenNotifications.includes(notificationId)) {
+        seenNotifications.push(notificationId);
+        localStorage.setItem('seenNotifications', JSON.stringify(seenNotifications));
+    }
+    
     // Animate out
-    notificationElement.classList.add('opacity-0', 'translate-y-2');
+    notificationElement.classList.remove('notification-enter-active');
+    notificationElement.classList.add('notification-exit', 'notification-exit-active');
     
     setTimeout(() => {
         if (notificationElement.parentNode) {
             notificationElement.parentNode.removeChild(notificationElement);
         }
-    }, NOTIFICATION_CONFIG.FADE_DURATION);
+    }, 300);
 }
 
 // Function to load all data from combined API
@@ -1643,11 +1669,49 @@ function initializeNotificationSystem() {
             const newSettings = JSON.parse(e.newValue);
             GPS_SETTINGS = newSettings;
             console.log('GPS Settings updated:', GPS_SETTINGS);
+            // Update registration time status when GPS settings change
+            updateRegistrationTimeStatus();
         }
     });
     
     // Clean up old seen notifications (older than 7 days)
     cleanupOldSeenNotifications();
+    
+    // Initialize registration time status
+    updateRegistrationTimeStatus();
+    
+    // Update registration time status every minute
+    setInterval(updateRegistrationTimeStatus, 60000);
+}
+
+// Function to update registration time status display
+function updateRegistrationTimeStatus() {
+    const container = document.getElementById('registrationTimeStatus');
+    if (!container) return;
+    
+    const status = getRegistrationTimeStatus();
+    if (!status) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    const isOpen = status.includes('✅');
+    const bgColor = isOpen ? 'bg-green-100' : 'bg-red-100';
+    const borderColor = isOpen ? 'border-green-500' : 'border-red-500';
+    const textColor = isOpen ? 'text-green-800' : 'text-red-800';
+    const icon = isOpen ? 'fa-clock' : 'fa-clock';
+    const iconColor = isOpen ? 'text-green-600' : 'text-red-600';
+    
+    container.innerHTML = `
+        <div class="${bgColor} border-l-4 ${borderColor} p-4 rounded-lg shadow-md">
+            <div class="flex items-center">
+                <i class="fas ${icon} ${iconColor} text-lg mr-3"></i>
+                <div class="flex-1">
+                    <p class="font-medium ${textColor} text-sm">${status}</p>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // Function to cleanup old seen notifications
@@ -1690,8 +1754,78 @@ async function refreshGpsSettings() {
     refreshAllData();
 }
 
+// ===== REGISTRATION TIME VALIDATION =====
+
+// Check if current time is within registration time window
+function isWithinRegistrationTime() {
+    if (!GPS_SETTINGS.registrationTimeEnabled) {
+        return true; // No time restriction
+    }
+    
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes(); // Convert to minutes
+    
+    const [startHour, startMinute] = GPS_SETTINGS.registrationStartTime.split(':').map(Number);
+    const [endHour, endMinute] = GPS_SETTINGS.registrationEndTime.split(':').map(Number);
+    
+    const startTime = startHour * 60 + startMinute;
+    const endTime = endHour * 60 + endMinute;
+    
+    // Handle overnight time ranges (e.g., 22:00 to 06:00)
+    if (endTime < startTime) {
+        return currentTime >= startTime || currentTime <= endTime;
+    } else {
+        return currentTime >= startTime && currentTime <= endTime;
+    }
+}
+
+// Get registration time status message
+function getRegistrationTimeStatus() {
+    if (!GPS_SETTINGS.registrationTimeEnabled) {
+        return null;
+    }
+    
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+    
+    const [startHour, startMinute] = GPS_SETTINGS.registrationStartTime.split(':').map(Number);
+    const [endHour, endMinute] = GPS_SETTINGS.registrationEndTime.split(':').map(Number);
+    
+    const startTime = startHour * 60 + startMinute;
+    const endTime = endHour * 60 + endMinute;
+    
+    if (endTime < startTime) {
+        // Overnight range
+        if (currentTime >= startTime || currentTime <= endTime) {
+            return `✅ Đăng ký mở cửa (${GPS_SETTINGS.registrationStartTime} - ${GPS_SETTINGS.registrationEndTime})`;
+        } else {
+            return `❌ Đăng ký đóng cửa (${GPS_SETTINGS.registrationStartTime} - ${GPS_SETTINGS.registrationEndTime})`;
+        }
+    } else {
+        // Same day range
+        if (currentTime >= startTime && currentTime <= endTime) {
+            return `✅ Đăng ký mở cửa (${GPS_SETTINGS.registrationStartTime} - ${GPS_SETTINGS.registrationEndTime})`;
+        } else {
+            return `❌ Đăng ký đóng cửa (${GPS_SETTINGS.registrationStartTime} - ${GPS_SETTINGS.registrationEndTime})`;
+        }
+    }
+}
+
+// Validate registration time before form submission
+function validateRegistrationTime() {
+    if (!isWithinRegistrationTime()) {
+        const status = getRegistrationTimeStatus();
+        showMessage(`Không thể đăng ký lúc này. ${status}`, 'error', 8000);
+        return false;
+    }
+    return true;
+}
+
 // Export functions for global access
 window.refreshNotifications = refreshNotifications;
 window.dismissNotification = dismissNotification;
 window.refreshGpsSettings = refreshGpsSettings;
 window.getGpsSettings = getGpsSettings;
+window.isWithinRegistrationTime = isWithinRegistrationTime;
+window.getRegistrationTimeStatus = getRegistrationTimeStatus;
+window.validateRegistrationTime = validateRegistrationTime;

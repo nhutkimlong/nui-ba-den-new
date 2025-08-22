@@ -54,8 +54,14 @@ let gpsSettings = {
     registrationRadius: CONFIG.DEFAULT_REGISTRATION_RADIUS,
     certificateRadius: CONFIG.DEFAULT_CERTIFICATE_RADIUS,
     requireGpsRegistration: true,
-    requireGpsCertificate: true
+    requireGpsCertificate: true,
+    registrationTimeEnabled: false,
+    registrationStartTime: '06:00',
+    registrationEndTime: '18:00'
 };
+
+// Loading state
+let isLoading = false;
 
 // Chart instances
 let dailyChart = null;
@@ -97,6 +103,12 @@ function initializeElements() {
         notificationType: document.getElementById('notificationType'),
         notificationTitle: document.getElementById('notificationTitle'),
         notificationMessage: document.getElementById('notificationMessage'),
+        
+        // Registration time settings
+        registrationTimeEnabled: document.getElementById('registrationTimeEnabled'),
+        registrationStartTime: document.getElementById('registrationStartTime'),
+        registrationEndTime: document.getElementById('registrationEndTime'),
+        registrationTimeSettings: document.getElementById('registrationTimeSettings'),
         activeNotificationsList: document.getElementById('activeNotificationsList'),
         
         // Search
@@ -138,6 +150,11 @@ function setupEventListeners() {
     // GPS Settings form
     if (elements.gpsSettingsForm) {
         elements.gpsSettingsForm.addEventListener('submit', handleSaveGpsSettings);
+    }
+    
+    // Registration time settings
+    if (elements.registrationTimeEnabled) {
+        elements.registrationTimeEnabled.addEventListener('change', toggleRegistrationTimeSettings);
     }
 }
 
@@ -673,7 +690,14 @@ async function handleCreateNotification(e) {
         return;
     }
     
+    // Prevent duplicate submission
+    if (isLoading) {
+        showMessage('Đang xử lý, vui lòng đợi...', 'warning');
+        return;
+    }
+    
     try {
+        isLoading = true;
         setLoadingState(true);
         
         const notification = {
@@ -705,10 +729,6 @@ async function handleCreateNotification(e) {
             // Refresh notifications from server
             await loadNotifications();
             
-            // Also update localStorage to ensure sync with climb page
-            notifications.push(notification);
-            localStorage.setItem('climbNotifications', JSON.stringify(notifications));
-            
             // Trigger storage event for other tabs/windows
             window.dispatchEvent(new StorageEvent('storage', {
                 key: 'climbNotifications',
@@ -719,6 +739,10 @@ async function handleCreateNotification(e) {
             // Fallback to localStorage for development
             notifications.push(notification);
             localStorage.setItem('climbNotifications', JSON.stringify(notifications));
+            
+            // Update UI
+            updateNotificationsList();
+            updateStats();
             
             // Trigger storage event for other tabs/windows
             window.dispatchEvent(new StorageEvent('storage', {
@@ -748,6 +772,12 @@ async function handleCreateNotification(e) {
                     data: notification
                 }, '*');
             }
+            
+            // Trigger storage event for other tabs/windows
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'climbNotifications',
+                newValue: JSON.stringify(notifications)
+            }));
         } catch (error) {
             console.error('Could not refresh climb page notifications:', error);
         }
@@ -758,6 +788,7 @@ async function handleCreateNotification(e) {
         console.error('Error creating notification:', error);
         showMessage('Có lỗi khi tạo thông báo', 'error');
     } finally {
+        isLoading = false;
         setLoadingState(false);
     }
 }
@@ -788,7 +819,10 @@ async function loadAllDataFromAPI() {
                 registrationRadius: CONFIG.DEFAULT_REGISTRATION_RADIUS,
                 certificateRadius: CONFIG.DEFAULT_CERTIFICATE_RADIUS,
                 requireGpsRegistration: true,
-                requireGpsCertificate: true
+                requireGpsCertificate: true,
+                registrationTimeEnabled: false,
+                registrationStartTime: '06:00',
+                registrationEndTime: '18:00'
             };
             localStorage.setItem('gpsSettings', JSON.stringify(gpsSettings));
             
@@ -812,11 +846,11 @@ async function loadAllDataFromAPI() {
 // Load notifications (legacy - now using combined API)
 async function loadNotifications() {
     try {
-        // Fetch from Netlify Function API
-        const response = await fetch(CONFIG.NOTIFICATION_API_URL);
+        // Fetch from Combined API
+        const response = await fetch(CONFIG.COMBINED_API_URL);
         if (response.ok) {
             const result = await response.json();
-            notifications = result.data || [];
+            notifications = result.notifications.data || [];
             // Sync with localStorage to ensure climb page can read
             localStorage.setItem('climbNotifications', JSON.stringify(notifications));
         } else {
@@ -932,6 +966,10 @@ async function toggleNotification(notificationId) {
                 console.error('Error updating notification:', error);
                 // Fallback to localStorage for development
                 localStorage.setItem('climbNotifications', JSON.stringify(notifications));
+                
+                // Update UI
+                updateNotificationsList();
+                updateStats();
             }
             
             // Update UI
@@ -1003,6 +1041,10 @@ async function deleteNotification(notificationId) {
                 // Fallback to localStorage for development
                 notifications = notifications.filter(n => n.id !== notificationId);
                 localStorage.setItem('climbNotifications', JSON.stringify(notifications));
+                
+                // Update UI
+                updateNotificationsList();
+                updateStats();
             }
             
             // Update UI
@@ -1169,7 +1211,10 @@ async function loadGpsSettings() {
                 registrationRadius: CONFIG.DEFAULT_REGISTRATION_RADIUS,
                 certificateRadius: CONFIG.DEFAULT_CERTIFICATE_RADIUS,
                 requireGpsRegistration: true,
-                requireGpsCertificate: true
+                requireGpsCertificate: true,
+                registrationTimeEnabled: false,
+                registrationStartTime: '06:00',
+                registrationEndTime: '18:00'
             };
         } else {
             // Fallback to localStorage for development
@@ -1208,6 +1253,32 @@ function updateGpsSettingsForm() {
     if (elements.requireGpsCertificate) {
         elements.requireGpsCertificate.checked = gpsSettings.requireGpsCertificate;
     }
+    
+    // Update registration time settings
+    if (elements.registrationTimeEnabled) {
+        elements.registrationTimeEnabled.checked = gpsSettings.registrationTimeEnabled;
+        toggleRegistrationTimeSettings();
+    }
+    if (elements.registrationStartTime) {
+        elements.registrationStartTime.value = gpsSettings.registrationStartTime;
+    }
+    if (elements.registrationEndTime) {
+        elements.registrationEndTime.value = gpsSettings.registrationEndTime;
+    }
+}
+
+// Toggle registration time settings visibility
+function toggleRegistrationTimeSettings() {
+    const isEnabled = elements.registrationTimeEnabled.checked;
+    const settingsDiv = elements.registrationTimeSettings;
+    
+    if (isEnabled) {
+        settingsDiv.style.display = 'grid';
+        settingsDiv.style.opacity = '1';
+    } else {
+        settingsDiv.style.display = 'none';
+        settingsDiv.style.opacity = '0.5';
+    }
 }
 
 // Handle save GPS settings
@@ -1218,7 +1289,10 @@ async function handleSaveGpsSettings(e) {
         registrationRadius: parseInt(elements.registrationRadius.value) || CONFIG.DEFAULT_REGISTRATION_RADIUS,
         certificateRadius: parseInt(elements.certificateRadius.value) || CONFIG.DEFAULT_CERTIFICATE_RADIUS,
         requireGpsRegistration: elements.requireGpsRegistration.checked,
-        requireGpsCertificate: elements.requireGpsCertificate.checked
+        requireGpsCertificate: elements.requireGpsCertificate.checked,
+        registrationTimeEnabled: elements.registrationTimeEnabled.checked,
+        registrationStartTime: elements.registrationStartTime.value,
+        registrationEndTime: elements.registrationEndTime.value
     };
     
     try {
@@ -1532,18 +1606,30 @@ function showMessage(message, type = 'info') {
 
 // Set loading state
 function setLoadingState(loading) {
-    const buttons = document.querySelectorAll('button[type="submit"]');
-    buttons.forEach(button => {
+    const refreshButton = document.getElementById('refreshButton');
+    const submitButtons = document.querySelectorAll('button[type="submit"]');
+    
+    if (refreshButton) {
+        if (loading) {
+            refreshButton.disabled = true;
+            refreshButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Đang tải...';
+        } else {
+            refreshButton.disabled = false;
+            refreshButton.innerHTML = '<i class="fas fa-sync-alt mr-1"></i>Làm mới';
+        }
+    }
+    
+    submitButtons.forEach(button => {
         if (loading) {
             button.disabled = true;
+            const originalText = button.getAttribute('data-original-text') || button.innerHTML;
+            button.setAttribute('data-original-text', originalText);
             button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang xử lý...';
         } else {
             button.disabled = false;
-            // Restore original button text (you might want to store it)
-            if (button.classList.contains('btn-primary')) {
-                button.innerHTML = '<i class="fas fa-plus mr-2"></i>Tạo thông báo';
-            } else if (button.classList.contains('btn-success')) {
-                button.innerHTML = '<i class="fas fa-save mr-2"></i>Lưu cài đặt';
+            const originalText = button.getAttribute('data-original-text');
+            if (originalText) {
+                button.innerHTML = originalText;
             }
         }
     });

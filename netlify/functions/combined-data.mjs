@@ -35,7 +35,10 @@ export default async (request, context) => {
         registrationRadius: 50,
         certificateRadius: 150,
         requireGpsRegistration: true,
-        requireGpsCertificate: true
+        requireGpsCertificate: true,
+        registrationTimeEnabled: false,
+        registrationStartTime: '06:00',
+        registrationEndTime: '18:00'
       };
       
       const result = {
