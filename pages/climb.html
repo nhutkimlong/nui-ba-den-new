@@ -585,13 +585,26 @@
                 }
                 
                 window._cropperLoading = new Promise((res, rej) => {
+                    console.log('HTML: Loading Cropper.js from CDN...');
                     const cropperScript = document.createElement('script');
                     cropperScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js';
                     cropperScript.onload = () => {
-                        window._cropperLoading = null;
-                        res();
+                        console.log('HTML: Cropper.js script loaded');
+                        // Wait a bit more to ensure Cropper is available
+                        setTimeout(() => {
+                            if (window.Cropper) {
+                                console.log('HTML: Cropper.js is available');
+                                window._cropperLoading = null;
+                                res();
+                            } else {
+                                console.log('HTML: Cropper.js not available after load');
+                                window._cropperLoading = null;
+                                rej(new Error('Cropper.js not available after loading'));
+                            }
+                        }, 100);
                     };
                     cropperScript.onerror = () => {
+                        console.log('HTML: Failed to load Cropper.js');
                         window._cropperLoading = null;
                         rej(new Error('Failed to load Cropper.js'));
                     };

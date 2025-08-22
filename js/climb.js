@@ -876,10 +876,26 @@ if (typeof window.loadCropperJS !== 'function') {
         if (window.Cropper) return Promise.resolve();
         
         return new Promise((resolve, reject) => {
+            console.log('Fallback: Loading Cropper.js from CDN...');
             const cropperScript = document.createElement('script');
             cropperScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js';
-            cropperScript.onload = resolve;
-            cropperScript.onerror = reject;
+            cropperScript.onload = () => {
+                console.log('Fallback: Cropper.js script loaded');
+                // Wait a bit more to ensure Cropper is available
+                setTimeout(() => {
+                    if (window.Cropper) {
+                        console.log('Fallback: Cropper.js is available');
+                        resolve();
+                    } else {
+                        console.log('Fallback: Cropper.js not available after load');
+                        reject(new Error('Cropper.js not available after loading'));
+                    }
+                }, 100);
+            };
+            cropperScript.onerror = () => {
+                console.log('Fallback: Failed to load Cropper.js');
+                reject(new Error('Failed to load Cropper.js from CDN'));
+            };
             document.head.appendChild(cropperScript);
         });
     };
@@ -914,7 +930,23 @@ async function handlePhotoSelection(event) {
         if (typeof window.loadCropperJS !== 'function') {
             throw new Error('loadCropperJS function not available');
         }
+        
+        console.log('Loading Cropper.js...');
         await window.loadCropperJS();
+        console.log('Cropper.js loaded, checking availability...');
+        
+        // Wait a bit more to ensure Cropper is fully available
+        let attempts = 0;
+        while (typeof window.Cropper === 'undefined' && attempts < 10) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
+        if (typeof window.Cropper === 'undefined') {
+            throw new Error('Cropper.js failed to load properly');
+        }
+        
+        console.log('Cropper.js is ready to use');
         
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -922,7 +954,15 @@ async function handlePhotoSelection(event) {
             currentCropContext = { name: memberName, previewId: previewId, removeId: removeId, fileInput: fileInput };
             cropModal.classList.remove('hidden');
             if (cropperInstance) cropperInstance.destroy();
-            cropperInstance = new Cropper(imageToCrop, {
+            
+            // Double-check that Cropper is available
+            if (typeof window.Cropper === 'undefined') {
+                showMessage('Lỗi: Thư viện cắt ảnh chưa được tải.', 'error');
+                handleCancelCrop();
+                return;
+            }
+            
+            cropperInstance = new window.Cropper(imageToCrop, {
                 aspectRatio: CROP_ASPECT_RATIO, viewMode: 1, dragMode: 'move', background: false,
                 autoCropArea: 0.9, responsive: true, restore: false, checkOrientation: false,
                 modal: true, guides: true, center: true, highlight: false, cropBoxMovable: true,
