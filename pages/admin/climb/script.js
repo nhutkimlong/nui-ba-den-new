@@ -81,12 +81,15 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(updateCurrentDate, 60000); // Update every minute
     
     // Auto-refresh data when tab becomes visible (user switches back to tab)
+    // Commented out to prevent automatic refresh
+    /*
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) {
             // Refresh data when user comes back to the tab
             refreshAllData();
         }
     });
+    */
 });
 
 // Initialize DOM elements
@@ -161,6 +164,14 @@ function setupEventListeners() {
 // Load initial data
 async function loadInitialData() {
     try {
+        // Show loading state first
+        updateStats({
+            totalRegistrations: 'Đang tải...',
+            activeNotifications: 0,
+            totalCertificates: 'Đang tải...',
+            gpsEnabled: false
+        });
+        
         await Promise.all([
             loadStats(),
             loadAllDataFromAPI(),
@@ -806,8 +817,8 @@ function clearNotificationForm() {
 // Load all data from combined API
 async function loadAllDataFromAPI() {
     try {
-        console.log('Loading all data from combined API...', new Date().toISOString());
-        console.trace('loadAllDataFromAPI called from:');
+        // console.log('Loading all data from combined API...', new Date().toISOString());
+        // console.trace('loadAllDataFromAPI called from:');
         
         const response = await fetch(CONFIG.COMBINED_API_URL);
         if (response.ok) {
@@ -1424,14 +1435,15 @@ async function loadStats() {
         
     } catch (error) {
         console.error('Error loading stats:', error);
-        // Fallback to mock data
+        // Show error state instead of old data
         const stats = {
-            totalRegistrations: 156,
+            totalRegistrations: 'Lỗi',
             activeNotifications: notifications.filter(n => n.active).length,
-            totalCertificates: 0, // Will be calculated from actual data
+            totalCertificates: 'Lỗi',
             gpsEnabled: gpsSettings.requireGpsRegistration || gpsSettings.requireGpsCertificate
         };
         updateStats(stats);
+        showMessage('Không thể tải thống kê. Vui lòng thử lại.', 'error');
     }
 }
 
@@ -1439,9 +1451,9 @@ async function loadStats() {
 function updateStats(stats = null) {
     if (!stats) {
         stats = {
-            totalRegistrations: 156,
+            totalRegistrations: '-',  // Show loading indicator instead of old data
             activeNotifications: notifications.filter(n => n.active).length,
-            totalCertificates: 0, // Will be calculated from actual data
+            totalCertificates: '-',   // Show loading indicator instead of old data
             gpsEnabled: gpsSettings.requireGpsRegistration || gpsSettings.requireGpsCertificate
         };
     }
