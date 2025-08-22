@@ -9,10 +9,12 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  included_files = ["netlify/functions/**"]
 
 # Enable Netlify Blobs for data storage
 [functions.environment]
   NETLIFY_BLOBS_CONTEXT = "true"
+  NODE_ENV = "production"
 
 # Functions are automatically accessible at /.netlify/functions/
 # No redirect needed for functions

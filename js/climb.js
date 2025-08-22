@@ -296,11 +296,14 @@ async function loadGpsSettings() {
             localStorage.setItem('gpsSettings', JSON.stringify(GPS_SETTINGS));
             console.log('GPS Settings loaded from API and saved to localStorage:', GPS_SETTINGS);
         } else {
-            console.warn('Failed to load GPS settings, using defaults');
+            console.warn('Failed to load GPS settings from API, using defaults');
+            // Save defaults to localStorage to avoid future API calls
+            localStorage.setItem('gpsSettings', JSON.stringify(GPS_SETTINGS));
         }
     } catch (error) {
         console.error('Error loading GPS settings:', error);
-        // Use default settings
+        // Use default settings and save to localStorage
+        localStorage.setItem('gpsSettings', JSON.stringify(GPS_SETTINGS));
     }
 }
 
@@ -1426,6 +1429,7 @@ async function fetchAdminNotifications() {
             return notifications.filter(n => n.active);
         }
         
+        console.warn('Netlify Function not available, using localStorage fallback');
         // Fallback to localStorage for development
         const storedNotifications = localStorage.getItem('climbNotifications');
         if (storedNotifications) {
@@ -1437,6 +1441,12 @@ async function fetchAdminNotifications() {
         return [];
     } catch (error) {
         console.error('Error fetching notifications:', error);
+        // Fallback to localStorage
+        const storedNotifications = localStorage.getItem('climbNotifications');
+        if (storedNotifications) {
+            const notifications = JSON.parse(storedNotifications);
+            return notifications.filter(n => n.active);
+        }
         return [];
     }
 }

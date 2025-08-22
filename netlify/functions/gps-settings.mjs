@@ -6,6 +6,18 @@ const gpsSettingsStore = getStore('climb-gps-settings');
 export default async (request, context) => {
   const { method } = request;
   
+  // Add CORS headers for preflight requests
+  if (method === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      }
+    };
+  }
+  
   try {
     switch (method) {
       case 'GET':
