@@ -784,6 +784,9 @@ async function handleCreateNotification(e) {
         
         showMessage('Thông báo đã được tạo thành công', 'success');
         
+        // Refresh all data to show latest information
+        await refreshAllData();
+        
     } catch (error) {
         console.error('Error creating notification:', error);
         showMessage('Có lỗi khi tạo thông báo', 'error');
@@ -1001,6 +1004,9 @@ async function toggleNotification(notificationId) {
             const status = notification.active ? 'kích hoạt' : 'ẩn';
             showMessage(`Thông báo đã được ${status}`, 'success');
             
+            // Refresh all data to show latest information
+            await refreshAllData();
+            
         } catch (error) {
             console.error('Error toggling notification:', error);
             showMessage('Có lỗi khi cập nhật thông báo', 'error');
@@ -1074,6 +1080,9 @@ async function deleteNotification(notificationId) {
             }
             
             showMessage('Thông báo đã được xóa', 'success');
+            
+            // Refresh all data to show latest information
+            await refreshAllData();
             
         } catch (error) {
             console.error('Error deleting notification:', error);
@@ -1336,6 +1345,9 @@ async function handleSaveGpsSettings(e) {
             
             showMessage('Cài đặt GPS đã được lưu thành công và đồng bộ với hệ thống', 'success');
             
+            // Refresh all data to show latest information
+            await refreshAllData();
+            
         } catch (error) {
             console.error('Error saving GPS settings to server:', error);
             // Fallback to localStorage for development
@@ -1343,6 +1355,9 @@ async function handleSaveGpsSettings(e) {
             localStorage.setItem('climbGpsSettings', JSON.stringify(gpsSettings));
             updateGpsStatus();
             showMessage('Cài đặt GPS đã được lưu thành công (chế độ offline)', 'success');
+            
+            // Refresh all data to show latest information
+            await refreshAllData();
         }
         
     } catch (error) {
