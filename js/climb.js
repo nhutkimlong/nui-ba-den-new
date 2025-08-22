@@ -190,7 +190,7 @@ function isValidNationalId(nationalId) {
     return /^(?:\d{9}|0\d{11})$/.test(value);
 }
 
-// --- Name Validation & Profanity Filter ---
+// --- Name Validation (profanity filter removed per request) ---
 function normalizeVi(str) {
     return String(str || '')
         .normalize('NFD')
@@ -221,33 +221,15 @@ function isClimbDateTimeWithinGrace(dateStr, timeStr, graceMinutes = 30) {
     return scheduled.getTime() >= (now.getTime() - graceMs);
 }
 
-const PROFANITY_PATTERNS = [
-    // Core vulgarities (normalized & variants)
-    'ditme', 'ditmay', 'ditmemay', 'ditmeo', 'ditcho', 'ditconme', 'djt', 'djtme', 'dmm', 'dm', 'dcm',
-    'vcl', 'vl', 'vkl', 'vcc', 'cc', 'cmm', 'ccmm',
+const PROFANITY_PATTERNS = [];
 
-    // Sexual terms and slurs
-    'cac', 'cặc', 'cak', 'kec', 'kecch', 'kecc', 'buoi', 'buồi', 'chim', 'bi', 'bim', 'dit',
-    'lon', 'lồn', 'lonz', 'lozz', 'lol', 'loz', 'lz', 'amdao', 'am dao', 'vu', 'vú', 'ngucto', 'nguc to',
-
-    // Insults
-    'occho', 'oc cho', 'occhoi', 'occhoi', 'occho', 'occhos', 'oc', 'cho', 'cut', 'cutme', 'cutmeo', 'cuc', 'cutcho',
-    'deo', 'deos', 'dzo', 'dmml', 'clm', 'meme', 'me may', 'me m', 'meo me', 'matday', 'mat day',
-
-    // Leetspeak and spacing variants (will be normalized and space-stripped)
-    'd1tme', 'd1tm3', 'd!tme', 'd!tm3', 'd i t m e', 'd i t m a y', 'djt m3', 'djt m e',
-];
-
-function containsProfanity(name) {
-    const n = normalizeVi(name).replace(/\s+/g, '');
-    return PROFANITY_PATTERNS.some(p => n.includes(normalizeVi(p).replace(/\s+/g, '')));
-}
+function containsProfanity(name) { return false; }
 
 function isCleanName(name) {
     const trimmed = String(name || '').trim();
     if (!trimmed) return false;
     if (trimmed.length < 2 || trimmed.length > 100) return false;
-    if (containsProfanity(trimmed)) return false;
+    // profanity filter removed
     return true;
 }
 
@@ -397,18 +379,18 @@ async function handleRegistrationSubmit(event) {
         showMessage('Ngày/giờ leo chỉ được sớm hơn tối đa 30 phút so với hiện tại.', 'error');
         return;
     }
-    // Validate leader name and each member name (profanity filter)
+    // Validate leader name and each member name (basic length only)
     const leaderNameInput = document.getElementById('leaderName');
     const leaderNameVal = leaderNameInput ? leaderNameInput.value : '';
-    if (!isCleanName(leaderNameVal)) {
-        showMessage('Họ và tên không hợp lệ hoặc chứa từ cấm.', 'error');
+    if (!leaderNameVal || leaderNameVal.trim().length < 2 || leaderNameVal.trim().length > 100) {
+        showMessage('Họ và tên không hợp lệ.', 'error');
         return;
     }
     const memberListRawCheck = memberListInput?.value || '';
     const memberListArrForCheck = memberListRawCheck.split('\n').map(x => x.trim()).filter(x => x);
     for (const name of memberListArrForCheck) {
-        if (!isCleanName(name)) {
-            showMessage('Danh sách thành viên chứa tên không hợp lệ hoặc từ cấm.', 'error');
+        if (!name || name.length < 2 || name.length > 100) {
+            showMessage('Danh sách thành viên chứa tên không hợp lệ.', 'error');
             return;
         }
     }
@@ -516,17 +498,17 @@ function handleLocationCheckForRegistration(position) {
             showMessage('Ngày/giờ leo chỉ được sớm hơn tối đa 30 phút so với hiện tại.', 'error');
             return;
         }
-        // Validate names (leader + members)
-        const leaderNameVal = formData.get('leaderName');
-        if (!isCleanName(leaderNameVal)) {
-            showMessage('Họ và tên không hợp lệ hoặc chứa từ cấm.', 'error');
+        // Validate names (leader + members) with basic length only
+        const leaderNameVal = String(formData.get('leaderName') || '').trim();
+        if (!leaderNameVal || leaderNameVal.length < 2 || leaderNameVal.length > 100) {
+            showMessage('Họ và tên không hợp lệ.', 'error');
             return;
         }
         const memberListRawCheck2 = (formData.get('memberList') || '').toString();
         const memberListArrForCheck2 = memberListRawCheck2.split('\n').map(x => x.trim()).filter(x => x);
         for (const name of memberListArrForCheck2) {
-            if (!isCleanName(name)) {
-                showMessage('Danh sách thành viên chứa tên không hợp lệ hoặc từ cấm.', 'error');
+            if (!name || name.length < 2 || name.length > 100) {
+                showMessage('Danh sách thành viên chứa tên không hợp lệ.', 'error');
                 return;
             }
         }
