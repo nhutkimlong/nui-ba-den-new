@@ -806,7 +806,8 @@ function clearNotificationForm() {
 // Load all data from combined API
 async function loadAllDataFromAPI() {
     try {
-        console.log('Loading all data from combined API...');
+        console.log('Loading all data from combined API...', new Date().toISOString());
+        console.trace('loadAllDataFromAPI called from:');
         
         const response = await fetch(CONFIG.COMBINED_API_URL);
         if (response.ok) {
