@@ -144,6 +144,9 @@
 
     <div id="messageBox" class="message-box z-[150]"></div>
 
+    <!-- Admin Notifications Container -->
+    <div id="adminNotifications" class="fixed top-20 left-4 right-4 z-[160] max-w-md mx-auto"></div>
+
     <div class="container mx-auto px-4 py-8 md:px-6 md:py-12 max-w-5xl">
 
         <header class="text-center mb-10 md:mb-16">
@@ -238,10 +241,14 @@
                             </div>
                             <div class="relative">
                                 <label for="birthday" class="block text-sm font-medium text-gray-700 mb-1">Ngày sinh <span class="text-red-500">*</span></label>
-                                <div class="flex items-center border border-gray-300 rounded-md shadow-sm focus-within:ring-1 focus-within:ring-green-500 focus-within:border-green-500">
-                                    <span class="pl-3 pr-2 text-gray-400"><i class="fa-solid fa-cake-candles"></i></span>
-                                    <input type="text" id="birthday" name="birthday" required class="w-full py-2 border border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 shadow-sm">
-                                </div>
+                                        <div class="flex items-center border border-gray-300 rounded-md shadow-sm focus-within:ring-1 focus-within:ring-green-500 focus-within:border-green-500">
+            <span class="pl-3 pr-2 text-gray-400"><i class="fa-solid fa-cake-candles"></i></span>
+            <input type="date" id="birthday" name="birthday" required class="w-full py-2 border-0 rounded-r-md focus:ring-0 focus:outline-none text-base" max="2009-12-31" placeholder="Chọn ngày sinh">
+        </div>
+        <p class="text-xs text-gray-500 mt-1">
+            <i class="fa-solid fa-info-circle mr-1"></i>
+            Chọn ngày sinh (phải từ 15 tuổi trở lên).
+        </p>
                             </div>
                             <div class="relative">
                                 <label for="cccd" class="block text-sm font-medium text-gray-700 mb-1">Căn cước công dân <span class="text-red-500">*</span></label>

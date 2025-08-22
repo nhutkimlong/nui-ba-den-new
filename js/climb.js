@@ -1,12 +1,21 @@
 // --- Configuration ---
 const SUMMIT_LATITUDE = 11.382117991152592;
 const SUMMIT_LONGITUDE = 106.17201169600158;
-const ALLOWED_RADIUS_METERS = 150; // Tăng khoảng cách cho phép lên 150m
 const REGISTRATION_LATITUDE = 11.3636370; // Tọa độ địa điểm đăng ký - CẬP NHẬT THEO ĐỊA CHỈ CỤ THỂ
 const REGISTRATION_LONGITUDE = 106.1664847; // Tọa độ địa điểm đăng ký - CẬP NHẬT THEO ĐỊA CHỈ CỤ THỂ
-const REGISTRATION_RADIUS_METERS = 50; // Bán kính cho phép đăng ký (50m)
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymY15w6A3V2t04Sj190THYP86o8q4bGbBS1qDpMxYTbABP5I1DSDI5eFdhXVHoBDJCnA/exec'; // Ensure this is your latest script URL
 const CROP_ASPECT_RATIO = 11.89 / 16.73; // Defined aspect ratio
+
+// GPS Settings API URL
+const GPS_SETTINGS_API_URL = '/.netlify/functions/gps-settings';
+
+// Default GPS settings (fallback)
+let GPS_SETTINGS = {
+    registrationRadius: 50,
+    certificateRadius: 150,
+    requireGpsRegistration: true,
+    requireGpsCertificate: true
+};
 
 // --- State Variables ---
 let messageTimeout;
@@ -104,6 +113,74 @@ function formatDateObjectToDDMMYYYY(date) {
     return `${day}/${month}/${year}`;
 }
 
+// Hàm validation ngày sinh
+function validateBirthday() {
+    const birthdayInput = document.getElementById('birthday');
+    if (!birthdayInput) return;
+
+    const birthdayValue = birthdayInput.value;
+    if (!birthdayValue) return;
+
+    // Kiểm tra format yyyy-mm-dd
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(birthdayValue)) {
+        birthdayInput.setCustomValidity('Vui lòng chọn ngày sinh hợp lệ');
+        return;
+    }
+
+    const birthday = new Date(birthdayValue);
+    const today = new Date();
+    const age = today.getFullYear() - birthday.getFullYear();
+    const monthDiff = today.getMonth() - birthday.getMonth();
+    
+    // Tính tuổi chính xác
+    let actualAge = age;
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthday.getDate())) {
+        actualAge--;
+    }
+
+                if (actualAge < 15) {
+                birthdayInput.setCustomValidity('Bạn phải từ 15 tuổi trở lên để đăng ký leo núi');
+            } else if (actualAge > 100) {
+                birthdayInput.setCustomValidity('Vui lòng kiểm tra lại ngày sinh');
+            } else {
+                birthdayInput.setCustomValidity('');
+            }
+}
+
+// Hàm helper để đảm bảo format ngày sinh đúng
+function ensureBirthdayFormat(birthdayValue) {
+    if (!birthdayValue) return '';
+    
+    // Nếu đã đúng format yyyy-mm-dd
+    if (/^\d{4}-\d{2}-\d{2}$/.test(birthdayValue)) {
+        return birthdayValue;
+    }
+    
+    // Nếu là Date object
+    if (birthdayValue instanceof Date) {
+        const year = birthdayValue.getFullYear();
+        const month = String(birthdayValue.getMonth() + 1).padStart(2, '0');
+        const day = String(birthdayValue.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
+    // Nếu là string khác format, thử parse
+    try {
+        const date = new Date(birthdayValue);
+        if (!isNaN(date.getTime())) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+    } catch (e) {
+        console.warn('Không thể parse ngày sinh:', birthdayValue);
+    }
+    
+    return birthdayValue; // Trả về nguyên bản nếu không parse được
+}
+
 // Lưu ý về định dạng ngày:
 // - Input type="date" trả về yyyy-mm-dd (đúng cho backend)
 // - Hiển thị trong modal cam kết: dd/mm/yyyy (đã format)
@@ -197,6 +274,41 @@ function initializeLeafletMap() {
     }
 }
 
+// --- GPS Settings Management ---
+
+// Load GPS settings from localStorage first, then API if needed
+async function loadGpsSettings() {
+    try {
+        // Try to load from localStorage first (no API call)
+        const storedSettings = localStorage.getItem('gpsSettings');
+        if (storedSettings) {
+            GPS_SETTINGS = JSON.parse(storedSettings);
+            console.log('GPS Settings loaded from localStorage:', GPS_SETTINGS);
+            return;
+        }
+        
+        // Only call API if no localStorage data
+        console.log('No GPS settings in localStorage, fetching from API...');
+        const response = await fetch(GPS_SETTINGS_API_URL);
+        if (response.ok) {
+            GPS_SETTINGS = await response.json();
+            // Save to localStorage for future use
+            localStorage.setItem('gpsSettings', JSON.stringify(GPS_SETTINGS));
+            console.log('GPS Settings loaded from API and saved to localStorage:', GPS_SETTINGS);
+        } else {
+            console.warn('Failed to load GPS settings, using defaults');
+        }
+    } catch (error) {
+        console.error('Error loading GPS settings:', error);
+        // Use default settings
+    }
+}
+
+// Get current GPS settings
+function getGpsSettings() {
+    return GPS_SETTINGS;
+}
+
 // --- Registration Form Handler ---
 async function handleRegistrationSubmit(event) {
     event.preventDefault();
@@ -218,6 +330,27 @@ async function handleRegistrationSubmit(event) {
             safetyCommitError.classList.remove('hidden');
         }
         showMessage('Vui lòng điền đủ thông tin (*) và xác nhận cam kết.', 'error');
+        return;
+    }
+    
+    // Kiểm tra xem có yêu cầu GPS cho đăng ký không
+    if (!GPS_SETTINGS.requireGpsRegistration) {
+        // Nếu không yêu cầu GPS, tiếp tục với form data
+        const formData = new FormData(registrationForm);
+        pendingRegistrationData = {
+            leaderName: formData.get('leaderName'),
+            birthday: ensureBirthdayFormat(formData.get('birthday')),
+            phoneNumber: formData.get('phoneNumber'),
+            cccd: formData.get('cccd'),
+            address: formData.get('address'),
+            groupSize: formData.get('groupSize'),
+            email: formData.get('email'),
+            climbDate: formData.get('climbDate'),
+            climbTime: formData.get('climbTime'),
+            safetyCommit: safetyCommitCheckbox.checked,
+            memberList: formData.get('memberList').trim()
+        };
+        showCommitmentModal();
         return;
     }
     
@@ -283,14 +416,27 @@ function handleLocationCheckForRegistration(position) {
 
     const distance = getDistanceFromLatLonInMeters(userLat, userLon, REGISTRATION_LATITUDE, REGISTRATION_LONGITUDE);
 
-    if (distance <= REGISTRATION_RADIUS_METERS) {
+    if (distance <= GPS_SETTINGS.registrationRadius) {
         showMessage('Vị trí hợp lệ. Đang chuẩn bị cam kết...', 'success', 2000);
 
         // Lưu lại dữ liệu form để dùng cho bước cam kết
         const formData = new FormData(registrationForm);
+        
+        // Đảm bảo format ngày sinh đúng (yyyy-mm-dd)
+        let birthdayValue = formData.get('birthday');
+        if (birthdayValue) {
+            // Nếu có flatpickr, lấy giá trị thực từ input
+            const birthdayInput = document.getElementById('birthday');
+            if (birthdayInput && birthdayInput._flatpickr && birthdayInput._flatpickr.selectedDates[0]) {
+                birthdayValue = birthdayInput._flatpickr.selectedDates[0];
+            }
+            // Sử dụng helper function để đảm bảo format đúng
+            birthdayValue = ensureBirthdayFormat(birthdayValue);
+        }
+        
         pendingRegistrationData = {
             leaderName: formData.get('leaderName'),
-            birthday: formData.get('birthday'),
+            birthday: birthdayValue,
             phoneNumber: formData.get('phoneNumber'),
             cccd: formData.get('cccd'),
             address: formData.get('address'),
@@ -542,7 +688,7 @@ function handleLocationSuccessForVerification(position, phoneNumber) {
     const distance = getDistanceFromLatLonInMeters(userLat, userLon, SUMMIT_LATITUDE, SUMMIT_LONGITUDE);
 
     // Check distance to set isValid
-    if (distance <= ALLOWED_RADIUS_METERS) {
+    if (distance <= GPS_SETTINGS.certificateRadius) {
         isValid = true;
     }
 
@@ -551,7 +697,7 @@ function handleLocationSuccessForVerification(position, phoneNumber) {
         showMessage(`Vị trí hợp lệ. Đang tải danh sách...`, 'info', 0);
         fetchMembersListForSelection(phoneNumber);
     } else {
-        showMessage(`Vị trí không hợp lệ (cách đỉnh ~${distance.toFixed(0)}m). Cần trong phạm vi ${ALLOWED_RADIUS_METERS}m. Vui lòng di chuyển đến đỉnh núi và thử lại.`, 'error', 12000);
+        showMessage(`Vị trí không hợp lệ (cách đỉnh ~${distance.toFixed(0)}m). Cần trong phạm vi ${GPS_SETTINGS.certificateRadius}m. Vui lòng di chuyển đến đỉnh núi và thử lại.`, 'error', 12000);
         setLoadingState(verifyPhoneBtn, certSpinner, false);
     }
 }
@@ -1042,7 +1188,7 @@ async function handleConfirmCommitment() {
 }
 
 // --- Initialization ---
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Khởi tạo tất cả DOM elements
     initializeDOMElements();
     
@@ -1052,22 +1198,50 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tự động điền ngày và giờ hiện tại
     setupDefaultDateTime();
     
+    // Load GPS settings từ API
+    await loadGpsSettings();
+    
+    // Khởi tạo hệ thống thông báo admin
+    initializeNotificationSystem();
+    
     // Khởi tạo bản đồ với delay nhỏ để đảm bảo Leaflet đã load
     setTimeout(() => {
         initializeLeafletMap();
     }, 100);
 
-    // Khởi tạo flatpickr cho ngày sinh
-    const birthdayInput = document.getElementById('birthday');
-    if (birthdayInput && typeof flatpickr !== 'undefined') {
-        flatpickr(birthdayInput, {
-            dateFormat: "Y-m-d",
-            maxDate: "today",
-            locale: "vn",
-            altInput: true,
-            altFormat: "d/m/Y",
-            yearRange: [1900, new Date().getFullYear()],
-            defaultDate: null,
+            // Khởi tạo flatpickr cho ngày sinh (nếu có)
+        const birthdayInput = document.getElementById('birthday');
+        if (birthdayInput && typeof flatpickr !== 'undefined') {
+            flatpickr(birthdayInput, {
+                dateFormat: "Y-m-d",
+                maxDate: "2009-12-31", // Giới hạn 15 tuổi trở lên
+                locale: "vn",
+                altInput: true,
+                altFormat: "d/m/Y",
+                yearRange: [1900, 2009],
+                defaultDate: null,
+                onChange: function(selectedDates, dateStr, instance) {
+                    // Đảm bảo format đúng cho backend
+                    birthdayInput.value = dateStr;
+                }
+            });
+        } else if (birthdayInput) {
+        // Fallback cho mobile: thêm validation và format
+        birthdayInput.addEventListener('input', function() {
+            // Đảm bảo format yyyy-mm-dd
+            let value = this.value;
+            if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                // Nếu người dùng nhập dd/mm/yyyy, chuyển thành yyyy-mm-dd
+                const parts = value.split('/');
+                if (parts.length === 3) {
+                    const day = parts[0].padStart(2, '0');
+                    const month = parts[1].padStart(2, '0');
+                    const year = parts[2];
+                    if (year.length === 4) {
+                        this.value = `${year}-${month}-${day}`;
+                    }
+                }
+            }
         });
     }
 });
@@ -1166,6 +1340,13 @@ function setupEventListeners() {
             safetyCommitError.classList.toggle('hidden', safetyCommitCheckbox.checked);
         });
     }
+
+    // Validation cho ngày sinh
+    const birthdayInput = document.getElementById('birthday');
+    if (birthdayInput) {
+        birthdayInput.addEventListener('change', validateBirthday);
+        birthdayInput.addEventListener('blur', validateBirthday);
+    }
 }
 
 // Hàm thiết lập ngày giờ mặc định
@@ -1187,3 +1368,289 @@ function setupDefaultDateTime() {
         climbTimeInput.value = `${hh}:${min}`;
     }
 }
+
+// --- Admin Notification System ---
+let adminNotifications = [];
+let notificationCheckInterval = null;
+
+// Configuration for notification system
+const NOTIFICATION_CONFIG = {
+    DISPLAY_DURATION: 10000, // Show notifications for 10 seconds
+    FADE_DURATION: 500, // Fade animation duration
+    MAX_NOTIFICATIONS: 3 // Maximum number of notifications to show at once
+};
+
+// Notification types and their styling
+const NOTIFICATION_TYPES = {
+    weather: { 
+        name: 'Cảnh báo thời tiết', 
+        icon: 'fa-cloud-rain', 
+        bgColor: 'bg-blue-50', 
+        borderColor: 'border-blue-200', 
+        textColor: 'text-blue-800',
+        iconColor: 'text-blue-600'
+    },
+    maintenance: { 
+        name: 'Bảo trì', 
+        icon: 'fa-tools', 
+        bgColor: 'bg-yellow-50', 
+        borderColor: 'border-yellow-200', 
+        textColor: 'text-yellow-800',
+        iconColor: 'text-yellow-600'
+    },
+    announcement: { 
+        name: 'Thông báo chung', 
+        icon: 'fa-bullhorn', 
+        bgColor: 'bg-green-50', 
+        borderColor: 'border-green-200', 
+        textColor: 'text-green-800',
+        iconColor: 'text-green-600'
+    },
+    emergency: { 
+        name: 'Khẩn cấp', 
+        icon: 'fa-exclamation-triangle', 
+        bgColor: 'bg-red-50', 
+        borderColor: 'border-red-200', 
+        textColor: 'text-red-800',
+        iconColor: 'text-red-600'
+    }
+};
+
+// Function to fetch notifications from admin system
+async function fetchAdminNotifications() {
+    try {
+        // Try to fetch from Netlify Function API first
+        const response = await fetch('/.netlify/functions/notifications');
+        if (response.ok) {
+            const notifications = await response.json();
+            return notifications.filter(n => n.active);
+        }
+        
+        // Fallback to localStorage for development
+        const storedNotifications = localStorage.getItem('climbNotifications');
+        if (storedNotifications) {
+            const notifications = JSON.parse(storedNotifications);
+            return notifications.filter(n => n.active);
+        }
+        
+        // No notifications available
+        return [];
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+        return [];
+    }
+}
+
+// Function to check if notification is new (not seen before)
+function isNewNotification(notification) {
+    const seenNotifications = JSON.parse(localStorage.getItem('seenNotifications') || '[]');
+    const isSeen = seenNotifications.includes(notification.id);
+    
+    return !isSeen;
+    
+    // Production code (uncomment when deploying)
+    // return !isSeen;
+}
+
+// Function to mark notification as seen
+function markNotificationAsSeen(notificationId) {
+    const seenNotifications = JSON.parse(localStorage.getItem('seenNotifications') || '[]');
+    if (!seenNotifications.includes(notificationId)) {
+        seenNotifications.push(notificationId);
+        localStorage.setItem('seenNotifications', JSON.stringify(seenNotifications));
+    }
+}
+
+// Function to create notification HTML
+function createNotificationHTML(notification) {
+    const typeInfo = NOTIFICATION_TYPES[notification.type] || NOTIFICATION_TYPES.announcement;
+    
+    return `
+        <div id="notification-${notification.id}" class="notification-item ${typeInfo.bgColor} ${typeInfo.borderColor} border rounded-lg shadow-lg p-4 mb-3 transform transition-all duration-300 opacity-0 translate-y-2" data-notification-id="${notification.id}">
+            <div class="flex items-start justify-between">
+                <div class="flex items-start space-x-3 flex-1">
+                    <div class="flex-shrink-0">
+                        <i class="fas ${typeInfo.icon} ${typeInfo.iconColor} text-xl"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <h4 class="font-semibold ${typeInfo.textColor} text-sm">${notification.title}</h4>
+                            <span class="px-2 py-1 text-xs ${typeInfo.bgColor} ${typeInfo.textColor} rounded-full border ${typeInfo.borderColor}">
+                                ${typeInfo.name}
+                            </span>
+                        </div>
+                        <p class="text-sm ${typeInfo.textColor} opacity-90">${notification.message}</p>
+                    </div>
+                </div>
+                <button onclick="dismissNotification('${notification.id}')" class="flex-shrink-0 ml-3 text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Function to show notification
+function showNotification(notification) {
+    const container = document.getElementById('adminNotifications');
+    if (!container) return;
+    
+    const notificationHTML = createNotificationHTML(notification);
+    container.insertAdjacentHTML('beforeend', notificationHTML);
+    
+    // Animate in
+    const notificationElement = document.getElementById(`notification-${notification.id}`);
+    if (notificationElement) {
+        setTimeout(() => {
+            notificationElement.classList.remove('opacity-0', 'translate-y-2');
+            notificationElement.classList.add('opacity-100', 'translate-y-0');
+        }, 100);
+    }
+    
+    // Auto dismiss after duration
+    setTimeout(() => {
+        dismissNotification(notification.id);
+    }, NOTIFICATION_CONFIG.DISPLAY_DURATION);
+    
+    // Mark as seen
+    markNotificationAsSeen(notification.id);
+}
+
+// Function to dismiss notification
+function dismissNotification(notificationId) {
+    const notificationElement = document.getElementById(`notification-${notificationId}`);
+    if (!notificationElement) return;
+    
+    // Animate out
+    notificationElement.classList.add('opacity-0', 'translate-y-2');
+    
+    setTimeout(() => {
+        if (notificationElement.parentNode) {
+            notificationElement.parentNode.removeChild(notificationElement);
+        }
+    }, NOTIFICATION_CONFIG.FADE_DURATION);
+}
+
+// Function to check for new notifications from localStorage only (no API call)
+function checkForNewNotificationsFromLocalStorage() {
+    try {
+        const storedNotifications = localStorage.getItem('climbNotifications');
+        if (!storedNotifications) return;
+        
+        const notifications = JSON.parse(storedNotifications);
+        const activeNotifications = notifications.filter(n => n.active);
+        const newNotifications = activeNotifications.filter(isNewNotification);
+        
+        // Limit the number of notifications shown
+        const notificationsToShow = newNotifications.slice(0, NOTIFICATION_CONFIG.MAX_NOTIFICATIONS);
+        
+        notificationsToShow.forEach(notification => {
+            showNotification(notification);
+        });
+    } catch (error) {
+        console.error('Error checking for notifications from localStorage:', error);
+    }
+}
+
+// Function to check for new notifications (with API call - only when needed)
+async function checkForNewNotifications() {
+    try {
+        const notifications = await fetchAdminNotifications();
+        const newNotifications = notifications.filter(isNewNotification);
+        
+        // Limit the number of notifications shown
+        const notificationsToShow = newNotifications.slice(0, NOTIFICATION_CONFIG.MAX_NOTIFICATIONS);
+        
+        notificationsToShow.forEach(notification => {
+            showNotification(notification);
+        });
+    } catch (error) {
+        console.error('Error checking for notifications:', error);
+    }
+}
+
+// Function to initialize notification system
+function initializeNotificationSystem() {
+    // Check for notifications immediately on page load (only from localStorage)
+    checkForNewNotificationsFromLocalStorage();
+    
+    // Listen for localStorage changes (when admin creates new notifications)
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'climbNotifications') {
+            console.log('New notification detected via storage event, refreshing...');
+            // Clear existing notifications and check for new ones
+            const container = document.getElementById('adminNotifications');
+            if (container) {
+                container.innerHTML = '';
+            }
+            checkForNewNotificationsFromLocalStorage();
+        }
+    });
+    
+    // Listen for custom events from admin panel (cross-window communication)
+    window.addEventListener('message', function(e) {
+        if (e.data && e.data.type === 'NEW_NOTIFICATION') {
+            console.log('New notification event received, refreshing...');
+            const container = document.getElementById('adminNotifications');
+            if (container) {
+                container.innerHTML = '';
+            }
+            checkForNewNotificationsFromLocalStorage();
+        }
+    });
+    
+    // Listen for GPS settings changes
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'gpsSettings') {
+            console.log('GPS settings changed, refreshing...');
+            const newSettings = JSON.parse(e.newValue);
+            GPS_SETTINGS = newSettings;
+            console.log('GPS Settings updated:', GPS_SETTINGS);
+        }
+    });
+    
+    // Clean up old seen notifications (older than 7 days)
+    cleanupOldSeenNotifications();
+}
+
+// Function to cleanup old seen notifications
+function cleanupOldSeenNotifications() {
+    const seenNotifications = JSON.parse(localStorage.getItem('seenNotifications') || '[]');
+    const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    
+    // In a real implementation, you might want to store timestamps with the IDs
+    // For now, we'll just clear all seen notifications weekly
+    if (seenNotifications.length > 100) { // Arbitrary limit
+        localStorage.removeItem('seenNotifications');
+    }
+}
+
+// Function to stop notification system
+function stopNotificationSystem() {
+    // Remove event listeners if needed
+    // Currently using passive listeners, so no cleanup needed
+}
+
+// Function to manually refresh notifications (can be called from admin panel)
+function refreshNotifications() {
+    console.log('Manually refreshing notifications...');
+    const container = document.getElementById('adminNotifications');
+    if (container) {
+        container.innerHTML = '';
+    }
+    checkForNewNotifications();
+}
+
+// Function to refresh GPS settings (can be called from admin panel)
+async function refreshGpsSettings() {
+    console.log('Refreshing GPS settings from API...');
+    // Clear localStorage to force API call
+    localStorage.removeItem('gpsSettings');
+    await loadGpsSettings();
+}
+
+// Export functions for global access
+window.refreshNotifications = refreshNotifications;
+window.dismissNotification = dismissNotification;
+window.refreshGpsSettings = refreshGpsSettings;
+window.getGpsSettings = getGpsSettings;

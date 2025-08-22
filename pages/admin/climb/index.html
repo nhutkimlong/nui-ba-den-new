@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Quản lý Đăng ký Leo núi - Núi Bà Đen">
+    <meta name="author" content="BQL KDL Núi Bà Đen">
+    <title>Quản lý Đăng ký Leo núi - Núi Bà Đen</title>
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    
+    <!-- Critical CSS first -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Fonts with optimized loading -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+         <style>
+         body {
+             font-family: 'Inter', sans-serif;
+             background-color: #f1f5f9;
+         }
+         .card-hover {
+             transition: all 0.3s ease;
+         }
+         .card-hover:hover {
+             transform: translateY(-2px);
+             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+         }
+         .gradient-bg {
+             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+         }
+         .gradient-bg-success {
+             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+         }
+         .gradient-bg-warning {
+             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+         }
+         .gradient-bg-info {
+             background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+         }
+         
+         /* Chart container styles */
+         .chart-container {
+             position: relative;
+             overflow: hidden;
+         }
+         
+         .chart-container canvas {
+             max-width: 100% !important;
+             max-height: 100% !important;
+         }
+     </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <!-- Header -->
+    <header class="gradient-bg shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <a href="../../admin.html" class="text-white hover:text-blue-200 transition-colors mr-4" title="Về trang Admin">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </a>
+                    <i class="fas fa-mountain text-white text-2xl mr-3"></i>
+                    <h1 class="text-xl font-bold text-white">Quản lý Đăng ký Leo núi</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-white text-sm">
+                        <i class="fas fa-calendar-alt mr-2"></i>
+                        <span id="currentDate"></span>
+                    </span>
+                    <button 
+                        onclick="logout()" 
+                        class="text-white hover:text-blue-200 transition-colors px-3 py-1 rounded-lg hover:bg-white/10"
+                        title="Về trang chủ"
+                    >
+                        <i class="fas fa-home mr-1"></i>
+                        Về trang chủ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Page Title -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold text-slate-800 mb-2">Quản lý Đăng ký Leo núi</h2>
+            <p class="text-slate-600">Quản lý thông báo, tra cứu người leo núi và cài đặt hệ thống</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-slate-600">Tổng đăng ký</p>
+                        <p class="text-2xl font-bold text-slate-900" id="totalRegistrations">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100 text-green-600">
+                        <i class="fas fa-bell text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-slate-600">Thông báo đang hoạt động</p>
+                        <p class="text-2xl font-bold text-slate-900" id="activeNotifications">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                        <i class="fas fa-certificate text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-slate-600">Chứng chỉ đã tạo</p>
+                        <p class="text-2xl font-bold text-slate-900" id="totalCertificates">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-orange-100 text-orange-600">
+                        <i class="fas fa-map-marker-alt text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-slate-600">GPS đang bật</p>
+                        <p class="text-2xl font-bold text-slate-900" id="gpsStatus">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Notification Management -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="gradient-bg-success p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-bell text-white text-2xl mr-3"></i>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Quản lý Thông báo</h3>
+                                <p class="text-blue-100">Tạo và quản lý thông báo chủ động</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6">
+                    <!-- Create New Notification -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-slate-800 mb-4">Tạo thông báo mới</h4>
+                        <form id="notificationForm" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Loại thông báo</label>
+                                <select id="notificationType" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="weather">Cảnh báo thời tiết</option>
+                                    <option value="maintenance">Bảo trì</option>
+                                    <option value="announcement">Thông báo chung</option>
+                                    <option value="emergency">Khẩn cấp</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Tiêu đề</label>
+                                <input type="text" id="notificationTitle" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Nhập tiêu đề thông báo">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Nội dung</label>
+                                <textarea id="notificationMessage" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Nhập nội dung thông báo"></textarea>
+                            </div>
+                            
+                                                         <div class="flex items-center space-x-4">
+                                 <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                     <i class="fas fa-plus mr-2"></i>Tạo thông báo
+                                 </button>
+                                 <button type="button" onclick="clearNotificationForm()" class="px-4 py-2 bg-slate-300 text-slate-700 rounded-lg hover:bg-slate-400 transition-colors">
+                                     <i class="fas fa-times mr-2"></i>Xóa form
+                                 </button>
+                                 
+                             </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Active Notifications -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-slate-800 mb-4">Thông báo đang hoạt động</h4>
+                        <div id="activeNotificationsList" class="space-y-3">
+                            <!-- Notifications will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Search -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="gradient-bg-warning p-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-search text-white text-2xl mr-3"></i>
+                            <div>
+                                <h3 class="text-xl font-bold text-white">Tra cứu Người leo núi</h3>
+                                <p class="text-pink-100">Tìm kiếm thông tin đăng ký</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-6">
+                    <!-- Search Form -->
+                    <div class="mb-6">
+                        <h4 class="text-lg font-semibold text-slate-800 mb-4">Tìm kiếm theo số điện thoại</h4>
+                        <div class="flex space-x-3">
+                            <input type="tel" id="searchPhone" class="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Nhập số điện thoại">
+                            <button onclick="searchUser()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                <i class="fas fa-search mr-2"></i>Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Search Results -->
+                    <div>
+                        <h4 class="text-lg font-semibold text-slate-800 mb-4">Kết quả tìm kiếm</h4>
+                        <div id="searchResults" class="space-y-3">
+                            <!-- Search results will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GPS Settings -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-8">
+            <div class="gradient-bg-info p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas fa-map-marker-alt text-white text-2xl mr-3"></i>
+                        <div>
+                            <h3 class="text-xl font-bold text-white">Cài đặt GPS</h3>
+                            <p class="text-green-100">Cấu hình yêu cầu vị trí và bán kính cho phép</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6">
+                <form id="gpsSettingsForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Bán kính đăng ký (mét)</label>
+                            <input type="number" id="registrationRadius" min="10" max="1000" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="50">
+                            <p class="text-xs text-slate-500 mt-1">Khoảng cách tối đa từ điểm đăng ký</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Bán kính chứng chỉ (mét)</label>
+                            <input type="number" id="certificateRadius" min="50" max="2000" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="150">
+                            <p class="text-xs text-slate-500 mt-1">Khoảng cách tối đa từ đỉnh núi để tạo chứng chỉ</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="requireGpsRegistration" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded">
+                            <label for="requireGpsRegistration" class="ml-2 block text-sm text-slate-700">
+                                Yêu cầu GPS khi đăng ký
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" id="requireGpsCertificate" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded">
+                            <label for="requireGpsCertificate" class="ml-2 block text-sm text-slate-700">
+                                Yêu cầu GPS khi tạo chứng chỉ
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>Lưu cài đặt
+                        </button>
+                        <button type="button" onclick="resetGpsSettings()" class="px-4 py-2 bg-slate-300 text-slate-700 rounded-lg hover:bg-slate-400 transition-colors">
+                            <i class="fas fa-undo mr-2"></i>Khôi phục mặc định
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Detailed Statistics -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-8">
+            <h3 class="text-lg font-semibold text-slate-800 mb-6 flex items-center">
+                <i class="fas fa-chart-line text-indigo-500 mr-2"></i>
+                Thống kê Chi tiết
+            </h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                                 <!-- Daily Chart -->
+                 <div class="bg-slate-50 rounded-lg p-4">
+                     <h4 class="text-md font-semibold text-slate-700 mb-4">Thống kê 30 ngày gần đây</h4>
+                     <div class="chart-container" style="height: 300px;">
+                         <canvas id="dailyChart"></canvas>
+                     </div>
+                 </div>
+                 
+                 <!-- Monthly Chart -->
+                 <div class="bg-slate-50 rounded-lg p-4">
+                     <h4 class="text-md font-semibold text-slate-700 mb-4">Thống kê 12 tháng gần đây</h4>
+                     <div class="chart-container" style="height: 300px;">
+                         <canvas id="monthlyChart"></canvas>
+                     </div>
+                 </div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                 <!-- Visitor Type Chart -->
+                 <div class="bg-slate-50 rounded-lg p-4">
+                     <h4 class="text-md font-semibold text-slate-700 mb-4">Phân loại đoàn (số lượng đoàn)</h4>
+                     <div class="chart-container" style="height: 250px;">
+                         <canvas id="visitorTypeChart"></canvas>
+                     </div>
+                 </div>
+                 
+                 <!-- Growth Trend Chart -->
+                 <div class="bg-slate-50 rounded-lg p-4">
+                     <h4 class="text-md font-semibold text-slate-700 mb-4">Tăng trưởng 6 tháng</h4>
+                     <div class="chart-container" style="height: 250px;">
+                         <canvas id="growthTrendChart"></canvas>
+                     </div>
+                 </div>
+                
+                <!-- Executive Summary -->
+                <div class="bg-slate-50 rounded-lg p-4">
+                    <h4 class="text-md font-semibold text-slate-700 mb-4">Tóm tắt</h4>
+                    <div id="executiveSummary" class="space-y-3">
+                        <!-- Executive summary will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Registrations -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-8">
+            <h3 class="text-lg font-semibold text-slate-800 mb-4 flex items-center">
+                <i class="fas fa-history text-indigo-500 mr-2"></i>
+                Đăng ký gần đây
+            </h3>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200">
+                    <thead class="bg-slate-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tên</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">SĐT</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ngày sinh</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ngày đăng ký</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Thời gian</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentRegistrationsTable" class="bg-white divide-y divide-slate-200">
+                        <!-- Recent registrations will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-white py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="flex items-center mb-4 md:mb-0">
+                    <i class="fas fa-mountain text-2xl mr-3 text-indigo-400"></i>
+                    <div>
+                        <h4 class="font-semibold">BQL KDL Núi Bà Đen</h4>
+                        <p class="text-sm text-slate-400">Quản lý đăng ký leo núi</p>
+                    </div>
+                </div>
+                <div class="text-sm text-slate-400">
+                    © <span id="currentYear"></span> BQL KDL Núi Bà Đen. Tất cả quyền được bảo lưu.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="script.js"></script>
+
+    <!-- Admin Security Check -->
+    <script>
+        // Check authentication before loading admin panel
+        function checkAdminAuth() {
+            const token = localStorage.getItem('adminToken');
+            const loginTime = localStorage.getItem('adminLoginTime');
+            
+            // Check if token exists and is not expired (24 hours)
+            if (!token || !loginTime) {
+                window.location.href = '../../admin-login.html';
+                return;
+            }
+            
+            const now = Date.now();
+            const loginTimeNum = parseInt(loginTime);
+            const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
+            
+            if (now - loginTimeNum > sessionDuration) {
+                // Session expired
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminLoginTime');
+                window.location.href = '../../admin-login.html';
+                return;
+            }
+        }
+        
+        // Check auth on page load
+        checkAdminAuth();
+        
+        // Logout function
+        function logout() {
+            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminLoginTime');
+            window.location.href = '../../admin-login.html';
+        }
+    </script>
+</body>
+</html>
