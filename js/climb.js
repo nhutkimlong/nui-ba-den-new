@@ -1660,6 +1660,9 @@ async function loadAllDataFromAPI() {
             localStorage.setItem('climbNotifications', JSON.stringify(notifications));
             processNotifications(notifications);
             
+            // Update registration time status after GPS settings are loaded
+            updateRegistrationTimeStatus();
+            
         } else {
             throw new Error('Failed to fetch combined data');
         }
@@ -1668,6 +1671,9 @@ async function loadAllDataFromAPI() {
         // Fallback to individual APIs
         await loadGpsSettings();
         checkForNewNotificationsFromLocalStorage();
+        
+        // Update registration time status even in fallback case
+        updateRegistrationTimeStatus();
     }
 }
 
@@ -1771,8 +1777,8 @@ function initializeNotificationSystem() {
     // Clean up old seen notifications (older than 7 days)
     cleanupOldSeenNotifications();
     
-    // Initialize registration time status
-    updateRegistrationTimeStatus();
+    // Initialize registration time status after data is loaded
+    // updateRegistrationTimeStatus(); // Moved to after data loading
     
     // Update registration time status every minute
     setInterval(updateRegistrationTimeStatus, 60000);
@@ -1782,6 +1788,12 @@ function initializeNotificationSystem() {
 function updateRegistrationTimeStatus() {
     const container = document.getElementById('registrationTimeStatus');
     if (!container) return;
+    
+    // Check if GPS_SETTINGS is properly initialized
+    if (!GPS_SETTINGS || typeof GPS_SETTINGS.registrationTimeEnabled === 'undefined') {
+        container.innerHTML = '';
+        return;
+    }
     
     const status = getRegistrationTimeStatus();
     if (!status) {
@@ -1857,8 +1869,14 @@ async function refreshGpsSettings() {
 
 // Check if current time is within registration time window
 function isWithinRegistrationTime() {
-    if (!GPS_SETTINGS.registrationTimeEnabled) {
+    // Check if GPS_SETTINGS exists and has the required properties
+    if (!GPS_SETTINGS || !GPS_SETTINGS.registrationTimeEnabled) {
         return true; // No time restriction
+    }
+    
+    // Check if time settings exist
+    if (!GPS_SETTINGS.registrationStartTime || !GPS_SETTINGS.registrationEndTime) {
+        return true; // No time restriction if times are not set
     }
     
     const now = new Date();
@@ -1880,7 +1898,13 @@ function isWithinRegistrationTime() {
 
 // Get registration time status message
 function getRegistrationTimeStatus() {
-    if (!GPS_SETTINGS.registrationTimeEnabled) {
+    // Check if GPS_SETTINGS exists and has the required properties
+    if (!GPS_SETTINGS || !GPS_SETTINGS.registrationTimeEnabled) {
+        return null;
+    }
+    
+    // Check if time settings exist
+    if (!GPS_SETTINGS.registrationStartTime || !GPS_SETTINGS.registrationEndTime) {
         return null;
     }
     
@@ -1914,7 +1938,8 @@ function getRegistrationTimeStatus() {
 function validateRegistrationTime() {
     if (!isWithinRegistrationTime()) {
         const status = getRegistrationTimeStatus();
-        showMessage(`Không thể đăng ký lúc này. ${status}`, 'error', 8000);
+        const message = status ? `Không thể đăng ký lúc này. ${status}` : 'Không thể đăng ký lúc này.';
+        showMessage(message, 'error', 8000);
         return false;
     }
     return true;
