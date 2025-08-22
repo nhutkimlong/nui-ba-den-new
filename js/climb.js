@@ -6,8 +6,8 @@ const REGISTRATION_LONGITUDE = 106.1664847; // Tọa độ địa điểm đăng
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymY15w6A3V2t04Sj190THYP86o8q4bGbBS1qDpMxYTbABP5I1DSDI5eFdhXVHoBDJCnA/exec'; // Ensure this is your latest script URL
 const CROP_ASPECT_RATIO = 11.89 / 16.73; // Defined aspect ratio
 
-// GPS Settings API URL
-const GPS_SETTINGS_API_URL = '/.netlify/functions/gps-settings';
+// API URLs
+const COMBINED_API_URL = '/.netlify/functions/combined-data';
 
 // Default GPS settings (fallback)
 let GPS_SETTINGS = {
@@ -276,34 +276,14 @@ function initializeLeafletMap() {
 
 // --- GPS Settings Management ---
 
-// Load GPS settings from localStorage first, then API if needed
+// Load GPS settings from API first, then localStorage if needed (legacy - now using combined API)
 async function loadGpsSettings() {
-    try {
-        // Try to load from localStorage first (no API call)
-        const storedSettings = localStorage.getItem('gpsSettings');
-        if (storedSettings) {
-            GPS_SETTINGS = JSON.parse(storedSettings);
-            console.log('GPS Settings loaded from localStorage:', GPS_SETTINGS);
-            return;
-        }
-        
-        // Only call API if no localStorage data
-        console.log('No GPS settings in localStorage, fetching from API...');
-        const response = await fetch(GPS_SETTINGS_API_URL);
-        if (response.ok) {
-            GPS_SETTINGS = await response.json();
-            // Save to localStorage for future use
-            localStorage.setItem('gpsSettings', JSON.stringify(GPS_SETTINGS));
-            console.log('GPS Settings loaded from API and saved to localStorage:', GPS_SETTINGS);
-        } else {
-            console.warn('Failed to load GPS settings from API, using defaults');
-            // Save defaults to localStorage to avoid future API calls
-            localStorage.setItem('gpsSettings', JSON.stringify(GPS_SETTINGS));
-        }
-    } catch (error) {
-        console.error('Error loading GPS settings:', error);
-        // Use default settings and save to localStorage
-        localStorage.setItem('gpsSettings', JSON.stringify(GPS_SETTINGS));
+    console.warn('loadGpsSettings is deprecated, use loadAllDataFromAPI instead');
+    // Fallback to localStorage
+    const storedSettings = localStorage.getItem('gpsSettings');
+    if (storedSettings) {
+        GPS_SETTINGS = JSON.parse(storedSettings);
+        console.log('GPS Settings loaded from localStorage (fallback):', GPS_SETTINGS);
     }
 }
 
@@ -1201,8 +1181,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Tự động điền ngày và giờ hiện tại
     setupDefaultDateTime();
     
-    // Load GPS settings từ API
-    await loadGpsSettings();
+    // Load all data from combined API
+    await loadAllDataFromAPI();
     
     // Khởi tạo hệ thống thông báo admin
     initializeNotificationSystem();
@@ -1419,36 +1399,10 @@ const NOTIFICATION_TYPES = {
     }
 };
 
-// Function to fetch notifications from admin system
+// Function to fetch notifications from admin system (legacy - now using combined API)
 async function fetchAdminNotifications() {
-    try {
-        // Try to fetch from Netlify Function API first
-        const response = await fetch('/.netlify/functions/notifications');
-        if (response.ok) {
-            const notifications = await response.json();
-            return notifications.filter(n => n.active);
-        }
-        
-        console.warn('Netlify Function not available, using localStorage fallback');
-        // Fallback to localStorage for development
-        const storedNotifications = localStorage.getItem('climbNotifications');
-        if (storedNotifications) {
-            const notifications = JSON.parse(storedNotifications);
-            return notifications.filter(n => n.active);
-        }
-        
-        // No notifications available
-        return [];
-    } catch (error) {
-        console.error('Error fetching notifications:', error);
-        // Fallback to localStorage
-        const storedNotifications = localStorage.getItem('climbNotifications');
-        if (storedNotifications) {
-            const notifications = JSON.parse(storedNotifications);
-            return notifications.filter(n => n.active);
-        }
-        return [];
-    }
+    console.warn('fetchAdminNotifications is deprecated, use loadAllDataFromAPI instead');
+    return [];
 }
 
 // Function to check if notification is new (not seen before)
@@ -1502,8 +1456,15 @@ function createNotificationHTML(notification) {
 
 // Function to show notification
 function showNotification(notification) {
+    console.log('Showing notification:', notification);
+    
     const container = document.getElementById('adminNotifications');
-    if (!container) return;
+    if (!container) {
+        console.error('adminNotifications container not found!');
+        return;
+    }
+    
+    console.log('Found adminNotifications container:', container);
     
     const notificationHTML = createNotificationHTML(notification);
     container.insertAdjacentHTML('beforeend', notificationHTML);
@@ -1541,6 +1502,83 @@ function dismissNotification(notificationId) {
     }, NOTIFICATION_CONFIG.FADE_DURATION);
 }
 
+// Function to load all data from combined API
+async function loadAllDataFromAPI() {
+    try {
+        console.log('Loading all data from combined API...');
+        
+        const response = await fetch(COMBINED_API_URL);
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Combined API result:', result);
+            
+            // Check if we have cached data to compare
+            const cachedData = localStorage.getItem('combinedDataCache');
+            if (cachedData) {
+                const cached = JSON.parse(cachedData);
+                const notificationsChanged = cached.notifications.lastModified !== result.notifications.lastModified;
+                const gpsChanged = cached.gpsSettings.lastModified !== result.gpsSettings.lastModified;
+                
+                if (!notificationsChanged && !gpsChanged) {
+                    console.log('No changes detected, using cached data');
+                    // Use cached data
+                    GPS_SETTINGS = cached.gpsSettings.data;
+                    const notifications = cached.notifications.data.filter(n => n.active);
+                    processNotifications(notifications);
+                    return;
+                }
+            }
+            
+            // Save new data to cache
+            localStorage.setItem('combinedDataCache', JSON.stringify({
+                notifications: result.notifications,
+                gpsSettings: result.gpsSettings
+            }));
+            
+            // Process GPS settings
+            GPS_SETTINGS = result.gpsSettings.data;
+            localStorage.setItem('gpsSettings', JSON.stringify(GPS_SETTINGS));
+            console.log('GPS Settings loaded:', GPS_SETTINGS);
+            
+            // Process notifications
+            const notifications = result.notifications.data.filter(n => n.active);
+            localStorage.setItem('climbNotifications', JSON.stringify(notifications));
+            processNotifications(notifications);
+            
+        } else {
+            throw new Error('Failed to fetch combined data');
+        }
+    } catch (error) {
+        console.error('Error loading combined data:', error);
+        // Fallback to individual APIs
+        await loadGpsSettings();
+        checkForNewNotificationsFromLocalStorage();
+    }
+}
+
+// Function to process notifications
+function processNotifications(notifications) {
+    console.log('Processing notifications:', notifications);
+    
+    // Filter for new notifications
+    const newNotifications = notifications.filter(isNewNotification);
+    console.log('New notifications:', newNotifications);
+    
+    // Limit the number of notifications shown
+    const notificationsToShow = newNotifications.slice(0, NOTIFICATION_CONFIG.MAX_NOTIFICATIONS);
+    console.log('Notifications to show:', notificationsToShow);
+    
+    notificationsToShow.forEach(notification => {
+        showNotification(notification);
+    });
+}
+
+// Function to check for new notifications on page load (fetch from API first)
+async function checkForNewNotificationsOnPageLoad() {
+    // This function is now replaced by loadAllDataFromAPI
+    await loadAllDataFromAPI();
+}
+
 // Function to check for new notifications from localStorage only (no API call)
 function checkForNewNotificationsFromLocalStorage() {
     try {
@@ -1564,25 +1602,14 @@ function checkForNewNotificationsFromLocalStorage() {
 
 // Function to check for new notifications (with API call - only when needed)
 async function checkForNewNotifications() {
-    try {
-        const notifications = await fetchAdminNotifications();
-        const newNotifications = notifications.filter(isNewNotification);
-        
-        // Limit the number of notifications shown
-        const notificationsToShow = newNotifications.slice(0, NOTIFICATION_CONFIG.MAX_NOTIFICATIONS);
-        
-        notificationsToShow.forEach(notification => {
-            showNotification(notification);
-        });
-    } catch (error) {
-        console.error('Error checking for notifications:', error);
-    }
+    console.warn('checkForNewNotifications is deprecated, use loadAllDataFromAPI instead');
+    await loadAllDataFromAPI();
 }
 
 // Function to initialize notification system
 function initializeNotificationSystem() {
-    // Check for notifications immediately on page load (only from localStorage)
-    checkForNewNotificationsFromLocalStorage();
+    // Check for notifications immediately on page load (fetch from API first, then localStorage)
+    checkForNewNotificationsOnPageLoad();
     
     // Listen for localStorage changes (when admin creates new notifications)
     window.addEventListener('storage', function(e) {
@@ -1641,22 +1668,26 @@ function stopNotificationSystem() {
     // Currently using passive listeners, so no cleanup needed
 }
 
-// Function to manually refresh notifications (can be called from admin panel)
-function refreshNotifications() {
-    console.log('Manually refreshing notifications...');
+// Function to manually refresh all data (can be called from admin panel)
+function refreshAllData() {
+    console.log('Manually refreshing all data...');
     const container = document.getElementById('adminNotifications');
     if (container) {
         container.innerHTML = '';
     }
-    checkForNewNotifications();
+    loadAllDataFromAPI();
+}
+
+// Function to manually refresh notifications (can be called from admin panel)
+function refreshNotifications() {
+    console.log('Manually refreshing notifications...');
+    refreshAllData();
 }
 
 // Function to refresh GPS settings (can be called from admin panel)
 async function refreshGpsSettings() {
-    console.log('Refreshing GPS settings from API...');
-    // Clear localStorage to force API call
-    localStorage.removeItem('gpsSettings');
-    await loadGpsSettings();
+    console.log('Refreshing GPS settings...');
+    refreshAllData();
 }
 
 // Export functions for global access

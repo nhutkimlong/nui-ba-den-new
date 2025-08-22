@@ -4,8 +4,7 @@
 // Configuration
 const CONFIG = {
     GOOGLE_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyWYJtTjYvSFT--TPpV6bk4-o6jKtqXBhe5di-h6ozC2sKscM_i8_PCJxzPpL_bEDNT/exec',
-    NOTIFICATION_API_URL: '/.netlify/functions/notifications',
-    GPS_SETTINGS_API_URL: '/.netlify/functions/gps-settings',
+    COMBINED_API_URL: '/.netlify/functions/combined-data',
     NOTIFICATION_CHECK_INTERVAL: 30000, // 30 seconds
     NOTIFICATION_DISPLAY_DURATION: 10000, // 10 seconds
     MAX_NOTIFICATIONS: 5,
@@ -74,6 +73,14 @@ document.addEventListener('DOMContentLoaded', function() {
     loadInitialData();
     updateCurrentDate();
     setInterval(updateCurrentDate, 60000); // Update every minute
+    
+    // Auto-refresh data when tab becomes visible (user switches back to tab)
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            // Refresh data when user comes back to the tab
+            refreshAllData();
+        }
+    });
 });
 
 // Initialize DOM elements
@@ -139,8 +146,7 @@ async function loadInitialData() {
     try {
         await Promise.all([
             loadStats(),
-            loadNotifications(),
-            loadGpsSettings(),
+            loadAllDataFromAPI(),
             loadRecentRegistrations(),
             loadDetailedStats()
         ]);
@@ -681,12 +687,15 @@ async function handleCreateNotification(e) {
         
         // Send to Netlify Function API
         try {
-            const response = await fetch(CONFIG.NOTIFICATION_API_URL, {
+            const response = await fetch(CONFIG.COMBINED_API_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(notification)
+                body: JSON.stringify({
+                    action: 'createNotification',
+                    data: notification
+                })
             });
             
             if (!response.ok) {
@@ -760,13 +769,54 @@ function clearNotificationForm() {
     }
 }
 
-// Load notifications
+// Load all data from combined API
+async function loadAllDataFromAPI() {
+    try {
+        console.log('Loading all data from combined API...');
+        
+        const response = await fetch(CONFIG.COMBINED_API_URL);
+        if (response.ok) {
+            const result = await response.json();
+            console.log('Combined API result:', result);
+            
+            // Process notifications
+            notifications = result.notifications.data || [];
+            localStorage.setItem('climbNotifications', JSON.stringify(notifications));
+            
+            // Process GPS settings
+            gpsSettings = result.gpsSettings.data || {
+                registrationRadius: CONFIG.DEFAULT_REGISTRATION_RADIUS,
+                certificateRadius: CONFIG.DEFAULT_CERTIFICATE_RADIUS,
+                requireGpsRegistration: true,
+                requireGpsCertificate: true
+            };
+            localStorage.setItem('gpsSettings', JSON.stringify(gpsSettings));
+            
+            // Update UI
+            updateNotificationsList();
+            updateGpsSettingsForm();
+            updateGpsStatus();
+            updateStats();
+            
+        } else {
+            throw new Error('Failed to fetch combined data');
+        }
+    } catch (error) {
+        console.error('Error loading combined data:', error);
+        // Fallback to individual APIs
+        await loadNotifications();
+        await loadGpsSettings();
+    }
+}
+
+// Load notifications (legacy - now using combined API)
 async function loadNotifications() {
     try {
         // Fetch from Netlify Function API
         const response = await fetch(CONFIG.NOTIFICATION_API_URL);
         if (response.ok) {
-            notifications = await response.json();
+            const result = await response.json();
+            notifications = result.data || [];
             // Sync with localStorage to ensure climb page can read
             localStorage.setItem('climbNotifications', JSON.stringify(notifications));
         } else {
@@ -846,27 +896,149 @@ function createNotificationHTML(notification) {
 }
 
 // Toggle notification active status
-function toggleNotification(notificationId) {
+async function toggleNotification(notificationId) {
     const notification = notifications.find(n => n.id === notificationId);
     if (notification) {
-        notification.active = !notification.active;
-        localStorage.setItem('climbNotifications', JSON.stringify(notifications));
-        updateNotificationsList();
-        updateStats();
-        
-        const status = notification.active ? 'kích hoạt' : 'ẩn';
-        showMessage(`Thông báo đã được ${status}`, 'success');
+        try {
+            setLoadingState(true);
+            
+            // Update notification status
+            notification.active = !notification.active;
+            
+            // Send PUT request to Netlify Function API
+            try {
+                const response = await fetch(CONFIG.COMBINED_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'updateNotification',
+                        data: {
+                            id: notificationId,
+                            active: notification.active
+                        }
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to update notification');
+                }
+                
+                // Refresh notifications from server
+                await loadNotifications();
+                
+            } catch (error) {
+                console.error('Error updating notification:', error);
+                // Fallback to localStorage for development
+                localStorage.setItem('climbNotifications', JSON.stringify(notifications));
+            }
+            
+            // Update UI
+            updateNotificationsList();
+            updateStats();
+            
+            // Trigger storage event for other tabs/windows
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'climbNotifications',
+                newValue: JSON.stringify(notifications)
+            }));
+            
+            // Trigger notification refresh on climb page
+            try {
+                if (window.opener && window.opener.refreshNotifications) {
+                    window.opener.refreshNotifications();
+                }
+                
+                if (window.opener) {
+                    window.opener.postMessage({
+                        type: 'NEW_NOTIFICATION',
+                        data: notification
+                    }, '*');
+                }
+            } catch (error) {
+                console.error('Could not refresh climb page notifications:', error);
+            }
+            
+            const status = notification.active ? 'kích hoạt' : 'ẩn';
+            showMessage(`Thông báo đã được ${status}`, 'success');
+            
+        } catch (error) {
+            console.error('Error toggling notification:', error);
+            showMessage('Có lỗi khi cập nhật thông báo', 'error');
+        } finally {
+            setLoadingState(false);
+        }
     }
 }
 
 // Delete notification
-function deleteNotification(notificationId) {
+async function deleteNotification(notificationId) {
     if (confirm('Bạn có chắc chắn muốn xóa thông báo này?')) {
-        notifications = notifications.filter(n => n.id !== notificationId);
-        localStorage.setItem('climbNotifications', JSON.stringify(notifications));
-        updateNotificationsList();
-        updateStats();
-        showMessage('Thông báo đã được xóa', 'success');
+        try {
+            setLoadingState(true);
+            
+            // Send DELETE request to Netlify Function API
+            try {
+                const response = await fetch(CONFIG.COMBINED_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'deleteNotification',
+                        data: { id: notificationId }
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to delete notification');
+                }
+                
+                // Refresh notifications from server
+                await loadNotifications();
+                
+            } catch (error) {
+                console.error('Error deleting notification:', error);
+                // Fallback to localStorage for development
+                notifications = notifications.filter(n => n.id !== notificationId);
+                localStorage.setItem('climbNotifications', JSON.stringify(notifications));
+            }
+            
+            // Update UI
+            updateNotificationsList();
+            updateStats();
+            
+            // Trigger storage event for other tabs/windows
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'climbNotifications',
+                newValue: JSON.stringify(notifications)
+            }));
+            
+            // Trigger notification refresh on climb page
+            try {
+                if (window.opener && window.opener.refreshNotifications) {
+                    window.opener.refreshNotifications();
+                }
+                
+                if (window.opener) {
+                    window.opener.postMessage({
+                        type: 'NEW_NOTIFICATION',
+                        data: { deleted: true, id: notificationId }
+                    }, '*');
+                }
+            } catch (error) {
+                console.error('Could not refresh climb page notifications:', error);
+            }
+            
+            showMessage('Thông báo đã được xóa', 'success');
+            
+        } catch (error) {
+            console.error('Error deleting notification:', error);
+            showMessage('Có lỗi khi xóa thông báo', 'error');
+        } finally {
+            setLoadingState(false);
+        }
     }
 }
 
@@ -986,13 +1158,19 @@ function displaySearchResults(results) {
 
 // ===== GPS SETTINGS =====
 
-// Load GPS settings
+// Load GPS settings (legacy - now using combined API)
 async function loadGpsSettings() {
     try {
         // Fetch from Netlify Function API
         const response = await fetch(CONFIG.GPS_SETTINGS_API_URL);
         if (response.ok) {
-            gpsSettings = await response.json();
+            const result = await response.json();
+            gpsSettings = result.data || {
+                registrationRadius: CONFIG.DEFAULT_REGISTRATION_RADIUS,
+                certificateRadius: CONFIG.DEFAULT_CERTIFICATE_RADIUS,
+                requireGpsRegistration: true,
+                requireGpsCertificate: true
+            };
         } else {
             // Fallback to localStorage for development
             const stored = localStorage.getItem('climbGpsSettings');
@@ -1048,12 +1226,15 @@ async function handleSaveGpsSettings(e) {
         
         // Send to Netlify Function API
         try {
-            const response = await fetch(CONFIG.GPS_SETTINGS_API_URL, {
+            const response = await fetch(CONFIG.COMBINED_API_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(newSettings)
+                body: JSON.stringify({
+                    action: 'updateGpsSettings',
+                    data: newSettings
+                })
             });
             
             if (!response.ok) {
@@ -1061,25 +1242,25 @@ async function handleSaveGpsSettings(e) {
             }
             
             gpsSettings = newSettings;
-                    updateGpsStatus();
-        
-        // Trigger GPS settings refresh on climb page
-        try {
-            if (window.opener && window.opener.refreshGpsSettings) {
-                window.opener.refreshGpsSettings();
+            updateGpsStatus();
+            
+            // Trigger GPS settings refresh on climb page
+            try {
+                if (window.opener && window.opener.refreshGpsSettings) {
+                    window.opener.refreshGpsSettings();
+                }
+                
+                // Also trigger localStorage event for other tabs/windows
+                localStorage.setItem('gpsSettings', JSON.stringify(newSettings));
+                window.dispatchEvent(new StorageEvent('storage', {
+                    key: 'gpsSettings',
+                    newValue: JSON.stringify(newSettings)
+                }));
+            } catch (error) {
+                console.error('Could not refresh climb page GPS settings:', error);
             }
             
-            // Also trigger localStorage event for other tabs/windows
-            localStorage.setItem('gpsSettings', JSON.stringify(newSettings));
-            window.dispatchEvent(new StorageEvent('storage', {
-                key: 'gpsSettings',
-                newValue: JSON.stringify(newSettings)
-            }));
-        } catch (error) {
-            console.error('Could not refresh climb page GPS settings:', error);
-        }
-        
-        showMessage('Cài đặt GPS đã được lưu thành công và đồng bộ với hệ thống', 'success');
+            showMessage('Cài đặt GPS đã được lưu thành công và đồng bộ với hệ thống', 'success');
             
         } catch (error) {
             console.error('Error saving GPS settings to server:', error);
@@ -1280,6 +1461,33 @@ function displayRecentRegistrations(registrations) {
 
 // ===== UTILITY FUNCTIONS =====
 
+// Refresh all data
+async function refreshAllData() {
+    try {
+        setLoadingState(true);
+        
+        // Refresh all data from combined API
+        await loadAllDataFromAPI();
+        
+        // Refresh stats
+        await loadStats();
+        
+        // Refresh recent registrations
+        await loadRecentRegistrations();
+        
+        // Refresh detailed stats
+        await loadDetailedStats();
+        
+        showMessage('Đã làm mới tất cả dữ liệu', 'success');
+        
+    } catch (error) {
+        console.error('Error refreshing data:', error);
+        showMessage('Có lỗi khi làm mới dữ liệu', 'error');
+    } finally {
+        setLoadingState(false);
+    }
+}
+
 // Show message
 function showMessage(message, type = 'info') {
     // Create message element
@@ -1375,3 +1583,4 @@ window.clearNotificationForm = clearNotificationForm;
 window.toggleNotification = toggleNotification;
 window.deleteNotification = deleteNotification;
 window.resetGpsSettings = resetGpsSettings;
+window.refreshAllData = refreshAllData;

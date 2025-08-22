@@ -84,6 +84,15 @@
                         <span id="currentDate"></span>
                     </span>
                     <button 
+                        onclick="refreshAllData()" 
+                        class="text-white hover:text-blue-200 transition-colors px-3 py-1 rounded-lg hover:bg-white/10"
+                        title="Làm mới dữ liệu"
+                        id="refreshButton"
+                    >
+                        <i class="fas fa-sync-alt mr-1"></i>
+                        Làm mới
+                    </button>
+                    <button 
                         onclick="logout()" 
                         class="text-white hover:text-blue-200 transition-colors px-3 py-1 rounded-lg hover:bg-white/10"
                         title="Về trang chủ"
