@@ -213,11 +213,12 @@ function parseLocalDateTime(yyyyMmDd, hhMm) {
     } catch (e) { return null; }
 }
 
-function isClimbDateTimeNotBeforeNow(dateStr, timeStr) {
+function isClimbDateTimeWithinGrace(dateStr, timeStr, graceMinutes = 30) {
     const scheduled = parseLocalDateTime(dateStr, timeStr);
     if (!scheduled) return true; // if cannot parse, don't block here
     const now = new Date();
-    return scheduled.getTime() >= now.getTime();
+    const graceMs = Math.max(0, Number(graceMinutes)) * 60 * 1000;
+    return scheduled.getTime() >= (now.getTime() - graceMs);
 }
 
 const PROFANITY_PATTERNS = [
@@ -392,8 +393,8 @@ async function handleRegistrationSubmit(event) {
     // Validate climb date/time not before current time
     const climbDateVal = document.getElementById('climbDate')?.value || '';
     const climbTimeVal = document.getElementById('climbTime')?.value || '';
-    if (!isClimbDateTimeNotBeforeNow(climbDateVal, climbTimeVal)) {
-        showMessage('Ngày/giờ leo không được trước thời điểm đăng ký hiện tại.', 'error');
+    if (!isClimbDateTimeWithinGrace(climbDateVal, climbTimeVal, 30)) {
+        showMessage('Ngày/giờ leo chỉ được sớm hơn tối đa 30 phút so với hiện tại.', 'error');
         return;
     }
     // Validate leader name and each member name (profanity filter)
@@ -509,10 +510,10 @@ function handleLocationCheckForRegistration(position) {
         // Lưu lại dữ liệu form để dùng cho bước cam kết
         const formData = new FormData(registrationForm);
         // Validate climb date/time not before current time (redundant check)
-        const climbDateVal2 = formData.get('climbDate') || '';
-        const climbTimeVal2 = formData.get('climbTime') || '';
-        if (!isClimbDateTimeNotBeforeNow(String(climbDateVal2), String(climbTimeVal2))) {
-            showMessage('Ngày/giờ leo không được trước thời điểm đăng ký hiện tại.', 'error');
+        const climbDateVal2 = String(formData.get('climbDate') || '');
+        const climbTimeVal2 = String(formData.get('climbTime') || '');
+        if (!isClimbDateTimeWithinGrace(climbDateVal2, climbTimeVal2, 30)) {
+            showMessage('Ngày/giờ leo chỉ được sớm hơn tối đa 30 phút so với hiện tại.', 'error');
             return;
         }
         // Validate names (leader + members)
