@@ -1120,7 +1120,7 @@ async function searchUser() {
     const phoneNumber = elements.searchPhone.value.trim();
     
     if (!phoneNumber) {
-        showMessage('Vui lòng nhập số điện thoại', 'error');
+        showMessage('Vui lòng nhập số điện thoại để tìm kiếm', 'warning');
         return;
     }
     
@@ -1137,14 +1137,38 @@ async function searchUser() {
         const result = await response.json();
         
         if (result.success) {
-            displaySearchResults(result.data);
+            // Kiểm tra và xử lý dữ liệu trước khi hiển thị
+            if (Array.isArray(result.data)) {
+                displaySearchResults(result.data);
+            } else {
+                throw new Error('Dữ liệu trả về không đúng định dạng');
+            }
         } else {
             throw new Error(result.message || 'Không thể tìm kiếm người dùng');
         }
         
     } catch (error) {
         console.error('Error searching user:', error);
-        showMessage(`Có lỗi khi tìm kiếm người dùng: ${error.message}`, 'error');
+        
+        // Hiển thị thông báo lỗi cụ thể hơn
+        let errorMessage = 'Có lỗi khi tìm kiếm người dùng';
+        if (error.message.includes('HTTP error')) {
+            errorMessage = 'Không thể kết nối đến Google Apps Script';
+        } else {
+            errorMessage = error.message;
+        }
+        
+        showMessage(errorMessage, 'error');
+        
+        // Xóa kết quả tìm kiếm cũ
+        if (elements.searchResults) {
+            elements.searchResults.innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <i class="fas fa-exclamation-triangle text-4xl mb-4"></i>
+                    <p>Không thể tìm kiếm. Vui lòng thử lại sau.</p>
+                </div>
+            `;
+        }
     } finally {
         setLoadingState(false);
     }
@@ -1180,14 +1204,25 @@ function displaySearchResults(results) {
         </div>
     `;
     
-    html += limitedResults.map((user, index) => `
+    html += limitedResults.map((user, index) => {
+        // Đảm bảo tất cả các trường đều có giá trị mặc định
+        const safeUser = {
+            leaderName: user.leaderName || 'Không có tên',
+            phone: user.phone || 'Không có',
+            memberCount: user.memberCount || user.groupSize || 0,
+            timestamp: user.timestamp || 'Không có',
+            trekDate: user.trekDate || 'Không có',
+            address: user.address || 'Không có'
+        };
+        
+        return `
         <div class="search-result-item bg-white border border-slate-200 rounded-lg p-4 mb-3">
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center">
                     <span class="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 text-xs font-medium rounded-full mr-3">
                         ${index + 1}
                     </span>
-                    <h4 class="font-semibold text-slate-800">${user.leaderName || 'Không có tên'}</h4>
+                    <h4 class="font-semibold text-slate-800">${safeUser.leaderName}</h4>
                 </div>
                 <span class="status-badge status-active">
                     Hoạt động
@@ -1196,33 +1231,30 @@ function displaySearchResults(results) {
             <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
                     <span class="text-slate-600">SĐT:</span>
-                    <span class="font-medium">${user.phone}</span>
+                    <span class="font-medium">${safeUser.phone}</span>
                 </div>
                 <div>
                     <span class="text-slate-600">Số thành viên:</span>
-                    <span class="font-medium">${user.memberCount}</span>
+                    <span class="font-medium">${safeUser.memberCount}</span>
                 </div>
                 <div>
                     <span class="text-slate-600">Ngày đăng ký:</span>
-                    <span class="font-medium">${user.timestamp}</span>
+                    <span class="font-medium">${safeUser.timestamp}</span>
                 </div>
                 <div>
                     <span class="text-slate-600">Ngày leo núi:</span>
-                    <span class="font-medium">${user.trekDate}</span>
+                    <span class="font-medium">${safeUser.trekDate}</span>
                 </div>
             </div>
             <div class="mt-3 pt-3 border-t border-slate-200">
                 <div class="flex items-center justify-between">
                     <span class="text-slate-600">Địa chỉ:</span>
-                    <span class="font-medium text-slate-800">${user.address}</span>
-                </div>
-                <div class="flex items-center justify-between mt-2">
-                    <span class="text-slate-600">Chứng nhận:</span>
-                    <span class="font-medium text-slate-800">${user.certificateCount || 0} chứng chỉ</span>
+                    <span class="font-medium text-slate-800">${safeUser.address}</span>
                 </div>
             </div>
         </div>
-    `).join('');
+    `;
+    }).join('');
     
     elements.searchResults.innerHTML = html;
 }
