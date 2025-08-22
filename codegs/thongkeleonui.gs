@@ -276,6 +276,7 @@ function handleSearchPhone(data, phone) {
        const groupSize = parseGroupSizeCell(row[COL_INDEX.GROUP_SIZE]);
        const leaderName = row[COL_INDEX.LEADER_NAME];
        const address = row[COL_INDEX.ADDRESS];
+       const certificateLinks = row[COL_INDEX.CERTIFICATE_LINKS];
 
        let formattedRegistrationDate = registrationTimestampDate
           ? Utilities.formatDate(registrationTimestampDate, scriptTimeZone, dateFormat)
@@ -311,7 +312,6 @@ function handleSearchPhone(data, phone) {
             trekDate: formattedClimbDate,
             address: address || '(không có)',
             certificateCount: certificateCount,
-            certificateLinks: certificateLinks,
             _originalTimestamp: registrationTimestampDate
         });
     }

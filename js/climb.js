@@ -1660,8 +1660,11 @@ async function loadAllDataFromAPI() {
             localStorage.setItem('climbNotifications', JSON.stringify(notifications));
             processNotifications(notifications);
             
-            // Update registration time status after GPS settings are loaded
-            updateRegistrationTimeStatus();
+                // Update registration time status after GPS settings are loaded
+    updateRegistrationTimeStatus();
+    
+    // Update certificate radius display
+    updateCertificateRadiusDisplay();
             
         } else {
             throw new Error('Failed to fetch combined data');
@@ -1674,6 +1677,9 @@ async function loadAllDataFromAPI() {
         
         // Update registration time status even in fallback case
         updateRegistrationTimeStatus();
+        
+        // Update certificate radius display
+        updateCertificateRadiusDisplay();
     }
 }
 
@@ -1762,6 +1768,9 @@ function initializeNotificationSystem() {
             console.log('GPS Settings updated from storage:', GPS_SETTINGS);
             // Update registration time status when GPS settings change
             updateRegistrationTimeStatus();
+            
+            // Update certificate radius display when GPS settings change
+            updateCertificateRadiusDisplay();
         }
     });
     
@@ -1818,6 +1827,15 @@ function updateRegistrationTimeStatus() {
             </div>
         </div>
     `;
+}
+
+// Update certificate radius display
+function updateCertificateRadiusDisplay() {
+    const radiusElement = document.getElementById('certificateRadiusDisplay');
+    if (!radiusElement || !GPS_SETTINGS) return;
+    
+    const radius = GPS_SETTINGS.certificateRadiusMeters || 150;
+    radiusElement.textContent = radius;
 }
 
 
