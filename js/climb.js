@@ -198,6 +198,28 @@ function normalizeVi(str) {
         .toLowerCase();
 }
 
+// --- Date/Time Validation Helpers ---
+function parseLocalDateTime(yyyyMmDd, hhMm) {
+    if (!yyyyMmDd) return null;
+    try {
+        const [y, m, d] = yyyyMmDd.split('-').map(Number);
+        if (!y || !m || !d) return null;
+        let hours = 0, minutes = 0;
+        if (hhMm && /^(\d{2}):(\d{2})$/.test(hhMm)) {
+            const parts = hhMm.split(':').map(Number);
+            hours = parts[0]; minutes = parts[1];
+        }
+        return new Date(y, m - 1, d, hours, minutes, 0, 0);
+    } catch (e) { return null; }
+}
+
+function isClimbDateTimeNotBeforeNow(dateStr, timeStr) {
+    const scheduled = parseLocalDateTime(dateStr, timeStr);
+    if (!scheduled) return true; // if cannot parse, don't block here
+    const now = new Date();
+    return scheduled.getTime() >= now.getTime();
+}
+
 const PROFANITY_PATTERNS = [
     // Core vulgarities (normalized & variants)
     'ditme', 'ditmay', 'ditmemay', 'ditmeo', 'ditcho', 'ditconme', 'djt', 'djtme', 'dmm', 'dm', 'dcm',
@@ -367,6 +389,13 @@ async function handleRegistrationSubmit(event) {
         showMessage('Vui lòng điền đủ thông tin (*) và xác nhận cam kết.', 'error');
         return;
     }
+    // Validate climb date/time not before current time
+    const climbDateVal = document.getElementById('climbDate')?.value || '';
+    const climbTimeVal = document.getElementById('climbTime')?.value || '';
+    if (!isClimbDateTimeNotBeforeNow(climbDateVal, climbTimeVal)) {
+        showMessage('Ngày/giờ leo không được trước thời điểm đăng ký hiện tại.', 'error');
+        return;
+    }
     // Validate leader name and each member name (profanity filter)
     const leaderNameInput = document.getElementById('leaderName');
     const leaderNameVal = leaderNameInput ? leaderNameInput.value : '';
@@ -479,6 +508,13 @@ function handleLocationCheckForRegistration(position) {
 
         // Lưu lại dữ liệu form để dùng cho bước cam kết
         const formData = new FormData(registrationForm);
+        // Validate climb date/time not before current time (redundant check)
+        const climbDateVal2 = formData.get('climbDate') || '';
+        const climbTimeVal2 = formData.get('climbTime') || '';
+        if (!isClimbDateTimeNotBeforeNow(String(climbDateVal2), String(climbTimeVal2))) {
+            showMessage('Ngày/giờ leo không được trước thời điểm đăng ký hiện tại.', 'error');
+            return;
+        }
         // Validate names (leader + members)
         const leaderNameVal = formData.get('leaderName');
         if (!isCleanName(leaderNameVal)) {
