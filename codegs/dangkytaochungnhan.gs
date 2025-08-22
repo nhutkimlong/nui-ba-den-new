@@ -278,7 +278,7 @@ function handleGenerateCertificatesWithPhotos(requestData) {
     const regDetails = findRegistrationDetails(sheet, phoneNumber);
     if (!regDetails) return createJsonResponse({ success: false, message: `Không tìm thấy đăng ký gốc cho SĐT ${phoneNumber}.` });
 
-    const { rowIndex, leaderName = 'Bạn', userEmail = null, climbDate = new Date() } = regDetails;
+    const { rowIndex, leaderName = 'Bạn', userEmail = null, climbDate = new Date(), climbTime = '' } = regDetails;
     Logger.log(`Found registration: Row=${rowIndex}, Leader=${leaderName}, Email=${userEmail}, Date=${climbDate}`);
 
     let destFolder;
@@ -286,7 +286,11 @@ function handleGenerateCertificatesWithPhotos(requestData) {
 
     const pdfLinks = [], errors = [];
     const generationDate = new Date();
-    const dateStr = Utilities.formatDate(climbDate, Session.getScriptTimeZone(), 'dd/MM/yyyy');
+    const registrationTime = regDetails.registrationTimestamp instanceof Date ? regDetails.registrationTimestamp : null;
+    const baseDateForDisplay = registrationTime || climbDate;
+    const dateStr = Utilities.formatDate(baseDateForDisplay, Session.getScriptTimeZone(), 'dd/MM/yyyy');
+    const durationMs = registrationTime ? (generationDate.getTime() - registrationTime.getTime()) : null;
+    const durationString = durationMs !== null ? formatDurationVi(durationMs) : '';
 
     Logger.log(`Generating certs for ${selectedMembers.length} members in batches of ${BATCH_SIZE}...`);
     
@@ -318,7 +322,7 @@ function handleGenerateCertificatesWithPhotos(requestData) {
             try {
                 const safeName = memberName.replace(/[^\p{L}\p{N}\s_-]/gu, '').replace(/\s+/g, '_') || 'Member';
                 const fileNameBase = `ChungNhan_${safeName}_${Utilities.formatDate(generationDate, 'UTC', 'yyyyMMddHHmmss')}`;
-                const pdfUrl = createCertificate(memberName, dateStr, photoBase64, TEMPLATE_ID, destFolder, fileNameBase);
+                const pdfUrl = createCertificate(memberName, dateStr, String(climbTime || ''), durationString, photoBase64, TEMPLATE_ID, destFolder, fileNameBase);
                 if (pdfUrl) {
                     pdfLinks.push({ name: memberName, url: pdfUrl });
                     Logger.log(`Success: PDF for ${memberName} (${pdfLinks.length}/${selectedMembers.length})`);
@@ -444,7 +448,7 @@ function handleGetMembers(phoneNumber) {
 // ----- HELPER FUNCTIONS -----
 
 // Optimized certificate creation with better error handling
-function createCertificate(name, dateString, photoBase64, templateId, destinationFolder, outputFileNameBase) {
+function createCertificate(name, dateString, timeString, durationString, photoBase64, templateId, destinationFolder, outputFileNameBase) {
   let tempCopyFile = null, copyDoc = null;
   const placeholderAltText = IMAGE_PLACEHOLDER_ALT_TEXT; // Alt text của hình ảnh placeholder
 
@@ -498,6 +502,13 @@ function createCertificate(name, dateString, photoBase64, templateId, destinatio
     const body = copyDoc.getBody();
     body.replaceText('{{FullName}}', name || 'N/A');
     body.replaceText('{{Date}}', dateString || 'N/A');
+    // New placeholders for climb time
+    body.replaceText('{{ClimbTime}}', timeString || 'N/A');
+    body.replaceText('{{Time}}', timeString || 'N/A');
+    body.replaceText('{{DateTime}}', (dateString && timeString) ? `${dateString} ${timeString}` : (dateString || 'N/A'));
+    // Duration placeholders
+    body.replaceText('{{Duration}}', durationString || '');
+    body.replaceText('{{ElapsedTime}}', durationString || '');
 
     // Lưu và xuất PDF
     copyDoc.saveAndClose();
@@ -607,6 +618,22 @@ function formatDateDMY(dateStr) {
   return `${dd}/${mm}/${yyyy}`;
 }
 
+// Format duration in Vietnamese, e.g., 4 giờ 32 phút 10 giây
+function formatDurationVi(durationMs) {
+  try {
+    if (typeof durationMs !== 'number' || !isFinite(durationMs) || durationMs < 0) return '';
+    const totalSeconds = Math.floor(durationMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const parts = [];
+    if (hours > 0) parts.push(hours + ' Giờ');
+    if (minutes > 0) parts.push(minutes + ' Phút');
+    if (hours === 0 && minutes === 0) parts.push(seconds + ' Giây');
+    return parts.join(' ');
+  } catch (e) { return ''; }
+}
+
 // --- createJsonResponse (Giữ nguyên) ---
 function createJsonResponse(data) { return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON); }
 
@@ -647,12 +674,14 @@ function decodeBase64Image(base64String) {
 function findRegistrationDetails(sheet, phoneNumber) {
      const cols = getColumnIndices(sheet);
      if (!cols || !cols[COL_PHONE_NUMBER] || !cols[COL_LEADER_NAME] || !cols[COL_EMAIL] || !cols[COL_MEMBER_LIST] || !cols[COL_CLIMB_DATE]) { Logger.log("findRegDetails: Missing cols."); return null; }
-     const phoneCol = cols[COL_PHONE_NUMBER], leaderNameCol = cols[COL_LEADER_NAME], emailCol = cols[COL_EMAIL], memberListCol = cols[COL_MEMBER_LIST], climbDateCol = cols[COL_CLIMB_DATE];
+     const phoneCol = cols[COL_PHONE_NUMBER], leaderNameCol = cols[COL_LEADER_NAME], emailCol = cols[COL_EMAIL], memberListCol = cols[COL_MEMBER_LIST], climbDateCol = cols[COL_CLIMB_DATE], climbTimeCol = cols[COL_CLIMB_TIME], timestampCol = cols[COL_TIMESTAMP];
      const data = sheet.getDataRange().getValues();
      for (let i = data.length - 1; i >= 1; i--) {
        const sheetPhone = String(data[i][phoneCol - 1] || '').trim();
        if (sheetPhone === phoneNumber) {
          const climbDateValue = data[i][climbDateCol - 1];
+         const climbTimeValue = climbTimeCol ? String(data[i][climbTimeCol - 1] || '').trim() : '';
+         const registrationTsValue = timestampCol ? data[i][timestampCol - 1] : null;
          const leaderNameValue = String(data[i][leaderNameCol - 1] || 'Bạn').trim();
          const userEmailValue = String(data[i][emailCol - 1] || '').trim().toLowerCase();
          const memberListStrValue = String(data[i][memberListCol - 1] || '').trim();
@@ -660,7 +689,9 @@ function findRegistrationDetails(sheet, phoneNumber) {
          return {
            rowIndex: i + 1, leaderName: leaderNameValue, userEmail: userEmailValue || null,
            memberListString: memberListStrValue,
-           climbDate: climbDateValue instanceof Date ? climbDateValue : (climbDateValue ? new Date(climbDateValue) : new Date())
+           climbDate: climbDateValue instanceof Date ? climbDateValue : (climbDateValue ? new Date(climbDateValue) : new Date()),
+           climbTime: climbTimeValue,
+           registrationTimestamp: registrationTsValue instanceof Date ? registrationTsValue : (registrationTsValue ? new Date(registrationTsValue) : null)
          };
        }
      }

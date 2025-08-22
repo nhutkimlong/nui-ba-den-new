@@ -3,7 +3,7 @@ const SUMMIT_LATITUDE = 11.382117991152592;
 const SUMMIT_LONGITUDE = 106.17201169600158;
 const REGISTRATION_LATITUDE = 11.3636370; // Tọa độ địa điểm đăng ký - CẬP NHẬT THEO ĐỊA CHỈ CỤ THỂ
 const REGISTRATION_LONGITUDE = 106.1664847; // Tọa độ địa điểm đăng ký - CẬP NHẬT THEO ĐỊA CHỈ CỤ THỂ
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbymY15w6A3V2t04Sj190THYP86o8q4bGbBS1qDpMxYTbABP5I1DSDI5eFdhXVHoBDJCnA/exec'; // Ensure this is your latest script URL
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzafxB0TBS4_gcPIvaqbINNrnJJ_7aaE9Az3m9EqqkH5s2eo_mbzrRiOOw3jXolS5jfng/exec'; // Ensure this is your latest script URL
 const CROP_ASPECT_RATIO = 11.89 / 16.73; // Defined aspect ratio
 
 // API URLs
