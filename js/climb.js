@@ -758,14 +758,19 @@ async function fetchMembersListForSelection(phoneNumber) {
         if (result.success && Array.isArray(result.members)) {
             hideMessage();
             verifiedPhoneNumber = phoneNumber;
-            displayMemberListForSelection(result.members);
+            displayMemberListForSelection(result.members, phoneNumber);
             if(phoneVerificationArea) phoneVerificationArea.classList.add('hidden');
             if(memberSelectionArea) memberSelectionArea.classList.remove('hidden');
         } else {
              throw new Error(result.message || 'Không thể lấy danh sách thành viên.');
         }
     } catch (error) {
-        showMessage(`Lỗi tải danh sách: ${error.message}. Vui lòng thử lại.`, 'error', 10000);
+        // Check if it's a "not found" error
+        if (error.message.includes('not found') || error.message.includes('Không tìm thấy')) {
+            showMessage(`Số điện thoại ${phoneNumber} chưa được đăng ký trong hệ thống. Vui lòng kiểm tra lại hoặc đăng ký trước.`, 'error', 12000);
+        } else {
+            showMessage(`Lỗi tải danh sách: ${error.message}. Vui lòng thử lại.`, 'error', 10000);
+        }
         resetVerificationProcess();
     } finally {
         setLoadingState(verifyPhoneBtn, certSpinner, false);
@@ -775,13 +780,22 @@ async function fetchMembersListForSelection(phoneNumber) {
 }
 
 /** Dynamically creates and displays the member list for selection. */
-function displayMemberListForSelection(members) {
+function displayMemberListForSelection(members, phoneNumber) {
     if (!memberListContainer) return;
     memberListContainer.innerHTML = '';
     uploadedPhotos = {};
 
     if (members.length === 0) {
-        memberListContainer.innerHTML = '<p class="text-center text-gray-500 italic py-4">Không có thành viên nào được liệt kê trong đăng ký này.</p>'; // Slightly refined
+        memberListContainer.innerHTML = `
+            <div class="text-center py-6">
+                <div class="text-red-500 mb-2">
+                    <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+                <p class="text-red-600 font-medium mb-2">Số điện thoại chưa đăng ký!</p>
+                <p class="text-gray-600 text-sm">Số điện thoại <strong>${phoneNumber}</strong> chưa được đăng ký trong hệ thống.</p>
+                <p class="text-gray-500 text-sm mt-2">Vui lòng kiểm tra lại số điện thoại hoặc đăng ký trước khi nhận chứng chỉ.</p>
+            </div>
+        `;
         if (generateSelectedBtn) generateSelectedBtn.disabled = true;
         return;
     }

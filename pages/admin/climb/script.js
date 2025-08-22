@@ -81,14 +81,22 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(updateCurrentDate, 60000); // Update every minute
     
     // Auto-refresh data when tab becomes visible (user switches back to tab)
-    // Commented out to prevent automatic refresh
+    // Commented out - only refresh when admin makes changes
     /*
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) {
             // Refresh data when user comes back to the tab
-            refreshAllData();
+            refreshAllData(true); // Silent refresh
         }
     });
+    
+    // Auto-refresh data every 30 seconds to keep it fresh
+    setInterval(function() {
+        // Only refresh if tab is visible and not in loading state
+        if (!document.hidden && !isLoading) {
+            refreshAllData(true); // Silent refresh
+        }
+    }, 30000); // 30 seconds
     */
 });
 
@@ -1564,9 +1572,14 @@ function displayRecentRegistrations(registrations) {
 // ===== UTILITY FUNCTIONS =====
 
 // Refresh all data
-async function refreshAllData() {
+async function refreshAllData(silent = false) {
     try {
-        setLoadingState(true);
+        if (!silent) {
+            setLoadingState(true);
+        }
+        
+        // Update auto-refresh status
+        updateAutoRefreshStatus(true);
         
         // Refresh all data from combined API
         await loadAllDataFromAPI();
@@ -1580,13 +1593,42 @@ async function refreshAllData() {
         // Refresh detailed stats
         await loadDetailedStats();
         
-        showMessage('Đã làm mới tất cả dữ liệu', 'success');
+        if (!silent) {
+            showMessage('Đã làm mới tất cả dữ liệu', 'success');
+        }
+        
+        // Update auto-refresh status
+        updateAutoRefreshStatus(false);
         
     } catch (error) {
         console.error('Error refreshing data:', error);
-        showMessage('Có lỗi khi làm mới dữ liệu', 'error');
+        if (!silent) {
+            showMessage('Có lỗi khi làm mới dữ liệu', 'error');
+        }
+        updateAutoRefreshStatus(false);
     } finally {
-        setLoadingState(false);
+        if (!silent) {
+            setLoadingState(false);
+        }
+    }
+}
+
+// Update auto-refresh status
+function updateAutoRefreshStatus(isRefreshing) {
+    const statusElement = document.getElementById('autoRefreshStatus');
+    if (statusElement) {
+        if (isRefreshing) {
+            statusElement.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-1"></i>Đang cập nhật...';
+            statusElement.className = 'text-white text-xs opacity-100';
+        } else {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('vi-VN', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            statusElement.innerHTML = `<i class="fas fa-sync-alt mr-1"></i>Cập nhật lúc ${timeString}`;
+            statusElement.className = 'text-white text-xs opacity-75';
+        }
     }
 }
 
