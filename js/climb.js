@@ -1676,7 +1676,6 @@ function initializeNotificationSystem() {
             console.log('GPS Settings updated from storage:', GPS_SETTINGS);
             // Update registration time status when GPS settings change
             updateRegistrationTimeStatus();
-            updateGpsSettingsStatus();
         }
     });
     
@@ -1694,11 +1693,9 @@ function initializeNotificationSystem() {
     
     // Initialize registration time status
     updateRegistrationTimeStatus();
-    updateGpsSettingsStatus();
     
     // Update registration time status every minute
     setInterval(updateRegistrationTimeStatus, 60000);
-    setInterval(updateGpsSettingsStatus, 60000);
 }
 
 // Function to update registration time status display
@@ -1731,44 +1728,7 @@ function updateRegistrationTimeStatus() {
     `;
 }
 
-// Function to update GPS settings status display
-function updateGpsSettingsStatus() {
-    const container = document.getElementById('gpsSettingsStatus');
-    if (!container) return;
-    
-    const regRequired = GPS_SETTINGS.requireGpsRegistration;
-    const certRequired = GPS_SETTINGS.requireGpsCertificate;
-    
-    if (!regRequired && !certRequired) {
-        container.innerHTML = '';
-        return;
-    }
-    
-    const bgColor = 'bg-blue-100';
-    const borderColor = 'border-blue-500';
-    const textColor = 'text-blue-800';
-    const iconColor = 'text-blue-600';
-    
-    let statusText = '';
-    if (regRequired && certRequired) {
-        statusText = `GPS: Đăng ký (${GPS_SETTINGS.registrationRadius}m) + Chứng chỉ (${GPS_SETTINGS.certificateRadius}m)`;
-    } else if (regRequired) {
-        statusText = `GPS: Đăng ký (${GPS_SETTINGS.registrationRadius}m)`;
-    } else if (certRequired) {
-        statusText = `GPS: Chứng chỉ (${GPS_SETTINGS.certificateRadius}m)`;
-    }
-    
-    container.innerHTML = `
-        <div class="${bgColor} border-l-4 ${borderColor} p-4 rounded-lg shadow-md">
-            <div class="flex items-center">
-                <i class="fas fa-map-marker-alt ${iconColor} text-lg mr-3"></i>
-                <div class="flex-1">
-                    <p class="font-medium ${textColor} text-sm">${statusText}</p>
-                </div>
-            </div>
-        </div>
-    `;
-}
+
 
 // Function to cleanup old seen notifications
 function cleanupOldSeenNotifications() {
