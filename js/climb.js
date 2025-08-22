@@ -250,7 +250,7 @@ function initializeLeafletMap() {
         const map = L.map(mapCanvas).setView(mapCenter, 15); // Use local map variable
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
+            attribution: ''
         }).addTo(map);
         const trailStyle = { "color": "#E67E22", "weight": 4, "opacity": 0.8 };
         const geoJsonLayer = L.geoJSON(powerPoleTrailGeoJSON, {
