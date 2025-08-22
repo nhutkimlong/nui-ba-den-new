@@ -184,6 +184,50 @@ function ensureBirthdayFormat(birthdayValue) {
     return birthdayValue; // Trả về nguyên bản nếu không parse được
 }
 
+// Validate CMND/CCCD: 9 digits OR 12 digits starting with 0
+function isValidNationalId(nationalId) {
+    const value = String(nationalId || '').trim();
+    return /^(?:\d{9}|0\d{11})$/.test(value);
+}
+
+// --- Name Validation & Profanity Filter ---
+function normalizeVi(str) {
+    return String(str || '')
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase();
+}
+
+const PROFANITY_PATTERNS = [
+    // Core vulgarities (normalized & variants)
+    'ditme', 'ditmay', 'ditmemay', 'ditmeo', 'ditcho', 'ditconme', 'djt', 'djtme', 'dmm', 'dm', 'dcm',
+    'vcl', 'vl', 'vkl', 'vcc', 'cc', 'cmm', 'ccmm',
+
+    // Sexual terms and slurs
+    'cac', 'cặc', 'cak', 'kec', 'kecch', 'kecc', 'buoi', 'buồi', 'chim', 'bi', 'bim', 'dit',
+    'lon', 'lồn', 'lonz', 'lozz', 'lol', 'loz', 'lz', 'amdao', 'am dao', 'vu', 'vú', 'ngucto', 'nguc to',
+
+    // Insults
+    'occho', 'oc cho', 'occhoi', 'occhoi', 'occho', 'occhos', 'oc', 'cho', 'cut', 'cutme', 'cutmeo', 'cuc', 'cutcho',
+    'deo', 'deos', 'dzo', 'dmml', 'clm', 'meme', 'me may', 'me m', 'meo me', 'matday', 'mat day',
+
+    // Leetspeak and spacing variants (will be normalized and space-stripped)
+    'd1tme', 'd1tm3', 'd!tme', 'd!tm3', 'd i t m e', 'd i t m a y', 'djt m3', 'djt m e',
+];
+
+function containsProfanity(name) {
+    const n = normalizeVi(name).replace(/\s+/g, '');
+    return PROFANITY_PATTERNS.some(p => n.includes(normalizeVi(p).replace(/\s+/g, '')));
+}
+
+function isCleanName(name) {
+    const trimmed = String(name || '').trim();
+    if (!trimmed) return false;
+    if (trimmed.length < 2 || trimmed.length > 100) return false;
+    if (containsProfanity(trimmed)) return false;
+    return true;
+}
+
 // Lưu ý về định dạng ngày:
 // - Input type="date" trả về yyyy-mm-dd (đúng cho backend)
 // - Hiển thị trong modal cam kết: dd/mm/yyyy (đã format)
@@ -323,6 +367,21 @@ async function handleRegistrationSubmit(event) {
         showMessage('Vui lòng điền đủ thông tin (*) và xác nhận cam kết.', 'error');
         return;
     }
+    // Validate leader name and each member name (profanity filter)
+    const leaderNameInput = document.getElementById('leaderName');
+    const leaderNameVal = leaderNameInput ? leaderNameInput.value : '';
+    if (!isCleanName(leaderNameVal)) {
+        showMessage('Họ và tên không hợp lệ hoặc chứa từ cấm.', 'error');
+        return;
+    }
+    const memberListRawCheck = memberListInput?.value || '';
+    const memberListArrForCheck = memberListRawCheck.split('\n').map(x => x.trim()).filter(x => x);
+    for (const name of memberListArrForCheck) {
+        if (!isCleanName(name)) {
+            showMessage('Danh sách thành viên chứa tên không hợp lệ hoặc từ cấm.', 'error');
+            return;
+        }
+    }
     
     
     
@@ -330,6 +389,12 @@ async function handleRegistrationSubmit(event) {
     if (!GPS_SETTINGS.requireGpsRegistration) {
         // Nếu không yêu cầu GPS, tiếp tục với form data
         const formData = new FormData(registrationForm);
+        // Validate national ID
+        const nationalId = formData.get('cccd');
+        if (!isValidNationalId(nationalId)) {
+            showMessage('Số CMND/CCCD phải gồm 9 số hoặc 12 số bắt đầu bằng 0.', 'error');
+            return;
+        }
         pendingRegistrationData = {
             leaderName: formData.get('leaderName'),
             birthday: ensureBirthdayFormat(formData.get('birthday')),
@@ -414,6 +479,26 @@ function handleLocationCheckForRegistration(position) {
 
         // Lưu lại dữ liệu form để dùng cho bước cam kết
         const formData = new FormData(registrationForm);
+        // Validate names (leader + members)
+        const leaderNameVal = formData.get('leaderName');
+        if (!isCleanName(leaderNameVal)) {
+            showMessage('Họ và tên không hợp lệ hoặc chứa từ cấm.', 'error');
+            return;
+        }
+        const memberListRawCheck2 = (formData.get('memberList') || '').toString();
+        const memberListArrForCheck2 = memberListRawCheck2.split('\n').map(x => x.trim()).filter(x => x);
+        for (const name of memberListArrForCheck2) {
+            if (!isCleanName(name)) {
+                showMessage('Danh sách thành viên chứa tên không hợp lệ hoặc từ cấm.', 'error');
+                return;
+            }
+        }
+        // Validate national ID
+        const nationalId = formData.get('cccd');
+        if (!isValidNationalId(nationalId)) {
+            showMessage('Số CMND/CCCD phải gồm 9 số hoặc 12 số bắt đầu bằng 0.', 'error');
+            return;
+        }
         
         // Đảm bảo format ngày sinh đúng (yyyy-mm-dd)
         let birthdayValue = formData.get('birthday');
@@ -1428,6 +1513,26 @@ function setupEventListeners() {
     if (birthdayInput) {
         birthdayInput.addEventListener('change', validateBirthday);
         birthdayInput.addEventListener('blur', validateBirthday);
+    }
+
+    // Enforce CMND/CCCD only digits and max length 12 while typing
+    const cccdInput = document.getElementById('cccd');
+    if (cccdInput) {
+        // Set maxlength attribute for text inputs; if type=number, we'll still hard-truncate below
+        try { cccdInput.setAttribute('maxlength', '12'); } catch (e) {}
+        cccdInput.setAttribute('inputmode', 'numeric');
+        cccdInput.addEventListener('input', function() {
+            const digitsOnly = this.value.replace(/\D/g, '');
+            // Allow up to 12 digits max
+            const truncated = digitsOnly.slice(0, 12);
+            if (this.value !== truncated) this.value = truncated;
+        });
+        cccdInput.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const pasted = (e.clipboardData || window.clipboardData).getData('text');
+            const digitsOnly = String(pasted || '').replace(/\D/g, '').slice(0, 12);
+            document.execCommand('insertText', false, digitsOnly);
+        });
     }
 }
 
