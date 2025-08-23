@@ -17,6 +17,7 @@ export const handler = async function(event, context) {
     console.log('Event pathParameters:', event.pathParameters);
     console.log('Event queryStringParameters:', event.queryStringParameters);
     console.log('Event headers:', event.headers);
+    console.log('Full event object:', JSON.stringify(event, null, 2));
     
     // Lấy cài đặt từ Blobs
     const store = getStore(STORE_NAME);
@@ -34,13 +35,17 @@ export const handler = async function(event, context) {
     // Lấy đoạn mã hóa từ URL - tự parse từ path
     let encodedTime;
     
+    console.log('=== DEBUG PARSING ENCODED TIME ===');
+    
     // Thử lấy từ pathParameters.splat trước (Netlify redirect với :splat)
     if (event.pathParameters && event.pathParameters.splat) {
       encodedTime = event.pathParameters.splat;
+      console.log('Found in pathParameters.splat:', encodedTime);
     }
     // Thử lấy từ queryStringParameters
     else if (event.queryStringParameters && event.queryStringParameters.t) {
       encodedTime = event.queryStringParameters.t;
+      console.log('Found in queryStringParameters.t:', encodedTime);
     }
     // Thử lấy từ URL path (khi redirect từ /v/*)
     else if (event.path && event.path.includes('/v/')) {
@@ -48,6 +53,7 @@ export const handler = async function(event, context) {
       const vIndex = pathParts.indexOf('v');
       if (vIndex !== -1 && vIndex + 1 < pathParts.length) {
         encodedTime = pathParts[vIndex + 1];
+        console.log('Found in path /v/:', encodedTime);
       }
     }
     // Parse từ verify function path: /.netlify/functions/verify/{encodedTime}
@@ -56,13 +62,17 @@ export const handler = async function(event, context) {
       const verifyIndex = pathParts.indexOf('verify');
       if (verifyIndex !== -1 && verifyIndex + 1 < pathParts.length) {
         encodedTime = pathParts[verifyIndex + 1];
+        console.log('Found in path /verify/:', encodedTime);
       }
     }
     // Fallback: lấy phần cuối của path
     else if (event.path) {
       const pathParts = event.path.split('/');
       encodedTime = pathParts[pathParts.length - 1];
+      console.log('Found in fallback path:', encodedTime);
     }
+    
+    console.log('=== END DEBUG PARSING ===');
     
     console.log('Encoded time:', encodedTime);
     
