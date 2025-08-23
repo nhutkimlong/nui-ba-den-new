@@ -34,13 +34,13 @@ export const handler = async function(event, context) {
     // Lấy đoạn mã hóa từ URL - tự parse từ path
     let encodedTime;
     
-    // Thử lấy từ queryStringParameters trước
-    if (event.queryStringParameters && event.queryStringParameters.t) {
-      encodedTime = event.queryStringParameters.t;
-    }
-    // Thử lấy từ pathParameters.splat (Netlify redirect với :splat)
-    else if (event.pathParameters && event.pathParameters.splat) {
+    // Thử lấy từ pathParameters.splat trước (Netlify redirect với :splat)
+    if (event.pathParameters && event.pathParameters.splat) {
       encodedTime = event.pathParameters.splat;
+    }
+    // Thử lấy từ queryStringParameters
+    else if (event.queryStringParameters && event.queryStringParameters.t) {
+      encodedTime = event.queryStringParameters.t;
     }
     // Thử lấy từ URL path (khi redirect từ /v/*)
     else if (event.path && event.path.includes('/v/')) {
