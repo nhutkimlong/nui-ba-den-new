@@ -23,13 +23,13 @@
 [[redirects]]
   from = "/go"
   to = "/.netlify/functions/go"
-  status = 200
+  status = 302
 
 # Verification redirect to verify function
 [[redirects]]
   from = "/v/*"
   to = "/.netlify/functions/verify"
-  status = 200
+  status = 302
 
 
 
