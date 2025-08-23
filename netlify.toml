@@ -19,6 +19,20 @@
 # Functions are automatically accessible at /.netlify/functions/
 # No redirect needed for functions
 
+# QR Code redirect to go function
+[[redirects]]
+  from = "/go"
+  to = "/.netlify/functions/go"
+  status = 200
+
+# Verification redirect to verify function
+[[redirects]]
+  from = "/v/*"
+  to = "/.netlify/functions/verify"
+  status = 200
+
+
+
 # Redirect /pages/ to home page
 [[redirects]]
   from = "/pages/"
