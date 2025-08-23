@@ -31,7 +31,7 @@
   to = "/.netlify/functions/verify/:splat"
   status = 200
   force = true
-  headers = {X-Original-URL = "/:splat"}
+  headers = {X-Original-URL = "/v/:splat"}
 
 
 

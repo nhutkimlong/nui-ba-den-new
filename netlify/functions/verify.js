@@ -51,6 +51,14 @@ export const handler = async function(event, context) {
         encodedTime = originalUrl.substring(3); // Remove '/v/'
         console.log('Parsed from X-Original-URL:', encodedTime);
       }
+      // Parse từ /:splat format (fallback)
+      else if (originalUrl.startsWith('/:splat')) {
+        // Lấy từ pathParameters.splat nếu có
+        if (event.pathParameters && event.pathParameters.splat) {
+          encodedTime = event.pathParameters.splat;
+          console.log('Parsed from pathParameters.splat via X-Original-URL:', encodedTime);
+        }
+      }
     }
     // Thử lấy từ URL path (khi redirect từ /v/*)
     else if (event.path && event.path.includes('/v/')) {
