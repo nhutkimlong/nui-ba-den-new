@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Verify Function</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-link {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 15px;
+            background: #007cba;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .test-link:hover {
+            background: #005a87;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Verify Function</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Tạo QR Code mới</h2>
+        <a href="/.netlify/functions/go" class="test-link" target="_blank">Tạo QR Code mới</a>
+        <div class="result">
+            <p>Click link trên để tạo QR code mới và xem redirect hoạt động</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Test với timestamp hiện tại</h2>
+        <div id="current-timestamp"></div>
+        <div id="encoded-timestamp"></div>
+        <a href="#" id="test-verify-link" class="test-link" target="_blank">Test Verify với timestamp hiện tại</a>
+        <div class="result">
+            <p>Link này sẽ test verify function với timestamp hiện tại</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Test với timestamp cũ (đã hết hạn)</h2>
+        <a href="/v/MTc1NTkyNDAyMzM3Mw==" class="test-link" target="_blank">Test với timestamp cũ</a>
+        <div class="result">
+            <p>Link này sẽ test với timestamp cũ (có thể đã hết hạn)</p>
+        </div>
+    </div>
+
+    <script>
+        // Hiển thị timestamp hiện tại
+        const now = Date.now();
+        document.getElementById('current-timestamp').innerHTML = `<strong>Timestamp hiện tại:</strong> ${now}`;
+        
+        // Encode timestamp
+        const encoded = btoa(now.toString());
+        document.getElementById('encoded-timestamp').innerHTML = `<strong>Encoded:</strong> ${encoded}`;
+        
+        // Tạo link test
+        const testLink = document.getElementById('test-verify-link');
+        testLink.href = `/v/${encoded}`;
+    </script>
+</body>
+</html>

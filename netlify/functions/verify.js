@@ -15,6 +15,8 @@ export const handler = async function(event, context) {
     console.log('Event path:', event.path);
     console.log('Event rawPath:', event.rawPath);
     console.log('Event pathParameters:', event.pathParameters);
+    console.log('Event queryStringParameters:', event.queryStringParameters);
+    console.log('Event headers:', event.headers);
     
     // Lấy cài đặt từ Blobs
     const store = getStore(STORE_NAME);
@@ -29,13 +31,13 @@ export const handler = async function(event, context) {
     // Tính thời gian hết hạn từ cài đặt
     const EXPIRATION_TIME_MS = settings.expirationHours * 60 * 60 * 1000;
     
-    // Lấy đoạn mã hóa từ URL - thử nhiều cách
+    // Lấy đoạn mã hóa từ URL - tự parse từ path
     let encodedTime;
     
-    // Thử lấy từ pathParameters trước (Netlify Functions với wildcard)
-    if (event.pathParameters && event.pathParameters.proxy) {
-      encodedTime = event.pathParameters.proxy;
-    } 
+    // Thử lấy từ pathParameters.splat trước (Netlify redirect với :splat)
+    if (event.pathParameters && event.pathParameters.splat) {
+      encodedTime = event.pathParameters.splat;
+    }
     // Thử lấy từ queryStringParameters
     else if (event.queryStringParameters && event.queryStringParameters.t) {
       encodedTime = event.queryStringParameters.t;
@@ -48,8 +50,16 @@ export const handler = async function(event, context) {
         encodedTime = pathParts[vIndex + 1];
       }
     }
-    // Fallback: split path
-    else {
+    // Parse từ verify function path: /.netlify/functions/verify/{encodedTime}
+    else if (event.path && event.path.includes('/verify/')) {
+      const pathParts = event.path.split('/');
+      const verifyIndex = pathParts.indexOf('verify');
+      if (verifyIndex !== -1 && verifyIndex + 1 < pathParts.length) {
+        encodedTime = pathParts[verifyIndex + 1];
+      }
+    }
+    // Fallback: lấy phần cuối của path
+    else if (event.path) {
       const pathParts = event.path.split('/');
       encodedTime = pathParts[pathParts.length - 1];
     }
