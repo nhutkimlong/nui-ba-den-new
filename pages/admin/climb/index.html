@@ -304,7 +304,54 @@
             
             <div class="p-6">
                 <form id="gpsSettingsForm" class="space-y-6">
-                    <!-- GPS Settings content will be loaded by JavaScript -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Bán kính đăng ký (mét)</label>
+                            <input type="number" id="registrationRadius" min="10" max="1000" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="50">
+                            <p class="text-xs text-slate-500 mt-1">Khoảng cách tối đa từ điểm đăng ký</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Bán kính chứng chỉ (mét)</label>
+                            <input type="number" id="certificateRadius" min="50" max="2000" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="150">
+                            <p class="text-xs text-slate-500 mt-1">Khoảng cách tối đa từ đỉnh núi để tạo chứng chỉ</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="requireGpsRegistration" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded">
+                            <label for="requireGpsRegistration" class="ml-2 block text-sm text-slate-700">
+                                Yêu cầu GPS khi đăng ký
+                            </label>
+                        </div>
+                        
+                        <div class="flex items-center">
+                            <input type="checkbox" id="requireGpsCertificate" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded">
+                            <label for="requireGpsCertificate" class="ml-2 block text-sm text-slate-700">
+                                Yêu cầu GPS khi tạo chứng chỉ
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <h4 class="text-lg font-semibold text-slate-800">Giới hạn thời gian đăng ký</h4>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="enableTimeLimit" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded">
+                            <label for="enableTimeLimit" class="ml-2 block text-sm text-slate-700">
+                                Bật giới hạn thời gian đăng ký
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>Lưu cài đặt
+                        </button>
+                        <button type="button" onclick="resetGpsSettings()" class="px-4 py-2 bg-slate-300 text-slate-700 rounded-lg hover:bg-slate-400 transition-colors">
+                            <i class="fas fa-undo mr-2"></i>Khôi phục mặc định
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -371,74 +418,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Bán kính đăng ký (mét)</label>
-                            <input type="number" id="registrationRadius" min="10" max="1000" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="50">
-                            <p class="text-xs text-slate-500 mt-1">Khoảng cách tối đa từ điểm đăng ký</p>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Bán kính chứng chỉ (mét)</label>
-                            <input type="number" id="certificateRadius" min="50" max="2000" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="150">
-                            <p class="text-xs text-slate-500 mt-1">Khoảng cách tối đa từ đỉnh núi để tạo chứng chỉ</p>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div class="flex items-center">
-                            <input type="checkbox" id="requireGpsRegistration" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded">
-                            <label for="requireGpsRegistration" class="ml-2 block text-sm text-slate-700">
-                                Yêu cầu GPS khi đăng ký
-                            </label>
-                        </div>
-                        
-                        <div class="flex items-center">
-                            <input type="checkbox" id="requireGpsCertificate" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded">
-                            <label for="requireGpsCertificate" class="ml-2 block text-sm text-slate-700">
-                                Yêu cầu GPS khi tạo chứng chỉ
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <!-- Registration Time Settings -->
-                    <div class="border-t border-slate-200 pt-6">
-                        <h4 class="text-lg font-semibold text-slate-800 mb-4">Giới hạn thời gian đăng ký</h4>
-                        <div class="space-y-4">
-                            <div class="flex items-center">
-                                <input type="checkbox" id="registrationTimeEnabled" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded">
-                                <label for="registrationTimeEnabled" class="ml-2 block text-sm text-slate-700">
-                                    Bật giới hạn thời gian đăng ký
-                                </label>
-                            </div>
-                            
-                            <div id="registrationTimeSettings" class="grid grid-cols-1 md:grid-cols-2 gap-4 pl-6">
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-2">Thời gian bắt đầu</label>
-                                    <input type="time" id="registrationStartTime" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="06:00">
-                                    <p class="text-xs text-slate-500 mt-1">Thời gian bắt đầu cho phép đăng ký</p>
-                                </div>
-                                
-                                <div>
-                                    <label class="block text-sm font-medium text-slate-700 mb-2">Thời gian kết thúc</label>
-                                    <input type="time" id="registrationEndTime" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="18:00">
-                                    <p class="text-xs text-slate-500 mt-1">Thời gian kết thúc cho phép đăng ký</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center space-x-4">
-                        <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                            <i class="fas fa-save mr-2"></i>Lưu cài đặt
-                        </button>
-                        <button type="button" onclick="resetGpsSettings()" class="px-4 py-2 bg-slate-300 text-slate-700 rounded-lg hover:bg-slate-400 transition-colors">
-                            <i class="fas fa-undo mr-2"></i>Khôi phục mặc định
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
 
