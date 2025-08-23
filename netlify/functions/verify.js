@@ -34,7 +34,8 @@ export const handler = async function(event, context) {
     let settings;
     
     // Kiểm tra xem có nên thử kết nối Blobs không
-    const shouldTryBlobs = process.env.NETLIFY_BLOBS_CONTEXT === 'true' && !isDevelopment;
+    // Trên Netlify production, luôn thử kết nối Blobs để lấy cấu hình từ admin
+    const shouldTryBlobs = process.env.NETLIFY_BLOBS_CONTEXT === 'true';
     console.log('Should try Blobs:', shouldTryBlobs);
     
     if (shouldTryBlobs) {
@@ -69,6 +70,13 @@ export const handler = async function(event, context) {
       console.log('Bỏ qua Blobs, sử dụng cấu hình mặc định');
       settings = FALLBACK_SETTINGS;
     }
+    
+    // Thêm logging để debug cấu hình cuối cùng
+    console.log('Cấu hình QR cuối cùng sẽ sử dụng:', {
+      expirationHours: settings.expirationHours,
+      targetUrl: settings.targetUrl,
+      source: shouldTryBlobs ? 'Blobs' : 'Fallback'
+    });
 
     console.log('Sử dụng cấu hình QR:', settings);
 

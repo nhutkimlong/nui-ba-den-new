@@ -7,6 +7,7 @@
   NPM_FLAGS = "--legacy-peer-deps"
   NETLIFY_BLOBS_CONTEXT = "true"
   NODE_ENV = "production"
+  NETLIFY_DEV = "false"
 
 [functions]
   directory = "netlify/functions"
