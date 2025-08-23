@@ -40,6 +40,14 @@ export const handler = async function(event, context) {
     else if (event.queryStringParameters && event.queryStringParameters.t) {
       encodedTime = event.queryStringParameters.t;
     }
+    // Thử lấy từ URL path (khi redirect từ /v/*)
+    else if (event.path && event.path.includes('/v/')) {
+      const pathParts = event.path.split('/');
+      const vIndex = pathParts.indexOf('v');
+      if (vIndex !== -1 && vIndex + 1 < pathParts.length) {
+        encodedTime = pathParts[vIndex + 1];
+      }
+    }
     // Fallback: split path
     else {
       const pathParts = event.path.split('/');
