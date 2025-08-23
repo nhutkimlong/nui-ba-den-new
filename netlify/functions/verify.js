@@ -20,11 +20,11 @@ export const handler = async function(event, context) {
     console.log('Event queryStringParameters:', event.queryStringParameters);
     console.log('Event headers:', event.headers);
 
-    // Lấy cấu hình từ Netlify Blobs
-    const store = getStore(STORE_NAME);
+    // Lấy cấu hình từ Netlify Blobs (với fallback)
     let settings;
-
+    
     try {
+      const store = getStore(STORE_NAME);
       // Tải cấu hình dưới dạng JSON, nếu không có sẽ trả về null
       const settingsData = await store.get("settings", { type: "json" });
       settings = settingsData || {
@@ -33,6 +33,7 @@ export const handler = async function(event, context) {
       };
     } catch (blobError) {
       console.error("Lỗi khi lấy cấu hình từ Blob Store:", blobError);
+      console.log("Sử dụng cấu hình mặc định");
       // Nếu không lấy được cấu hình, sử dụng giá trị mặc định
       settings = {
         expirationHours: DEFAULT_EXPIRATION_HOURS,
