@@ -28,8 +28,8 @@
 # Verification redirect to verify function
 [[redirects]]
   from = "/v/*"
-  to = "/.netlify/functions/verify/:splat"
-  status = 200
+  to = "/.netlify/functions/verify"
+  status = 302
 
 
 

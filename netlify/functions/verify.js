@@ -37,8 +37,17 @@ export const handler = async function(event, context) {
     
     console.log('=== DEBUG PARSING ENCODED TIME ===');
     
-    // Thử lấy từ pathParameters.splat trước (Netlify redirect với :splat)
-    if (event.pathParameters && event.pathParameters.splat) {
+    // Thử lấy từ URL path (khi redirect từ /v/*) - ưu tiên cao nhất
+    if (event.path && event.path.includes('/v/')) {
+      const pathParts = event.path.split('/');
+      const vIndex = pathParts.indexOf('v');
+      if (vIndex !== -1 && vIndex + 1 < pathParts.length) {
+        encodedTime = pathParts[vIndex + 1];
+        console.log('Found in path /v/:', encodedTime);
+      }
+    }
+    // Thử lấy từ pathParameters.splat (Netlify redirect với :splat)
+    else if (event.pathParameters && event.pathParameters.splat) {
       encodedTime = event.pathParameters.splat;
       console.log('Found in pathParameters.splat:', encodedTime);
     }
@@ -46,15 +55,6 @@ export const handler = async function(event, context) {
     else if (event.queryStringParameters && event.queryStringParameters.t) {
       encodedTime = event.queryStringParameters.t;
       console.log('Found in queryStringParameters.t:', encodedTime);
-    }
-    // Thử lấy từ URL path (khi redirect từ /v/*)
-    else if (event.path && event.path.includes('/v/')) {
-      const pathParts = event.path.split('/');
-      const vIndex = pathParts.indexOf('v');
-      if (vIndex !== -1 && vIndex + 1 < pathParts.length) {
-        encodedTime = pathParts[vIndex + 1];
-        console.log('Found in path /v/:', encodedTime);
-      }
     }
     // Parse từ verify function path: /.netlify/functions/verify/{encodedTime}
     else if (event.path && event.path.includes('/verify/')) {
