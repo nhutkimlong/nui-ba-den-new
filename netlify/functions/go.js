@@ -13,8 +13,8 @@ export const handler = async function(event, context) {
   const encodedTime = Buffer.from(creationTime.toString()).toString('base64');
   console.log('Encoded time:', encodedTime);
 
-  // Tạo đường dẫn xác thực
-  const verificationPath = `/v/${encodedTime}`;
+  // Tạo đường dẫn xác thực với query parameter
+  const verificationPath = `/v/${encodedTime}?t=${encodedTime}`;
   console.log('Verification path:', verificationPath);
 
   // Chuyển hướng người dùng đến đường dẫn xác thực
