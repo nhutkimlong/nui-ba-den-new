@@ -5,6 +5,8 @@
 [build.environment]
   NODE_VERSION = "18"
   NPM_FLAGS = "--legacy-peer-deps"
+  NETLIFY_BLOBS_CONTEXT = "true"
+  NODE_ENV = "production"
 
 [functions]
   directory = "netlify/functions"
@@ -13,7 +15,6 @@
 
 # Enable Netlify Blobs for data storage
 [functions.environment]
-  NETLIFY_BLOBS_CONTEXT = "true"
   NODE_ENV = "production"
 
 # Functions are automatically accessible at /.netlify/functions/

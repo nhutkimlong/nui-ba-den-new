@@ -11,6 +11,12 @@ const STORE_NAME = "qr-settings";
 const DEFAULT_EXPIRATION_HOURS = 12;
 const DEFAULT_TARGET_URL = "https://nuibaden.netlify.app/pages/climb.html"; // Đảm bảo URL này chính xác
 
+// Fallback settings khi không thể kết nối Blobs
+const FALLBACK_SETTINGS = {
+  expirationHours: DEFAULT_EXPIRATION_HOURS,
+  targetUrl: DEFAULT_TARGET_URL
+};
+
 export const handler = async function(event, context) {
   try {
     // Debug: Log event details
@@ -19,26 +25,49 @@ export const handler = async function(event, context) {
     console.log('Event pathParameters:', event.pathParameters);
     console.log('Event queryStringParameters:', event.queryStringParameters);
     console.log('Event headers:', event.headers);
+    
+    // Check if we're in a development environment
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    console.log('Environment check:', { NODE_ENV: process.env.NODE_ENV, isDevelopment });
 
     // Lấy cấu hình từ Netlify Blobs (với fallback)
     let settings;
     
-    try {
-      const store = getStore(STORE_NAME);
-      // Tải cấu hình dưới dạng JSON, nếu không có sẽ trả về null
-      const settingsData = await store.get("settings", { type: "json" });
-      settings = settingsData || {
-        expirationHours: DEFAULT_EXPIRATION_HOURS,
-        targetUrl: DEFAULT_TARGET_URL
-      };
-    } catch (blobError) {
-      console.error("Lỗi khi lấy cấu hình từ Blob Store:", blobError);
-      console.log("Sử dụng cấu hình mặc định");
-      // Nếu không lấy được cấu hình, sử dụng giá trị mặc định
-      settings = {
-        expirationHours: DEFAULT_EXPIRATION_HOURS,
-        targetUrl: DEFAULT_TARGET_URL
-      };
+    // Kiểm tra xem có nên thử kết nối Blobs không
+    const shouldTryBlobs = process.env.NETLIFY_BLOBS_CONTEXT === 'true' && !isDevelopment;
+    console.log('Should try Blobs:', shouldTryBlobs);
+    
+    if (shouldTryBlobs) {
+      try {
+        console.log('Đang thử kết nối với Netlify Blobs Store:', STORE_NAME);
+        console.log('Environment variables:', {
+          NETLIFY_BLOBS_CONTEXT: process.env.NETLIFY_BLOBS_CONTEXT,
+          NODE_ENV: process.env.NODE_ENV,
+          SITE_ID: process.env.SITE_ID
+        });
+        
+        const store = getStore(STORE_NAME);
+        console.log('Đã tạo store thành công, đang tải cấu hình...');
+        
+        // Tải cấu hình dưới dạng JSON, nếu không có sẽ trả về null
+        const settingsData = await store.get("settings", { type: "json" });
+        console.log('Dữ liệu cấu hình từ Blob Store:', settingsData);
+        
+        settings = settingsData || FALLBACK_SETTINGS;
+      } catch (blobError) {
+        console.error("Lỗi khi lấy cấu hình từ Blob Store:", blobError);
+        console.log("Chi tiết lỗi:", {
+          name: blobError.name,
+          message: blobError.message,
+          stack: blobError.stack
+        });
+        console.log("Sử dụng cấu hình mặc định");
+        // Nếu không lấy được cấu hình, sử dụng giá trị mặc định
+        settings = FALLBACK_SETTINGS;
+      }
+    } else {
+      console.log('Bỏ qua Blobs, sử dụng cấu hình mặc định');
+      settings = FALLBACK_SETTINGS;
     }
 
     console.log('Sử dụng cấu hình QR:', settings);
