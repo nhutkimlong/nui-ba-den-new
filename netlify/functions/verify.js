@@ -73,6 +73,35 @@ export const handler = async function(event, context) {
       };
     }
 
+    // Kiểm tra độ dài và format của encodedTime
+    if (encodedTime.length < 10 || encodedTime.length > 50) {
+      console.log('Encoded time length invalid:', encodedTime.length);
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+        body: createErrorPage(
+          'Mã QR không hợp lệ',
+          'Mã QR này có độ dài không đúng. Vui lòng quét lại mã QR chính xác.',
+          '🔗'
+        ),
+      };
+    }
+
+    // Kiểm tra format base64 hợp lệ
+    const base64Regex = /^[A-Za-z0-9+/]*={0,2}$/;
+    if (!base64Regex.test(encodedTime)) {
+      console.log('Invalid base64 format:', encodedTime);
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+        body: createErrorPage(
+          'Mã QR không hợp lệ',
+          'Mã QR này có định dạng không đúng. Vui lòng quét lại mã QR chính xác.',
+          '🔗'
+        ),
+      };
+    }
+
     // Giải mã chuỗi base64 để lấy timestamp gốc
     let creationTime;
     try {
