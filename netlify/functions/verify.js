@@ -31,12 +31,19 @@ export const handler = async function(event, context) {
     
     // Lấy đoạn mã hóa từ URL - thử nhiều cách
     let encodedTime;
+    
+    // Thử lấy từ pathParameters trước (Netlify Functions với wildcard)
     if (event.pathParameters && event.pathParameters.proxy) {
-      // Nếu có pathParameters
       encodedTime = event.pathParameters.proxy;
-    } else {
-      // Fallback: split path
-      encodedTime = event.path.split('/').pop();
+    } 
+    // Thử lấy từ queryStringParameters
+    else if (event.queryStringParameters && event.queryStringParameters.t) {
+      encodedTime = event.queryStringParameters.t;
+    }
+    // Fallback: split path
+    else {
+      const pathParts = event.path.split('/');
+      encodedTime = pathParts[pathParts.length - 1];
     }
     
     console.log('Encoded time:', encodedTime);
