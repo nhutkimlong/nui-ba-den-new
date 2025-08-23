@@ -29,6 +29,7 @@ let currentCropContext = null; // Holds {name, previewId, removeId, fileInput} d
 let signatureContext = null; // Holds canvas context for signature
 let isDrawing = false; // Signature drawing state
 let pendingRegistrationData = null; // Stores form data before commitment
+let selectedRepresentativeType = null; // Stores the selected representative type
 
 // --- DOM Elements (sẽ được khởi tạo trong DOMContentLoaded) ---
 let registrationForm, registerBtn, registerSpinner, groupSizeInput, memberListInput, safetyCommitCheckbox, safetyCommitError;
@@ -39,6 +40,8 @@ let cropModal, imageToCrop, cancelCropBtn, confirmCropBtn;
 let commitmentModal, closeCommitmentBtn, cancelCommitmentBtn, confirmCommitmentBtn, clearSignatureBtn, signatureCanvas;
 let commitmentName, commitmentPhone, commitmentCCCD, commitmentEmail, commitmentAddress, commitmentGroupSize, commitmentDate, commitmentTime, commitmentBirthday;
 let downloadGpxBtn;
+let representativeModal, startRegistrationBtn, startRegistrationArea, registrationFormContainer;
+let cancelRepresentativeBtn, confirmRepresentativeBtn;
 
 // --- Trekking Route Data (Unchanged) ---
 const powerPoleTrailGeoJSON = { /* ... GeoJSON data ... */
@@ -1493,6 +1496,14 @@ function initializeDOMElements() {
     // Other Elements
     downloadGpxBtn = document.getElementById('downloadGpxBtn');
 
+    // Representative Modal Elements
+    representativeModal = document.getElementById('representativeModal');
+    startRegistrationBtn = document.getElementById('startRegistrationBtn');
+    startRegistrationArea = document.getElementById('startRegistrationArea');
+    registrationFormContainer = document.getElementById('registrationFormContainer');
+    cancelRepresentativeBtn = document.getElementById('cancelRepresentativeBtn');
+    confirmRepresentativeBtn = document.getElementById('confirmRepresentativeBtn');
+
     // Cập nhật năm hiện tại
     if (currentYearSpan) currentYearSpan.textContent = new Date().getFullYear();
 
@@ -1502,8 +1513,93 @@ function initializeDOMElements() {
     }
 }
 
+// --- Representative Modal Functions ---
+function showRepresentativeModal() {
+    if (representativeModal) {
+        representativeModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function hideRepresentativeModal() {
+    if (representativeModal) {
+        representativeModal.classList.add('hidden');
+        document.body.style.overflow = '';
+        // Reset selection
+        selectedRepresentativeType = null;
+        const radioButtons = document.querySelectorAll('input[name="representativeType"]');
+        radioButtons.forEach(radio => radio.checked = false);
+        if (confirmRepresentativeBtn) {
+            confirmRepresentativeBtn.disabled = true;
+            confirmRepresentativeBtn.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
+        }
+    }
+}
+
+
+
+function selectRepresentativeType(type) {
+    selectedRepresentativeType = type;
+    
+    // Update radio button
+    const radioButton = document.getElementById(type + 'Type');
+    if (radioButton) {
+        radioButton.checked = true;
+    }
+    
+    // Auto-fill group size for individual climber
+    if (type === 'individual' && groupSizeInput) {
+        groupSizeInput.value = '1';
+        // Trigger change event to update any dependent logic
+        groupSizeInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    
+    // Enable/disable confirm button based on selection
+    if (confirmRepresentativeBtn) {
+        if (type === 'member') {
+            confirmRepresentativeBtn.disabled = true;
+            confirmRepresentativeBtn.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
+        } else {
+            confirmRepresentativeBtn.disabled = false;
+            confirmRepresentativeBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
+        }
+    }
+}
+
+function handleConfirmRepresentative() {
+    if (!selectedRepresentativeType) {
+        showMessage('Vui lòng chọn vai trò của bạn.', 'error');
+        return;
+    }
+    
+    if (selectedRepresentativeType === 'member') {
+        showMessage('Vui lòng liên hệ trưởng đoàn để đăng ký thay vì tự đăng ký.', 'warning');
+        return;
+    }
+    
+    // Hide modal and show registration form
+    hideRepresentativeModal();
+    
+    // Show registration form
+    if (startRegistrationArea) {
+        startRegistrationArea.classList.add('hidden');
+    }
+    if (registrationFormContainer) {
+        registrationFormContainer.classList.remove('hidden');
+    }
+    
+    // Show success message
+    showMessage(`Đã xác nhận vai trò: ${selectedRepresentativeType === 'leader' ? 'Trưởng đoàn/Đại diện nhóm' : 'Cá nhân leo núi'}. Vui lòng điền thông tin đăng ký.`, 'success');
+}
+
 // Hàm thiết lập event listeners
 function setupEventListeners() {
+    // Representative Modal Event Listeners
+    if (startRegistrationBtn) startRegistrationBtn.addEventListener('click', showRepresentativeModal);
+    if (cancelRepresentativeBtn) cancelRepresentativeBtn.addEventListener('click', hideRepresentativeModal);
+    if (confirmRepresentativeBtn) confirmRepresentativeBtn.addEventListener('click', handleConfirmRepresentative);
+    
+    // Registration Form Event Listeners
     if (registrationForm) registrationForm.addEventListener('submit', handleRegistrationSubmit);
     
     if (verifyPhoneBtn) verifyPhoneBtn.addEventListener('click', handleVerifyPhoneAndLocation);
@@ -1534,6 +1630,8 @@ function setupEventListeners() {
         birthdayInput.addEventListener('blur', validateBirthday);
     }
 
+
+
     // Enforce CMND/CCCD only digits and max length 12 while typing
     const cccdInput = document.getElementById('cccd');
     if (cccdInput) {
@@ -1551,6 +1649,15 @@ function setupEventListeners() {
             const pasted = (e.clipboardData || window.clipboardData).getData('text');
             const digitsOnly = String(pasted || '').replace(/\D/g, '').slice(0, 12);
             document.execCommand('insertText', false, digitsOnly);
+        });
+    }
+
+    // Close representative modal when clicking outside
+    if (representativeModal) {
+        representativeModal.addEventListener('click', function(e) {
+            if (e.target === representativeModal) {
+                hideRepresentativeModal();
+            }
         });
     }
 }
