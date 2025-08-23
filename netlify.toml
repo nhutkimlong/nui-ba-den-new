@@ -25,11 +25,13 @@
   to = "/.netlify/functions/go"
   status = 302
 
-# Verification redirect to verify function
+# Verification redirect to verify function (internal redirect, user still sees /v/*)
 [[redirects]]
   from = "/v/*"
   to = "/.netlify/functions/verify/:splat"
   status = 200
+  force = true
+  headers = {X-Original-URL = "/:splat"}
 
 
 

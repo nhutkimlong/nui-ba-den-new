@@ -42,6 +42,16 @@ export const handler = async function(event, context) {
       encodedTime = event.pathParameters.splat;
       console.log('Found in pathParameters.splat:', encodedTime);
     }
+    // Thử lấy từ header X-Original-URL (khi redirect internal)
+    else if (event.headers && event.headers['x-original-url']) {
+      const originalUrl = event.headers['x-original-url'];
+      console.log('Found in X-Original-URL header:', originalUrl);
+      // Parse từ /v/{encodedTime} format
+      if (originalUrl.startsWith('/v/')) {
+        encodedTime = originalUrl.substring(3); // Remove '/v/'
+        console.log('Parsed from X-Original-URL:', encodedTime);
+      }
+    }
     // Thử lấy từ URL path (khi redirect từ /v/*)
     else if (event.path && event.path.includes('/v/')) {
       const pathParts = event.path.split('/');
