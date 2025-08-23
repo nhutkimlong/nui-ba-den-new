@@ -124,9 +124,31 @@ export const handler = async function(event, context) {
       };
     }
 
+    // Kiểm tra timestamp có hợp lý không
+    const currentTime = Date.now();
+    const minValidTime = currentTime - (365 * 24 * 60 * 60 * 1000); // 1 năm trước
+    const maxValidTime = currentTime + (24 * 60 * 60 * 1000); // 1 ngày sau
+
+    if (creationTime < minValidTime || creationTime > maxValidTime) {
+      console.log('Timestamp out of valid range:', {
+        creationTime,
+        currentTime,
+        minValidTime,
+        maxValidTime
+      });
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+        body: createErrorPage(
+          'Mã QR không hợp lệ',
+          'Mã QR này có thời gian tạo không hợp lệ. Vui lòng quét lại mã QR chính xác.',
+          '🔗'
+        ),
+      };
+    }
+
     // --- KIỂM TRA HẾT HẠN ---
     const expirationTimeMs = settings.expirationHours * 60 * 60 * 1000;
-    const currentTime = Date.now();
 
     if (currentTime - creationTime > expirationTimeMs) {
       // Nếu đã hết hạn, trả về trang lỗi
