@@ -33,7 +33,13 @@
 
 
 
-# Redirect /pages/ to home page
+# Redirect /pages/climb.html to climb page
+[[redirects]]
+  from = "/pages/climb.html"
+  to = "/pages/climb.html"
+  status = 200
+
+# Redirect other /pages/ to home page
 [[redirects]]
   from = "/pages/"
   to = "/home.html"
