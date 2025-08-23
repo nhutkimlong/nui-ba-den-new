@@ -96,8 +96,6 @@ export const handler = async function(event, context) {
     }
 
     // --- KIỂM TRA HẾT HẠN ---
-    // TẠM THỜI TẮT KIỂM TRA THỜI GIAN HẾT HẠN ĐỂ TEST
-    /*
     const expirationTimeMs = settings.expirationHours * 60 * 60 * 1000;
     const currentTime = Date.now();
 
@@ -113,7 +111,6 @@ export const handler = async function(event, context) {
         ),
       };
     }
-    */
     
 
     // Nếu hợp lệ và chưa hết hạn, tải nội dung của trang đích
