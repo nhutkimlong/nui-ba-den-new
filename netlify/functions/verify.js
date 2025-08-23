@@ -1,13 +1,15 @@
 // File: netlify/functions/verify.js
-import fetch from 'node-fetch';
+
+// fetch đã có sẵn trong môi trường Netlify Functions (Node.js 18+),
+// vì vậy không cần import 'node-fetch'.
 import { getStore } from "@netlify/blobs";
 
-// Store name for QR settings
+// Tên của Blob Store để lưu cấu hình QR
 const STORE_NAME = "qr-settings";
 
-// Default settings
+// Cấu hình mặc định
 const DEFAULT_EXPIRATION_HOURS = 12;
-const DEFAULT_TARGET_URL = "https://nuibaden.netlify.app/pages/climb.html";
+const DEFAULT_TARGET_URL = "https://nuibaden.netlify.app/pages/climb.html"; // Đảm bảo URL này chính xác
 
 export const handler = async function(event, context) {
   try {
@@ -17,455 +19,222 @@ export const handler = async function(event, context) {
     console.log('Event pathParameters:', event.pathParameters);
     console.log('Event queryStringParameters:', event.queryStringParameters);
     console.log('Event headers:', event.headers);
-    console.log('Full event object:', JSON.stringify(event, null, 2));
-    
-    // Lấy cài đặt từ Blobs
+
+    // Lấy cấu hình từ Netlify Blobs
     const store = getStore(STORE_NAME);
-    const settingsData = await store.get("settings");
-    const settings = settingsData ? JSON.parse(settingsData) : {
-      expirationHours: DEFAULT_EXPIRATION_HOURS,
-      targetUrl: DEFAULT_TARGET_URL
-    };
-    
-    console.log('QR Settings:', settings);
-    
-    // Tính thời gian hết hạn từ cài đặt
-    const EXPIRATION_TIME_MS = settings.expirationHours * 60 * 60 * 1000;
-    
-    // Lấy đoạn mã hóa từ URL - tự parse từ path
-    let encodedTime;
-    
-    console.log('=== DEBUG PARSING ENCODED TIME ===');
-    
-    // Thử lấy từ pathParameters.splat (Netlify redirect với :splat) - ưu tiên cao nhất
-    if (event.pathParameters && event.pathParameters.splat) {
-      encodedTime = event.pathParameters.splat;
-      console.log('Found in pathParameters.splat:', encodedTime);
-    }
-    // Thử lấy từ header X-Original-URL (khi redirect internal)
-    else if (event.headers && event.headers['x-original-url']) {
-      const originalUrl = event.headers['x-original-url'];
-      console.log('Found in X-Original-URL header:', originalUrl);
-      // Parse từ /v/{encodedTime} format
-      if (originalUrl.startsWith('/v/')) {
-        encodedTime = originalUrl.substring(3); // Remove '/v/'
-        console.log('Parsed from X-Original-URL:', encodedTime);
-      }
-      // Parse từ /:splat format (fallback)
-      else if (originalUrl.startsWith('/:splat')) {
-        // Lấy từ pathParameters.splat nếu có
-        if (event.pathParameters && event.pathParameters.splat) {
-          encodedTime = event.pathParameters.splat;
-          console.log('Parsed from pathParameters.splat via X-Original-URL:', encodedTime);
-        }
-      }
-    }
-    // Thử lấy từ URL path (khi redirect từ /v/*)
-    else if (event.path && event.path.includes('/v/')) {
-      const pathParts = event.path.split('/');
-      const vIndex = pathParts.indexOf('v');
-      if (vIndex !== -1 && vIndex + 1 < pathParts.length) {
-        encodedTime = pathParts[vIndex + 1];
-        console.log('Found in path /v/:', encodedTime);
-      }
-    }
-    // Thử lấy từ queryStringParameters
-    else if (event.queryStringParameters && event.queryStringParameters.t) {
-      encodedTime = event.queryStringParameters.t;
-      console.log('Found in queryStringParameters.t:', encodedTime);
-    }
-    // Parse từ verify function path: /.netlify/functions/verify/{encodedTime}
-    else if (event.path && event.path.includes('/verify/')) {
-      const pathParts = event.path.split('/');
-      const verifyIndex = pathParts.indexOf('verify');
-      if (verifyIndex !== -1 && verifyIndex + 1 < pathParts.length) {
-        encodedTime = pathParts[verifyIndex + 1];
-        console.log('Found in path /verify/:', encodedTime);
-      }
-    }
-    // Fallback: lấy phần cuối của path
-    else if (event.path) {
-      const pathParts = event.path.split('/');
-      encodedTime = pathParts[pathParts.length - 1];
-      console.log('Found in fallback path:', encodedTime);
-    }
-    
-    console.log('=== END DEBUG PARSING ===');
-    
-    console.log('Encoded time:', encodedTime);
-    
-    // Kiểm tra xem có encodedTime hợp lệ không
-    if (!encodedTime || encodedTime === 'verify') {
-      return {
-        statusCode: 400,
-        headers: { "Content-Type": "text/html" },
-        body: `
-          <html>
-            <head>
-              <title>Lỗi - URL không hợp lệ</title>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                body {
-                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                  text-align: center;
-                  padding: 50px 20px;
-                  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-                  color: white;
-                  min-height: 100vh;
-                  margin: 0;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                }
-                .container {
-                  max-width: 600px;
-                  background: rgba(255, 255, 255, 0.1);
-                  padding: 40px;
-                  border-radius: 20px;
-                  backdrop-filter: blur(10px);
-                  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-                }
-                h1 {
-                  font-size: 2.5rem;
-                  margin-bottom: 20px;
-                  color: #fff;
-                }
-                p {
-                  font-size: 1.2rem;
-                  line-height: 1.6;
-                  margin-bottom: 30px;
-                  opacity: 0.9;
-                }
-                .icon {
-                  font-size: 4rem;
-                  margin-bottom: 20px;
-                }
-                .back-btn {
-                  display: inline-block;
-                  background: rgba(255, 255, 255, 0.2);
-                  color: white;
-                  padding: 12px 30px;
-                  text-decoration: none;
-                  border-radius: 25px;
-                  transition: all 0.3s ease;
-                  border: 2px solid rgba(255, 255, 255, 0.3);
-                }
-                .back-btn:hover {
-                  background: rgba(255, 255, 255, 0.3);
-                  transform: translateY(-2px);
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="icon">⚠️</div>
-                <h1>URL không hợp lệ</h1>
-                <p>Vui lòng sử dụng đúng đường dẫn QR code được tạo từ hệ thống.</p>
-                <a href="/" class="back-btn">Về trang chủ</a>
-              </div>
-            </body>
-          </html>
-        `,
+    let settings;
+
+    try {
+      // Tải cấu hình dưới dạng JSON, nếu không có sẽ trả về null
+      const settingsData = await store.get("settings", { type: "json" });
+      settings = settingsData || {
+        expirationHours: DEFAULT_EXPIRATION_HOURS,
+        targetUrl: DEFAULT_TARGET_URL
+      };
+    } catch (blobError) {
+      console.error("Lỗi khi lấy cấu hình từ Blob Store:", blobError);
+      // Nếu không lấy được cấu hình, sử dụng giá trị mặc định
+      settings = {
+        expirationHours: DEFAULT_EXPIRATION_HOURS,
+        targetUrl: DEFAULT_TARGET_URL
       };
     }
 
-    // Giải mã để lấy lại thời gian tạo gốc
+    console.log('Sử dụng cấu hình QR:', settings);
+
+    // --- LOGIC LẤY MÃ HÓA ĐÃ ĐƯỢC SỬA LẠI ---
+    // Logic cũ khá phức tạp. Dựa trên log, đường dẫn request luôn có dạng
+    // `/v/CHUOI_MA_HOA`. Logic đơn giản hóa này sẽ ổn định hơn và
+    // trích xuất mã một cách trực tiếp.
+    let encodedTime = '';
+    const path = event.path;
+
+    if (path && path.startsWith('/v/')) {
+      // Lấy phần chuỗi nằm sau '/v/'
+      encodedTime = path.substring(3);
+    }
+
+    console.log('=== DEBUG PARSING ENCODED TIME ===');
+    console.log('Path:', path);
+    console.log('Encoded time:', encodedTime);
+    console.log('=== END DEBUG PARSING ===');
+
+    // Kiểm tra xem đã lấy được mã hóa hay chưa
+    if (!encodedTime) {
+      return {
+        statusCode: 400,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+        body: createErrorPage(
+          'URL không hợp lệ',
+          'Vui lòng sử dụng đúng đường dẫn QR code được tạo từ hệ thống.',
+          '⚠️'
+        ),
+      };
+    }
+
+    // Giải mã chuỗi base64 để lấy timestamp gốc
     let creationTime;
     try {
-      creationTime = parseInt(Buffer.from(encodedTime, 'base64').toString('utf8'));
+      const decodedString = Buffer.from(encodedTime, 'base64').toString('utf8');
+      creationTime = parseInt(decodedString, 10);
       if (isNaN(creationTime)) {
-        throw new Error('Invalid timestamp');
+        // Lỗi sẽ được bắt ở khối catch bên dưới
+        throw new Error('Timestamp sau khi giải mã không phải là một con số.');
       }
     } catch (error) {
+      console.error("Lỗi giải mã Base64:", error);
       return {
         statusCode: 400,
-        headers: { "Content-Type": "text/html" },
-        body: `
-          <html>
-            <head>
-              <title>Lỗi - Mã thời gian không hợp lệ</title>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                body {
-                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                  text-align: center;
-                  padding: 50px 20px;
-                  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-                  color: white;
-                  min-height: 100vh;
-                  margin: 0;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                }
-                .container {
-                  max-width: 600px;
-                  background: rgba(255, 255, 255, 0.1);
-                  padding: 40px;
-                  border-radius: 20px;
-                  backdrop-filter: blur(10px);
-                  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-                }
-                h1 {
-                  font-size: 2.5rem;
-                  margin-bottom: 20px;
-                  color: #fff;
-                }
-                p {
-                  font-size: 1.2rem;
-                  line-height: 1.6;
-                  margin-bottom: 30px;
-                  opacity: 0.9;
-                }
-                .icon {
-                  font-size: 4rem;
-                  margin-bottom: 20px;
-                }
-                .back-btn {
-                  display: inline-block;
-                  background: rgba(255, 255, 255, 0.2);
-                  color: white;
-                  padding: 12px 30px;
-                  text-decoration: none;
-                  border-radius: 25px;
-                  transition: all 0.3s ease;
-                  border: 2px solid rgba(255, 255, 255, 0.3);
-                }
-                .back-btn:hover {
-                  background: rgba(255, 255, 255, 0.3);
-                  transform: translateY(-2px);
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="icon">⚠️</div>
-                <h1>Mã thời gian không hợp lệ</h1>
-                <p>Vui lòng quét lại mã QR để tạo đường dẫn mới.</p>
-                <a href="/" class="back-btn">Về trang chủ</a>
-              </div>
-            </body>
-          </html>
-        `,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+        body: createErrorPage(
+          'Mã không hợp lệ',
+          'Mã QR này không hợp lệ hoặc đã bị hỏng. Vui lòng quét lại mã QR mới.',
+          '🔗'
+        ),
       };
     }
-    
+
+    // --- KIỂM TRA HẾT HẠN ---
+    // TẠM THỜI TẮT KIỂM TRA THỜI GIAN HẾT HẠN ĐỂ TEST
+    /*
+    const expirationTimeMs = settings.expirationHours * 60 * 60 * 1000;
     const currentTime = Date.now();
 
-        // TẠM THỜI TẮT KIỂM TRA THỜI GIAN HẾT HẠN
-    // if (currentTime - creationTime < EXPIRATION_TIME_MS) {
+    if (currentTime - creationTime > expirationTimeMs) {
+      // Nếu đã hết hạn, trả về trang lỗi
+      return {
+        statusCode: 410, // 410 Gone
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+        body: createErrorPage(
+            'Đường dẫn đã hết hiệu lực',
+            `URL này chỉ có giá trị trong ${settings.expirationHours} giờ. Vui lòng quét lại mã QR để tạo đường dẫn mới.`,
+            '⏰'
+        ),
+      };
+    }
+    */
     
-    // Nếu hợp lệ: Lấy nội dung trang gốc và hiển thị
+
+    // Nếu hợp lệ và chưa hết hạn, tải nội dung của trang đích
     const targetUrl = settings.targetUrl;
-    console.log('Target URL:', targetUrl);
-      
+    console.log('Đang tải trang đích:', targetUrl);
+
     try {
       const response = await fetch(targetUrl);
-      console.log('Fetch response status:', response.status);
-      
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`Không thể tải trang đích. Status: ${response.status}`);
       }
-      
       const pageContent = await response.text();
-      console.log('Page content length:', pageContent.length);
-
+      
+      // Trả về nội dung của trang đích
       return {
         statusCode: 200,
-        headers: { "Content-Type": "text/html" },
+        headers: { "Content-Type": "text/html; charset=utf-8" },
         body: pageContent,
       };
     } catch (fetchError) {
-      console.error('Fetch error:', fetchError);
+      console.error('Lỗi khi tải trang đích:', fetchError);
       return {
         statusCode: 500,
-        headers: { "Content-Type": "text/html" },
-        body: `
-          <html>
-            <head>
-              <title>Lỗi - Không thể tải trang</title>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <style>
-                body {
-                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                  text-align: center;
-                  padding: 50px 20px;
-                  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-                  color: white;
-                  min-height: 100vh;
-                  margin: 0;
-                  display: flex;
-                  align-items: center;
-                  justify-content: center;
-                }
-                .container {
-                  max-width: 600px;
-                  background: rgba(255, 255, 255, 0.1);
-                  padding: 40px;
-                  border-radius: 20px;
-                  backdrop-filter: blur(10px);
-                  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-                }
-                h1 {
-                  font-size: 2.5rem;
-                  margin-bottom: 20px;
-                  color: #fff;
-                }
-                p {
-                  font-size: 1.2rem;
-                  line-height: 1.6;
-                  margin-bottom: 30px;
-                  opacity: 0.9;
-                }
-                .icon {
-                  font-size: 4rem;
-                  margin-bottom: 20px;
-                }
-                .back-btn {
-                  display: inline-block;
-                  background: rgba(255, 255, 255, 0.2);
-                  color: white;
-                  padding: 12px 30px;
-                  text-decoration: none;
-                  border-radius: 25px;
-                  transition: all 0.3s ease;
-                  border: 2px solid rgba(255, 255, 255, 0.3);
-                }
-                .back-btn:hover {
-                  background: rgba(255, 255, 255, 0.3);
-                  transform: translateY(-2px);
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="icon">🌐</div>
-                <h1>Không thể tải trang</h1>
-                <p>Không thể tải nội dung từ trang đích. Vui lòng thử lại sau.</p>
-                <a href="/" class="back-btn">Về trang chủ</a>
-              </div>
-            </body>
-          </html>
-        `,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+        body: createErrorPage(
+            'Không thể tải trang',
+            'Đã có lỗi xảy ra khi tải nội dung trang đích. Vui lòng thử lại sau.',
+            '🌐'
+        ),
       };
     }
-    
-    // TẠM THỜI COMMENT PHẦN KIỂM TRA HẾT HẠN
-    /*
-  } else {
-    // Nếu đã hết hạn: Trả về trang thông báo lỗi
-    return {
-      statusCode: 410, // 410 Gone - tài nguyên đã bị xóa vĩnh viễn
-      headers: { "Content-Type": "text/html" },
-      body: `
-        <html>
-          <head>
-            <title>Hết hiệu lực</title>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                text-align: center;
-                padding: 50px 20px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                min-height: 100vh;
-                margin: 0;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-              }
-              .container {
-                max-width: 600px;
-                background: rgba(255, 255, 255, 0.1);
-                padding: 40px;
-                border-radius: 20px;
-                backdrop-filter: blur(10px);
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-              }
-              h1 {
-                font-size: 2.5rem;
-                margin-bottom: 20px;
-                color: #fff;
-              }
-              p {
-                font-size: 1.2rem;
-                line-height: 1.6;
-                margin-bottom: 30px;
-                opacity: 0.9;
-              }
-              .icon {
-                font-size: 4rem;
-                margin-bottom: 20px;
-              }
-              .back-btn {
-                display: inline-block;
-                background: rgba(255, 255, 255, 0.2);
-                color: white;
-                padding: 12px 30px;
-                text-decoration: none;
-                border-radius: 25px;
-                transition: all 0.3s ease;
-                border: 2px solid rgba(255, 255, 255, 0.3);
-              }
-              .back-btn:hover {
-                background: rgba(255, 255, 255, 0.3);
-                transform: translateY(-2px);
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="icon">⏰</div>
-              <h1>Rất tiếc, đường dẫn này đã hết hiệu lực</h1>
-              <p>URL này chỉ có giá trị trong 12 giờ kể từ lúc được tạo. Vui lòng quét lại mã QR để tạo đường dẫn mới.</p>
-              <a href="/" class="back-btn">Về trang chủ</a>
-            </div>
-          </body>
-        </html>
-      `,
-    };
-  }
-  */
+
   } catch (error) {
-    // Xử lý nếu URL không hợp lệ
+    console.error('Đã xảy ra lỗi không mong muốn:', error);
     return {
-      statusCode: 400,
-      headers: { "Content-Type": "text/html" },
-      body: `
-        <html>
-          <head>
-            <title>Lỗi</title>
-            <meta charset="utf-8">
-            <style>
-              body {
-                font-family: sans-serif;
-                text-align: center;
-                padding: 50px;
-                background: #f5f5f5;
-              }
-              .error {
-                background: white;
-                padding: 30px;
-                border-radius: 10px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                max-width: 500px;
-                margin: 0 auto;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="error">
-              <h1>URL không hợp lệ</h1>
-              <p>Đường dẫn bạn truy cập không đúng định dạng.</p>
-            </div>
-          </body>
-        </html>
-      `
+      statusCode: 500,
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+      body: createErrorPage(
+          'Lỗi Máy Chủ',
+          'Đã có lỗi ngoài ý muốn xảy ra. Vui lòng thử lại sau.',
+          '⚙️'
+      ),
     };
   }
 };
+
+/**
+ * Hàm trợ giúp để tạo trang lỗi HTML có giao diện đẹp.
+ * @param {string} title - Tiêu đề của trang.
+ * @param {string} message - Thông điệp lỗi.
+ * @param {string} icon - Biểu tượng emoji.
+ * @returns {string} - Chuỗi HTML của trang lỗi.
+ */
+function createErrorPage(title, message, icon) {
+    return `
+      <!DOCTYPE html>
+      <html lang="vi">
+        <head>
+          <title>${title}</title>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              text-align: center;
+              padding: 40px 20px;
+              background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+              color: white;
+              min-height: 100vh;
+              margin: 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              box-sizing: border-box;
+            }
+            .container {
+              max-width: 600px;
+              background: rgba(255, 255, 255, 0.1);
+              padding: 40px;
+              border-radius: 20px;
+              backdrop-filter: blur(10px);
+              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            }
+            h1 {
+              font-size: 2.2rem;
+              margin-bottom: 20px;
+            }
+            p {
+              font-size: 1.1rem;
+              line-height: 1.6;
+              margin-bottom: 30px;
+              opacity: 0.9;
+            }
+            .icon {
+              font-size: 4rem;
+              margin-bottom: 20px;
+            }
+            .back-btn {
+              display: inline-block;
+              background: rgba(255, 255, 255, 0.2);
+              color: white;
+              padding: 12px 30px;
+              text-decoration: none;
+              border-radius: 25px;
+              transition: all 0.3s ease;
+              border: 2px solid rgba(255, 255, 255, 0.3);
+              font-weight: 600;
+            }
+            .back-btn:hover {
+              background: rgba(255, 255, 255, 0.3);
+              transform: translateY(-2px);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="icon">${icon}</div>
+            <h1>${title}</h1>
+            <p>${message}</p>
+            <a href="/" class="back-btn">Về trang chủ</a>
+          </div>
+        </body>
+      </html>
+    `;
+}
