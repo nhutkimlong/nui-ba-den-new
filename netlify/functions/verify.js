@@ -226,112 +226,38 @@ export const handler = async function(event, context) {
     
     const currentTime = Date.now();
 
-    // Kiểm tra xem link có còn hợp lệ hay không
-    if (currentTime - creationTime < EXPIRATION_TIME_MS) {
-      // Nếu hợp lệ: Lấy nội dung trang gốc và hiển thị
-      const targetUrl = settings.targetUrl;
-      console.log('Target URL:', targetUrl);
+        // TẠM THỜI TẮT KIỂM TRA THỜI GIAN HẾT HẠN
+    // if (currentTime - creationTime < EXPIRATION_TIME_MS) {
+    
+    // Nếu hợp lệ: Lấy nội dung trang gốc và hiển thị
+    const targetUrl = settings.targetUrl;
+    console.log('Target URL:', targetUrl);
       
-      try {
-        const response = await fetch(targetUrl);
-        console.log('Fetch response status:', response.status);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const pageContent = await response.text();
-        console.log('Page content length:', pageContent.length);
-
-        return {
-          statusCode: 200,
-          headers: { "Content-Type": "text/html" },
-          body: pageContent,
-        };
-      } catch (fetchError) {
-        console.error('Fetch error:', fetchError);
-        return {
-          statusCode: 500,
-          headers: { "Content-Type": "text/html" },
-          body: `
-            <html>
-              <head>
-                <title>Lỗi - Không thể tải trang</title>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>
-                  body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    text-align: center;
-                    padding: 50px 20px;
-                    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-                    color: white;
-                    min-height: 100vh;
-                    margin: 0;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  }
-                  .container {
-                    max-width: 600px;
-                    background: rgba(255, 255, 255, 0.1);
-                    padding: 40px;
-                    border-radius: 20px;
-                    backdrop-filter: blur(10px);
-                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-                  }
-                  h1 {
-                    font-size: 2.5rem;
-                    margin-bottom: 20px;
-                    color: #fff;
-                  }
-                  p {
-                    font-size: 1.2rem;
-                    line-height: 1.6;
-                    margin-bottom: 30px;
-                    opacity: 0.9;
-                  }
-                  .icon {
-                    font-size: 4rem;
-                    margin-bottom: 20px;
-                  }
-                  .back-btn {
-                    display: inline-block;
-                    background: rgba(255, 255, 255, 0.2);
-                    color: white;
-                    padding: 12px 30px;
-                    text-decoration: none;
-                    border-radius: 25px;
-                    transition: all 0.3s ease;
-                    border: 2px solid rgba(255, 255, 255, 0.3);
-                  }
-                  .back-btn:hover {
-                    background: rgba(255, 255, 255, 0.3);
-                    transform: translateY(-2px);
-                  }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <div class="icon">🌐</div>
-                  <h1>Không thể tải trang</h1>
-                  <p>Không thể tải nội dung từ trang đích. Vui lòng thử lại sau.</p>
-                  <a href="/" class="back-btn">Về trang chủ</a>
-                </div>
-              </body>
-            </html>
-          `,
-        };
+    try {
+      const response = await fetch(targetUrl);
+      console.log('Fetch response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    } else {
-      // Nếu đã hết hạn: Trả về trang thông báo lỗi
+      
+      const pageContent = await response.text();
+      console.log('Page content length:', pageContent.length);
+
       return {
-        statusCode: 410, // 410 Gone - tài nguyên đã bị xóa vĩnh viễn
+        statusCode: 200,
+        headers: { "Content-Type": "text/html" },
+        body: pageContent,
+      };
+    } catch (fetchError) {
+      console.error('Fetch error:', fetchError);
+      return {
+        statusCode: 500,
         headers: { "Content-Type": "text/html" },
         body: `
           <html>
             <head>
-              <title>Hết hiệu lực</title>
+              <title>Lỗi - Không thể tải trang</title>
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1.0">
               <style>
@@ -339,7 +265,7 @@ export const handler = async function(event, context) {
                   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
                   text-align: center;
                   padding: 50px 20px;
-                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
                   color: white;
                   min-height: 100vh;
                   margin: 0;
@@ -388,9 +314,9 @@ export const handler = async function(event, context) {
             </head>
             <body>
               <div class="container">
-                <div class="icon">⏰</div>
-                <h1>Rất tiếc, đường dẫn này đã hết hiệu lực</h1>
-                <p>URL này chỉ có giá trị trong 12 giờ kể từ lúc được tạo. Vui lòng quét lại mã QR để tạo đường dẫn mới.</p>
+                <div class="icon">🌐</div>
+                <h1>Không thể tải trang</h1>
+                <p>Không thể tải nội dung từ trang đích. Vui lòng thử lại sau.</p>
                 <a href="/" class="back-btn">Về trang chủ</a>
               </div>
             </body>
@@ -398,6 +324,85 @@ export const handler = async function(event, context) {
         `,
       };
     }
+    
+    // TẠM THỜI COMMENT PHẦN KIỂM TRA HẾT HẠN
+    /*
+  } else {
+    // Nếu đã hết hạn: Trả về trang thông báo lỗi
+    return {
+      statusCode: 410, // 410 Gone - tài nguyên đã bị xóa vĩnh viễn
+      headers: { "Content-Type": "text/html" },
+      body: `
+        <html>
+          <head>
+            <title>Hết hiệu lực</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                text-align: center;
+                padding: 50px 20px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                min-height: 100vh;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              }
+              .container {
+                max-width: 600px;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 40px;
+                border-radius: 20px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+              }
+              h1 {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+                color: #fff;
+              }
+              p {
+                font-size: 1.2rem;
+                line-height: 1.6;
+                margin-bottom: 30px;
+                opacity: 0.9;
+              }
+              .icon {
+                font-size: 4rem;
+                margin-bottom: 20px;
+              }
+              .back-btn {
+                display: inline-block;
+                background: rgba(255, 255, 255, 0.2);
+                color: white;
+                padding: 12px 30px;
+                text-decoration: none;
+                border-radius: 25px;
+                transition: all 0.3s ease;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+              }
+              .back-btn:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: translateY(-2px);
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="icon">⏰</div>
+              <h1>Rất tiếc, đường dẫn này đã hết hiệu lực</h1>
+              <p>URL này chỉ có giá trị trong 12 giờ kể từ lúc được tạo. Vui lòng quét lại mã QR để tạo đường dẫn mới.</p>
+              <a href="/" class="back-btn">Về trang chủ</a>
+            </div>
+          </body>
+        </html>
+      `,
+    };
+  }
+  */
   } catch (error) {
     // Xử lý nếu URL không hợp lệ
     return {
