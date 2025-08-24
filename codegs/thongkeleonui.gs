@@ -373,6 +373,7 @@
           const climbDate = parseDateCell(row[cols[COL_CLIMB_DATE] - 1]);
           const groupSize = parseGroupSizeCell(row[cols[COL_GROUP_SIZE] - 1]);
           const leaderName = row[cols[COL_LEADER_NAME] - 1];
+          const email = row[cols[COL_EMAIL] - 1];
           const address = row[cols[COL_ADDRESS] - 1];
           const certificateLinks = row[cols[COL_CERT_LINKS] - 1];
 
@@ -405,6 +406,7 @@
                 timestamp: formattedRegistrationDate,
                 registrationTime: formattedRegistrationTime,
                 leaderName: leaderName || '(không có)',
+                email: email || '(không có)',
                 phone: String(rowPhoneNumber),
                 memberCount: groupSize !== null ? groupSize : '(không có)',
                 trekDate: formattedClimbDate,

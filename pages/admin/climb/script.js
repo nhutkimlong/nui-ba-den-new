@@ -2165,10 +2165,10 @@ async function loadRegistrationDataByPhone() {
                         const registration = regResult.data[0]; // Get most recent
                         
                         // Map data from searchPhone response to form fields
-                        // searchPhone returns: timestamp, registrationTime, leaderName, phone, memberCount, trekDate, address, certificateCount
+                        // searchPhone returns: timestamp, registrationTime, leaderName, email, phone, memberCount, trekDate, address, certificateCount
                         if (emailInput) {
-                            // Note: searchPhone doesn't return email, so we'll leave it empty for manual input
-                            emailInput.value = '';
+                            // Use email from searchPhone response
+                            emailInput.value = registration.email && registration.email !== '(không có)' ? registration.email : '';
                         }
                         
                         if (dateInput && registration.trekDate && registration.trekDate !== '(không có)') {
@@ -2180,10 +2180,9 @@ async function loadRegistrationDataByPhone() {
                             }
                         }
                         
-                        // Note: searchPhone doesn't return climb time, only registration time
-                        // So we'll leave time input empty for manual input
-                        if (timeInput) {
-                            timeInput.value = '';
+                        // Populate climb time with registration time from searchPhone response
+                        if (timeInput && registration.registrationTime && registration.registrationTime !== '(không có)') {
+                            timeInput.value = registration.registrationTime;
                         }
                         
                         // Duration is not available in searchPhone response, so leave empty
