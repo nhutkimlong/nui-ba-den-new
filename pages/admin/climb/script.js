@@ -2113,6 +2113,7 @@ async function loadRegistrationDataByPhone() {
     try {
         // Get members list
         const response = await fetch(`${CONFIG.GOOGLE_SCRIPT_URL}?action=getMembersByPhone&phone=${encodeURIComponent(phoneNumber)}`);
+        
         if (response.ok) {
             const result = await response.json();
             
@@ -2154,29 +2155,39 @@ async function loadRegistrationDataByPhone() {
                 
                 // Get registration details for email and date
                 const regResponse = await fetch(`${CONFIG.GOOGLE_SCRIPT_URL}?action=searchPhone&phone=${encodeURIComponent(phoneNumber)}`);
+                
                 if (regResponse.ok) {
                     const regResult = await regResponse.json();
+                    console.log('SearchPhone response:', regResult);
                     
                     if (regResult.success && regResult.data && regResult.data.length > 0) {
                         const registration = regResult.data[0]; // Get most recent
                         
-                        if (emailInput && registration.email) {
-                            emailInput.value = registration.email;
+                        // Map data from searchPhone response to form fields
+                        // searchPhone returns: timestamp, registrationTime, leaderName, phone, memberCount, trekDate, address, certificateCount
+                        if (emailInput) {
+                            // Note: searchPhone doesn't return email, so we'll leave it empty for manual input
+                            emailInput.value = '';
                         }
                         
-                        if (dateInput && registration.climbDate) {
-                            const date = new Date(registration.climbDate);
-                            if (!isNaN(date.getTime())) {
-                                dateInput.value = date.toISOString().split('T')[0];
+                        if (dateInput && registration.trekDate && registration.trekDate !== '(không có)') {
+                            // Convert DD/MM/YYYY to YYYY-MM-DD for date input
+                            const dateParts = registration.trekDate.split('/');
+                            if (dateParts.length === 3) {
+                                const formattedDate = `${dateParts[2]}-${dateParts[1].padStart(2, '0')}-${dateParts[0].padStart(2, '0')}`;
+                                dateInput.value = formattedDate;
                             }
                         }
                         
-                        if (timeInput && registration.climbTime) {
-                            timeInput.value = registration.climbTime;
+                        // Note: searchPhone doesn't return climb time, only registration time
+                        // So we'll leave time input empty for manual input
+                        if (timeInput) {
+                            timeInput.value = '';
                         }
                         
-                        if (durationInput && registration.duration) {
-                            durationInput.value = registration.duration;
+                        // Duration is not available in searchPhone response, so leave empty
+                        if (durationInput) {
+                            durationInput.value = '';
                         }
                     }
                 }
@@ -2194,12 +2205,12 @@ async function loadRegistrationDataByPhone() {
                     errorData.classList.remove('hidden');
                     const errorMessage = document.getElementById('errorMessage');
                     if (errorMessage) {
-                        errorMessage.textContent = 'Không tìm thấy thông tin đăng ký cho số điện thoại này';
+                        errorMessage.textContent = result.message || 'Không tìm thấy thông tin đăng ký cho số điện thoại này';
                     }
                 }
             }
         } else {
-            throw new Error('Network error');
+            throw new Error(`Network error: ${response.status}`);
         }
         
     } catch (error) {
@@ -2211,7 +2222,7 @@ async function loadRegistrationDataByPhone() {
             errorData.classList.remove('hidden');
             const errorMessage = document.getElementById('errorMessage');
             if (errorMessage) {
-                errorMessage.textContent = 'Không thể tải dữ liệu đăng ký. Vui lòng thử lại.';
+                errorMessage.textContent = `Không thể tải dữ liệu đăng ký: ${error.message}. Vui lòng thử lại.`;
             }
         }
     }
