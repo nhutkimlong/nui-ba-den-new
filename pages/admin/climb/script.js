@@ -172,6 +172,9 @@ function setupEventListeners() {
     
     // QR Settings
     initQRSettings();
+    
+    // Manual Certificate Generation
+    initializeManualCertificateForm();
 }
 
 // Load initial data
@@ -1937,6 +1940,7 @@ function initializeManualCertificateForm() {
     const form = document.getElementById('manualCertificateForm');
     const addMemberBtn = document.getElementById('addMemberBtn');
     const resetFormBtn = document.getElementById('resetManualFormBtn');
+    const loadDataBtn = document.getElementById('loadDataBtn');
     
     if (form) {
         form.addEventListener('submit', handleManualCertificateGeneration);
@@ -1950,13 +1954,19 @@ function initializeManualCertificateForm() {
         resetFormBtn.addEventListener('click', resetManualForm);
     }
     
-    // Initialize first member item
-    updateManualPhotoUploads();
+    if (loadDataBtn) {
+        loadDataBtn.addEventListener('click', loadRegistrationDataByPhone);
+    }
     
-    // Add event listener for phone number input to auto-load data
+    // Add event listener for phone number input to auto-load data on Enter
     const phoneInput = document.getElementById('manualPhone');
     if (phoneInput) {
-        phoneInput.addEventListener('blur', loadRegistrationDataByPhone);
+        phoneInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                loadRegistrationDataByPhone();
+            }
+        });
     }
 }
 
@@ -2039,6 +2049,15 @@ function resetManualForm() {
     const form = document.getElementById('manualCertificateForm');
     const result = document.getElementById('manualCertResult');
     
+    // Hide all sections
+    const loadedDataSection = document.getElementById('loadedDataSection');
+    const loadingData = document.getElementById('loadingData');
+    const errorData = document.getElementById('errorData');
+    
+    if (loadedDataSection) loadedDataSection.classList.add('hidden');
+    if (loadingData) loadingData.classList.add('hidden');
+    if (errorData) errorData.classList.add('hidden');
+    
     if (form) {
         form.reset();
     }
@@ -2047,34 +2066,19 @@ function resetManualForm() {
         result.classList.add('hidden');
     }
     
-    // Reset member list to one item
+    // Clear member list
     const memberList = document.getElementById('manualMemberList');
     if (memberList) {
-        memberList.innerHTML = `
-            <div class="member-item flex items-center space-x-3 p-3 border border-slate-200 rounded-lg">
-                <input type="checkbox" class="member-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-slate-300 rounded" checked>
-                <input type="text" class="member-name flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="Họ tên thành viên" required>
-                <button type="button" class="remove-member text-red-600 hover:text-red-800">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-        
-        // Add event listeners
-        const removeBtn = memberList.querySelector('.remove-member');
-        const nameInput = memberList.querySelector('.member-name');
-        
-        removeBtn.addEventListener('click', () => {
-            memberList.querySelector('.member-item').remove();
-            updateManualPhotoUploads();
-        });
-        
-        nameInput.addEventListener('input', () => {
-            updateManualPhotoUploads();
-        });
+        memberList.innerHTML = '';
     }
     
-    updateManualPhotoUploads();
+    // Clear photo uploads
+    const photoUploads = document.getElementById('manualPhotoUploads');
+    if (photoUploads) {
+        photoUploads.innerHTML = '';
+    }
+    
+    showMessage('Đã làm mới form', 'success');
 }
 
 // Load registration data by phone number
@@ -2083,11 +2087,28 @@ async function loadRegistrationDataByPhone() {
     const emailInput = document.getElementById('manualEmail');
     const dateInput = document.getElementById('manualClimbDate');
     const timeInput = document.getElementById('manualClimbTime');
+    const durationInput = document.getElementById('manualDuration');
     
-    if (!phoneInput || !phoneInput.value.trim()) return;
+    // Show/hide sections
+    const loadedDataSection = document.getElementById('loadedDataSection');
+    const loadingData = document.getElementById('loadingData');
+    const errorData = document.getElementById('errorData');
+    
+    if (!phoneInput || !phoneInput.value.trim()) {
+        showMessage('Vui lòng nhập số điện thoại', 'error');
+        return;
+    }
     
     const phoneNumber = phoneInput.value.trim();
-    if (!/^[0-9]{10,11}$/.test(phoneNumber)) return;
+    if (!/^[0-9]{10,11}$/.test(phoneNumber)) {
+        showMessage('Số điện thoại không hợp lệ', 'error');
+        return;
+    }
+    
+    // Show loading state
+    if (loadedDataSection) loadedDataSection.classList.add('hidden');
+    if (errorData) errorData.classList.add('hidden');
+    if (loadingData) loadingData.classList.remove('hidden');
     
     try {
         // Get members list
@@ -2095,7 +2116,7 @@ async function loadRegistrationDataByPhone() {
         if (response.ok) {
             const result = await response.json();
             
-            if (result.success && result.data && result.data.members) {
+            if (result.success && result.data && result.data.members && result.data.members.length > 0) {
                 // Update member list
                 const memberList = document.getElementById('manualMemberList');
                 if (memberList) {
@@ -2131,38 +2152,68 @@ async function loadRegistrationDataByPhone() {
                     updateManualPhotoUploads();
                 }
                 
-                showMessage(`Đã tải ${result.data.members.length} thành viên từ đăng ký gốc`, 'success');
-            }
-        }
-        
-        // Get registration details for email and date
-        const regResponse = await fetch(`${CONFIG.GOOGLE_SCRIPT_URL}?action=searchPhone&phone=${encodeURIComponent(phoneNumber)}`);
-        if (regResponse.ok) {
-            const regResult = await regResponse.json();
-            
-            if (regResult.success && regResult.data && regResult.data.length > 0) {
-                const registration = regResult.data[0]; // Get most recent
-                
-                if (emailInput && registration.email) {
-                    emailInput.value = registration.email;
-                }
-                
-                if (dateInput && registration.climbDate) {
-                    const date = new Date(registration.climbDate);
-                    if (!isNaN(date.getTime())) {
-                        dateInput.value = date.toISOString().split('T')[0];
+                // Get registration details for email and date
+                const regResponse = await fetch(`${CONFIG.GOOGLE_SCRIPT_URL}?action=searchPhone&phone=${encodeURIComponent(phoneNumber)}`);
+                if (regResponse.ok) {
+                    const regResult = await regResponse.json();
+                    
+                    if (regResult.success && regResult.data && regResult.data.length > 0) {
+                        const registration = regResult.data[0]; // Get most recent
+                        
+                        if (emailInput && registration.email) {
+                            emailInput.value = registration.email;
+                        }
+                        
+                        if (dateInput && registration.climbDate) {
+                            const date = new Date(registration.climbDate);
+                            if (!isNaN(date.getTime())) {
+                                dateInput.value = date.toISOString().split('T')[0];
+                            }
+                        }
+                        
+                        if (timeInput && registration.climbTime) {
+                            timeInput.value = registration.climbTime;
+                        }
+                        
+                        if (durationInput && registration.duration) {
+                            durationInput.value = registration.duration;
+                        }
                     }
                 }
                 
-                if (timeInput && registration.climbTime) {
-                    timeInput.value = registration.climbTime;
+                // Show success state
+                if (loadingData) loadingData.classList.add('hidden');
+                if (loadedDataSection) loadedDataSection.classList.remove('hidden');
+                
+                showMessage(`Đã tải ${result.data.members.length} thành viên từ đăng ký gốc`, 'success');
+                
+            } else {
+                // No data found
+                if (loadingData) loadingData.classList.add('hidden');
+                if (errorData) {
+                    errorData.classList.remove('hidden');
+                    const errorMessage = document.getElementById('errorMessage');
+                    if (errorMessage) {
+                        errorMessage.textContent = 'Không tìm thấy thông tin đăng ký cho số điện thoại này';
+                    }
                 }
             }
+        } else {
+            throw new Error('Network error');
         }
         
     } catch (error) {
         console.error('Error loading registration data:', error);
-        showMessage('Không thể tải dữ liệu đăng ký', 'error');
+        
+        // Show error state
+        if (loadingData) loadingData.classList.add('hidden');
+        if (errorData) {
+            errorData.classList.remove('hidden');
+            const errorMessage = document.getElementById('errorMessage');
+            if (errorMessage) {
+                errorMessage.textContent = 'Không thể tải dữ liệu đăng ký. Vui lòng thử lại.';
+            }
+        }
     }
 }
 

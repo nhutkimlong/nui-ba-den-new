@@ -683,7 +683,7 @@
         return { success: false, message: `Không tìm thấy đăng ký cho SĐT ${phoneNumber}.` };
       }
       
-      return { success: true, members: members };
+      return { success: true, data: { members: members } };
     } catch (error) {
       Logger.log(`!!! ERROR in handleGetMembersByPhone: ${error}`);
       return { success: false, message: `Lỗi server khi lấy members.` };
@@ -1046,7 +1046,7 @@
     }
     return unsafe
       .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
+      .replace(/</g, "&lt;")  
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
