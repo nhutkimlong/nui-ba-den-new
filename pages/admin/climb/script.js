@@ -1930,6 +1930,380 @@ function updateQRSettingsForm() {
     }
 }
 
+// ===== MANUAL CERTIFICATE GENERATION =====
+
+// Initialize manual certificate form
+function initializeManualCertificateForm() {
+    const form = document.getElementById('manualCertificateForm');
+    const addMemberBtn = document.getElementById('addMemberBtn');
+    const resetFormBtn = document.getElementById('resetManualFormBtn');
+    
+    if (form) {
+        form.addEventListener('submit', handleManualCertificateGeneration);
+    }
+    
+    if (addMemberBtn) {
+        addMemberBtn.addEventListener('click', addManualMember);
+    }
+    
+    if (resetFormBtn) {
+        resetFormBtn.addEventListener('click', resetManualForm);
+    }
+    
+    // Initialize first member item
+    updateManualPhotoUploads();
+    
+    // Add event listener for phone number input to auto-load data
+    const phoneInput = document.getElementById('manualPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('blur', loadRegistrationDataByPhone);
+    }
+}
+
+// Add new member to manual certificate form
+function addManualMember() {
+    const memberList = document.getElementById('manualMemberList');
+    if (!memberList) return;
+    
+    const memberItem = document.createElement('div');
+    memberItem.className = 'member-item flex items-center space-x-3 p-3 border border-slate-200 rounded-lg';
+    memberItem.innerHTML = `
+        <input type="checkbox" class="member-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-slate-300 rounded" checked>
+        <input type="text" class="member-name flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="Họ tên thành viên" required>
+        <button type="button" class="remove-member text-red-600 hover:text-red-800">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    memberList.appendChild(memberItem);
+    
+    // Add event listeners
+    const removeBtn = memberItem.querySelector('.remove-member');
+    const nameInput = memberItem.querySelector('.member-name');
+    
+    removeBtn.addEventListener('click', () => {
+        memberItem.remove();
+        updateManualPhotoUploads();
+    });
+    
+    nameInput.addEventListener('input', () => {
+        updateManualPhotoUploads();
+    });
+    
+    updateManualPhotoUploads();
+}
+
+// Update photo upload sections based on member list
+function updateManualPhotoUploads() {
+    const memberList = document.getElementById('manualMemberList');
+    const photoUploads = document.getElementById('manualPhotoUploads');
+    
+    if (!memberList || !photoUploads) return;
+    
+    const memberItems = memberList.querySelectorAll('.member-item');
+    photoUploads.innerHTML = '';
+    
+    memberItems.forEach((item, index) => {
+        const memberName = item.querySelector('.member-name').value || `Thành viên ${index + 1}`;
+        
+        const photoItem = document.createElement('div');
+        photoItem.className = 'photo-upload-item flex items-center space-x-3 p-3 border border-slate-200 rounded-lg';
+        photoItem.innerHTML = `
+            <input type="text" class="photo-name flex-1 px-3 py-2 border border-slate-300 rounded-lg" value="${memberName}" readonly>
+            <input type="file" class="photo-file" accept="image/*" style="display: none;">
+            <button type="button" class="select-photo bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm">
+                <i class="fas fa-image mr-1"></i>Chọn ảnh
+            </button>
+            <span class="photo-status text-sm text-gray-500">Chưa chọn ảnh</span>
+        `;
+        
+        photoUploads.appendChild(photoItem);
+        
+        // Add event listeners
+        const selectBtn = photoItem.querySelector('.select-photo');
+        const fileInput = photoItem.querySelector('.photo-file');
+        const status = photoItem.querySelector('.photo-status');
+        
+        selectBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                status.textContent = e.target.files[0].name;
+                status.className = 'photo-status text-sm text-green-600';
+            }
+        });
+    });
+}
+
+// Reset manual certificate form
+function resetManualForm() {
+    const form = document.getElementById('manualCertificateForm');
+    const result = document.getElementById('manualCertResult');
+    
+    if (form) {
+        form.reset();
+    }
+    
+    if (result) {
+        result.classList.add('hidden');
+    }
+    
+    // Reset member list to one item
+    const memberList = document.getElementById('manualMemberList');
+    if (memberList) {
+        memberList.innerHTML = `
+            <div class="member-item flex items-center space-x-3 p-3 border border-slate-200 rounded-lg">
+                <input type="checkbox" class="member-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-slate-300 rounded" checked>
+                <input type="text" class="member-name flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="Họ tên thành viên" required>
+                <button type="button" class="remove-member text-red-600 hover:text-red-800">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        // Add event listeners
+        const removeBtn = memberList.querySelector('.remove-member');
+        const nameInput = memberList.querySelector('.member-name');
+        
+        removeBtn.addEventListener('click', () => {
+            memberList.querySelector('.member-item').remove();
+            updateManualPhotoUploads();
+        });
+        
+        nameInput.addEventListener('input', () => {
+            updateManualPhotoUploads();
+        });
+    }
+    
+    updateManualPhotoUploads();
+}
+
+// Load registration data by phone number
+async function loadRegistrationDataByPhone() {
+    const phoneInput = document.getElementById('manualPhone');
+    const emailInput = document.getElementById('manualEmail');
+    const dateInput = document.getElementById('manualClimbDate');
+    const timeInput = document.getElementById('manualClimbTime');
+    
+    if (!phoneInput || !phoneInput.value.trim()) return;
+    
+    const phoneNumber = phoneInput.value.trim();
+    if (!/^[0-9]{10,11}$/.test(phoneNumber)) return;
+    
+    try {
+        // Get members list
+        const response = await fetch(`${CONFIG.GOOGLE_SCRIPT_URL}?action=getMembersByPhone&phone=${encodeURIComponent(phoneNumber)}`);
+        if (response.ok) {
+            const result = await response.json();
+            
+            if (result.success && result.data && result.data.members) {
+                // Update member list
+                const memberList = document.getElementById('manualMemberList');
+                if (memberList) {
+                    memberList.innerHTML = '';
+                    
+                    result.data.members.forEach((memberName, index) => {
+                        const memberItem = document.createElement('div');
+                        memberItem.className = 'member-item flex items-center space-x-3 p-3 border border-slate-200 rounded-lg';
+                        memberItem.innerHTML = `
+                            <input type="checkbox" class="member-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-slate-300 rounded" checked>
+                            <input type="text" class="member-name flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" value="${memberName}" required>
+                            <button type="button" class="remove-member text-red-600 hover:text-red-800">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                        
+                        memberList.appendChild(memberItem);
+                        
+                        // Add event listeners
+                        const removeBtn = memberItem.querySelector('.remove-member');
+                        const nameInput = memberItem.querySelector('.member-name');
+                        
+                        removeBtn.addEventListener('click', () => {
+                            memberItem.remove();
+                            updateManualPhotoUploads();
+                        });
+                        
+                        nameInput.addEventListener('input', () => {
+                            updateManualPhotoUploads();
+                        });
+                    });
+                    
+                    updateManualPhotoUploads();
+                }
+                
+                showMessage(`Đã tải ${result.data.members.length} thành viên từ đăng ký gốc`, 'success');
+            }
+        }
+        
+        // Get registration details for email and date
+        const regResponse = await fetch(`${CONFIG.GOOGLE_SCRIPT_URL}?action=searchPhone&phone=${encodeURIComponent(phoneNumber)}`);
+        if (regResponse.ok) {
+            const regResult = await regResponse.json();
+            
+            if (regResult.success && regResult.data && regResult.data.length > 0) {
+                const registration = regResult.data[0]; // Get most recent
+                
+                if (emailInput && registration.email) {
+                    emailInput.value = registration.email;
+                }
+                
+                if (dateInput && registration.climbDate) {
+                    const date = new Date(registration.climbDate);
+                    if (!isNaN(date.getTime())) {
+                        dateInput.value = date.toISOString().split('T')[0];
+                    }
+                }
+                
+                if (timeInput && registration.climbTime) {
+                    timeInput.value = registration.climbTime;
+                }
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error loading registration data:', error);
+        showMessage('Không thể tải dữ liệu đăng ký', 'error');
+    }
+}
+
+// Handle manual certificate generation
+async function handleManualCertificateGeneration(e) {
+    e.preventDefault();
+    
+    const form = e.target;
+    const submitBtn = document.getElementById('generateManualCertBtn');
+    const spinner = document.getElementById('manualCertSpinner');
+    
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // Collect form data
+    const phoneNumber = document.getElementById('manualPhone').value.trim();
+    const email = document.getElementById('manualEmail').value.trim();
+    const climbDate = document.getElementById('manualClimbDate').value;
+    const climbTime = document.getElementById('manualClimbTime').value;
+    const duration = document.getElementById('manualDuration').value;
+    const notes = document.getElementById('manualNotes').value.trim();
+    
+    // Collect selected members
+    const memberItems = document.querySelectorAll('#manualMemberList .member-item');
+    const selectedMembers = [];
+    
+    // Process members and photos asynchronously
+    const memberPromises = memberItems.map(async (item, index) => {
+        const checkbox = item.querySelector('.member-checkbox');
+        const nameInput = item.querySelector('.member-name');
+        
+        if (checkbox.checked && nameInput.value.trim()) {
+            const memberName = nameInput.value.trim();
+            const photoFile = document.querySelector(`#manualPhotoUploads .photo-upload-item:nth-child(${index + 1}) .photo-file`);
+            
+            const memberData = {
+                name: memberName,
+                photoData: null
+            };
+            
+            // Convert photo to base64 if exists
+            if (photoFile && photoFile.files[0]) {
+                const file = photoFile.files[0];
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        memberData.photoData = e.target.result;
+                        resolve(memberData);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                return memberData;
+            }
+        }
+        return null;
+    });
+    
+    const resolvedMembers = await Promise.all(memberPromises);
+    selectedMembers.push(...resolvedMembers.filter(member => member !== null));
+    
+    if (selectedMembers.length === 0) {
+        showMessage('Vui lòng chọn ít nhất một thành viên', 'error');
+        return;
+    }
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    spinner.classList.remove('hidden');
+    
+    try {
+        // Call Google Apps Script API
+        const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'generateCertificatesWithPhotos',
+                phone: phoneNumber,
+                members: selectedMembers,
+                manualData: {
+                    email: email,
+                    climbDate: climbDate,
+                    climbTime: climbTime,
+                    duration: duration,
+                    notes: notes
+                }
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Lỗi kết nối server');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Show success result
+            const resultDiv = document.getElementById('manualCertResult');
+            const detailsDiv = document.getElementById('manualCertDetails');
+            
+            if (resultDiv && detailsDiv) {
+                detailsDiv.innerHTML = `
+                    <p><strong>Thành công:</strong> ${result.message}</p>
+                    <p><strong>Email:</strong> ${email}</p>
+                    <p><strong>Số chứng chỉ:</strong> ${result.stats?.success || 0}</p>
+                    <p><strong>Thời gian:</strong> ${result.stats?.timeSeconds || 0} giây</p>
+                    ${result.pdfLinks && result.pdfLinks.length > 0 ? `
+                        <div class="mt-3">
+                            <p class="font-semibold">Link chứng chỉ:</p>
+                            <ul class="list-disc list-inside space-y-1">
+                                ${result.pdfLinks.map(link => `
+                                    <li><a href="${link.url}" target="_blank" class="text-blue-600 hover:underline">${link.name}</a></li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                `;
+                
+                resultDiv.classList.remove('hidden');
+                resultDiv.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            showMessage('Tạo chứng chỉ thành công!', 'success');
+        } else {
+            showMessage(result.message || 'Có lỗi khi tạo chứng chỉ', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error generating manual certificate:', error);
+        showMessage('Lỗi khi tạo chứng chỉ: ' + error.message, 'error');
+    } finally {
+        // Reset loading state
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
+    }
+}
+
 // Export functions for global access
 window.searchUser = searchUser;
 window.clearNotificationForm = clearNotificationForm;
