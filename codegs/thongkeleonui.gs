@@ -2,25 +2,81 @@
     const SPREADSHEET_ID = '1mAQNIo2QVfl4uNiuyVS2lAiSEnA40AkDrnIhoBRQGag'; // ID của Google Sheet của bạn
     const SHEET_NAME = 'Sheet1';              // Tên trang tính chứa dữ liệu
 
-    // Column indices (0-based) - Updated to match dangkytaochungnhan.gs structure
-    const COL_INDEX = {
-      TIMESTAMP: 0,         // A - Timestamp
-      LEADER_NAME: 1,       // B - LeaderName
-      PHONE: 2,             // C - PhoneNumber
-      ADDRESS: 3,           // D - Address
-      GROUP_SIZE: 4,        // E - GroupSize
-      EMAIL: 5,             // F - Email
-      CLIMB_DATE: 6,        // G - ClimbDate
-      CLIMB_TIME: 7,        // H - ClimbTime
-      SAFETY_COMMIT: 8,     // I - SafetyCommit
-      MEMBER_LIST: 9,       // J - MemberList
-      STATUS: 10,           // K - Status
-      CERTIFICATE_LINKS: 11,// L - CertificateLinks
-      BIRTHDAY: 12,         // M - Birthday
-      CCCD: 13,             // N - CCCD
-      SIGNATURE_IMAGE: 14,  // O - SignatureImage
-      COMMITMENT_PDF: 15    // P - CommitmentPDFLink
-    };
+    // Expected Column Names (same as dangkytaochungnhan.gs)
+    const COL_TIMESTAMP = 'Timestamp';         // A
+    const COL_LEADER_NAME = 'LeaderName';      // B
+    const COL_PHONE_NUMBER = 'PhoneNumber';    // C
+    const COL_ADDRESS = 'Address';           // D
+    const COL_GROUP_SIZE = 'GroupSize';        // E
+    const COL_EMAIL = 'Email';               // F
+    const COL_CLIMB_DATE = 'ClimbDate';        // G
+    const COL_CLIMB_TIME = 'ClimbTime';        // H
+    const COL_SAFETY_COMMIT = 'SafetyCommit';  // I
+    const COL_MEMBER_LIST = 'MemberList';      // J
+    const COL_STATUS = 'Status';             // K
+    const COL_CERT_LINKS = 'CertificateLinks'; // L
+    const COL_BIRTHDAY = 'Birthday';
+    const COL_CCCD = 'CCCD';
+    const COL_COMMITMENT_PDF = 'CommitmentPDFLink';
+    const COL_SIGNATURE_IMAGE = 'SignatureImage';
+
+    // --- Cache Management ---
+    let _sheetCache = null;
+    let _columnCache = null;
+    let _lastCacheTime = 0;
+
+    function getCachedSheet() {
+      const now = Date.now();
+      if (!_sheetCache || (now - _lastCacheTime) > (300 * 1000)) { // 5 minutes cache
+        const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+        _sheetCache = ss.getSheetByName(SHEET_NAME);
+        _lastCacheTime = now;
+      }
+      return _sheetCache;
+    }
+
+    function getCachedColumnIndices(sheet) {
+      if (!_columnCache) {
+        _columnCache = getColumnIndices(sheet);
+        Logger.log(`Column indices cached: ${JSON.stringify(_columnCache)}`);
+      }
+      return _columnCache;
+    }
+
+    // --- getColumnIndices function (same as dangkytaochungnhan.gs) ---
+    function getColumnIndices(sheet) {
+      const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      const indices = {};
+      const expectedCols = [
+        COL_TIMESTAMP, COL_LEADER_NAME, COL_PHONE_NUMBER, COL_ADDRESS, COL_GROUP_SIZE, COL_EMAIL,
+        COL_CLIMB_DATE, COL_CLIMB_TIME, COL_SAFETY_COMMIT, COL_MEMBER_LIST, COL_STATUS, COL_CERT_LINKS,
+        COL_BIRTHDAY, COL_CCCD, COL_SIGNATURE_IMAGE, COL_COMMITMENT_PDF
+      ];
+      let criticalMissing = false;
+      expectedCols.forEach(colName => {
+        let foundIndex = -1;
+        const lowerCaseColName = colName.toLowerCase();
+        for (let i = 0; i < headers.length; i++) { 
+          if (headers[i] && String(headers[i]).toLowerCase() === lowerCaseColName) { 
+            foundIndex = i + 1; 
+            break; 
+          } 
+        }
+        if (foundIndex < 1) {
+          Logger.log(`WARN: Column "${colName}" not found.`);
+          // Check if missing column is critical
+          if ([COL_PHONE_NUMBER, COL_LEADER_NAME, COL_EMAIL, COL_MEMBER_LIST].includes(colName)) {
+            criticalMissing = true;
+          }
+        }
+        indices[colName] = foundIndex;
+      });
+      if (criticalMissing) { 
+        Logger.log("ERROR: Critical columns missing."); 
+        return null; 
+      }
+      return indices;
+    }
 
     // --- Main Function ---
     function doGet(e) {
@@ -124,8 +180,7 @@
     // --- Data Retrieval ---
     function getSheetData() {
       try {
-        const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-        const sheet = ss.getSheetByName(SHEET_NAME);
+        const sheet = getCachedSheet();
         if (!sheet) {
           throw new Error(`Không tìm thấy trang tính có tên "${SHEET_NAME}".`);
         }
@@ -133,8 +188,7 @@
         if (lastRow < 2) {
           return []; // No data rows
         }
-        const numCols = Math.max(...Object.values(COL_INDEX)) + 1;
-        const range = sheet.getRange(2, 1, lastRow - 1, numCols);
+        const range = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn());
         return range.getValues();
       } catch (error) {
         Logger.log('Error getting sheet data: ' + error.message);
@@ -216,10 +270,16 @@
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
 
+      const sheet = getCachedSheet();
+      const cols = getCachedColumnIndices(sheet);
+      if (!cols) {
+        throw new Error('Không thể lấy thông tin cột từ Google Sheet.');
+      }
+
       data.forEach(row => {
-        const timestampDate = parseDateCell(row[COL_INDEX.TIMESTAMP]);
-        const groupSize = parseGroupSizeCell(row[COL_INDEX.GROUP_SIZE]);
-        const certificateLinks = row[COL_INDEX.CERTIFICATE_LINKS];
+        const timestampDate = parseDateCell(row[cols[COL_TIMESTAMP] - 1]);
+        const groupSize = parseGroupSizeCell(row[cols[COL_GROUP_SIZE] - 1]);
+        const certificateLinks = row[cols[COL_CERT_LINKS] - 1];
 
         if (timestampDate && groupSize !== null) {
             const rowYear = timestampDate.getFullYear();
@@ -271,9 +331,15 @@
         throw new Error('Ngày bắt đầu không được sau ngày kết thúc.');
       }
 
+      const sheet = getCachedSheet();
+      const cols = getCachedColumnIndices(sheet);
+      if (!cols) {
+        throw new Error('Không thể lấy thông tin cột từ Google Sheet.');
+      }
+
       data.forEach(row => {
-        const timestampDate = parseDateCell(row[COL_INDEX.TIMESTAMP]);
-        const groupSize = parseGroupSizeCell(row[COL_INDEX.GROUP_SIZE]);
+        const timestampDate = parseDateCell(row[cols[COL_TIMESTAMP] - 1]);
+        const groupSize = parseGroupSizeCell(row[cols[COL_GROUP_SIZE] - 1]);
         if (timestampDate && groupSize !== null) {
             if (timestampDate >= startDate && timestampDate <= endDate) {
               periodCount += groupSize;
@@ -293,16 +359,22 @@
       const dateFormat = "dd/MM/yyyy";
       const timeFormat = "HH:mm";
 
+      const sheet = getCachedSheet();
+      const cols = getCachedColumnIndices(sheet);
+      if (!cols) {
+        throw new Error('Không thể lấy thông tin cột từ Google Sheet.');
+      }
+
       data.forEach((row, index) => {
-        const rowPhoneNumber = row[COL_INDEX.PHONE];
+        const rowPhoneNumber = row[cols[COL_PHONE_NUMBER] - 1];
 
         if (rowPhoneNumber != null && String(rowPhoneNumber).replace(/^'/, '').trim().replace(/\s+/g, '') === searchTerm) {
-          const registrationTimestampDate = parseDateCell(row[COL_INDEX.TIMESTAMP]);
-          const climbDate = parseDateCell(row[COL_INDEX.CLIMB_DATE]);
-          const groupSize = parseGroupSizeCell(row[COL_INDEX.GROUP_SIZE]);
-          const leaderName = row[COL_INDEX.LEADER_NAME];
-          const address = row[COL_INDEX.ADDRESS];
-          const certificateLinks = row[COL_INDEX.CERTIFICATE_LINKS];
+          const registrationTimestampDate = parseDateCell(row[cols[COL_TIMESTAMP] - 1]);
+          const climbDate = parseDateCell(row[cols[COL_CLIMB_DATE] - 1]);
+          const groupSize = parseGroupSizeCell(row[cols[COL_GROUP_SIZE] - 1]);
+          const leaderName = row[cols[COL_LEADER_NAME] - 1];
+          const address = row[cols[COL_ADDRESS] - 1];
+          const certificateLinks = row[cols[COL_CERT_LINKS] - 1];
 
           let formattedRegistrationDate = registrationTimestampDate
               ? Utilities.formatDate(registrationTimestampDate, scriptTimeZone, dateFormat)
@@ -373,9 +445,15 @@
             tempDate.setDate(tempDate.getDate() + 1);
         }
 
+        const sheet = getCachedSheet();
+        const cols = getCachedColumnIndices(sheet);
+        if (!cols) {
+          throw new Error('Không thể lấy thông tin cột từ Google Sheet.');
+        }
+
         data.forEach(row => {
-            const timestampDate = parseDateCell(row[COL_INDEX.TIMESTAMP]);
-            const groupSize = parseGroupSizeCell(row[COL_INDEX.GROUP_SIZE]);
+            const timestampDate = parseDateCell(row[cols[COL_TIMESTAMP] - 1]);
+            const groupSize = parseGroupSizeCell(row[cols[COL_GROUP_SIZE] - 1]);
             if (timestampDate && groupSize !== null && timestampDate >= thirtyDaysAgo && timestampDate <= today) {
                 const dayKey = Utilities.formatDate(timestampDate, scriptTimeZone, "dd/MM");
                 if (dailyCounts.hasOwnProperty(dayKey)) {
@@ -404,9 +482,15 @@
         const twelveMonthsAgoDate = new Date(currentYear, currentMonth - 11, 1);
         twelveMonthsAgoDate.setHours(0,0,0,0);
 
+        const sheet = getCachedSheet();
+        const cols = getCachedColumnIndices(sheet);
+        if (!cols) {
+          throw new Error('Không thể lấy thông tin cột từ Google Sheet.');
+        }
+
         data.forEach(row => {
-            const timestampDate = parseDateCell(row[COL_INDEX.TIMESTAMP]);
-            const groupSize = parseGroupSizeCell(row[COL_INDEX.GROUP_SIZE]);
+            const timestampDate = parseDateCell(row[cols[COL_TIMESTAMP] - 1]);
+            const groupSize = parseGroupSizeCell(row[cols[COL_GROUP_SIZE] - 1]);
             if (timestampDate && groupSize !== null && timestampDate >= twelveMonthsAgoDate) {
                 const monthKey = Utilities.formatDate(timestampDate, scriptTimeZone, "MM/yyyy");
                 if (monthlyCounts.hasOwnProperty(monthKey)) {
@@ -426,8 +510,14 @@
         'Đoàn rất lớn (>20 người)': 0
       };
 
+      const sheet = getCachedSheet();
+      const cols = getCachedColumnIndices(sheet);
+      if (!cols) {
+        throw new Error('Không thể lấy thông tin cột từ Google Sheet.');
+      }
+
       data.forEach(row => {
-        const groupSize = parseGroupSizeCell(row[COL_INDEX.GROUP_SIZE]);
+        const groupSize = parseGroupSizeCell(row[cols[COL_GROUP_SIZE] - 1]);
         if (groupSize !== null) {
           if (groupSize <= 5) {
             visitorTypes['Đoàn nhỏ (1-5 người)'] += 1; // Đếm số đoàn, không phải số người
@@ -461,10 +551,16 @@
         monthlyData[monthKey] = 0;
       }
 
+      const sheet = getCachedSheet();
+      const cols = getCachedColumnIndices(sheet);
+      if (!cols) {
+        throw new Error('Không thể lấy thông tin cột từ Google Sheet.');
+      }
+
       // Calculate monthly totals
       data.forEach(row => {
-        const timestampDate = parseDateCell(row[COL_INDEX.TIMESTAMP]);
-        const groupSize = parseGroupSizeCell(row[COL_INDEX.GROUP_SIZE]);
+        const timestampDate = parseDateCell(row[cols[COL_TIMESTAMP] - 1]);
+        const groupSize = parseGroupSizeCell(row[cols[COL_GROUP_SIZE] - 1]);
         if (timestampDate && groupSize !== null) {
           const monthKey = Utilities.formatDate(timestampDate, scriptTimeZone, "MM/yyyy");
           if (monthlyData.hasOwnProperty(monthKey)) {
@@ -502,13 +598,19 @@
       const timeFormat = "HH:mm";
       let recentRegistrations = [];
 
+      const sheet = getCachedSheet();
+      const cols = getCachedColumnIndices(sheet);
+      if (!cols) {
+        throw new Error('Không thể lấy thông tin cột từ Google Sheet.');
+      }
+
       // Convert data to objects with timestamp for sorting
       data.forEach(row => {
-        const timestampDate = parseDateCell(row[COL_INDEX.TIMESTAMP]);
-        const leaderName = row[COL_INDEX.LEADER_NAME];
-        const phoneNumber = row[COL_INDEX.PHONE];
-        const birthday = parseDateCell(row[COL_INDEX.BIRTHDAY]);
-        const groupSize = parseGroupSizeCell(row[COL_INDEX.GROUP_SIZE]);
+        const timestampDate = parseDateCell(row[cols[COL_TIMESTAMP] - 1]);
+        const leaderName = row[cols[COL_LEADER_NAME] - 1];
+        const phoneNumber = row[cols[COL_PHONE_NUMBER] - 1];
+        const birthday = parseDateCell(row[cols[COL_BIRTHDAY] - 1]);
+        const groupSize = parseGroupSizeCell(row[cols[COL_GROUP_SIZE] - 1]);
 
         if (timestampDate && leaderName) {
           let formattedBirthday = birthday
@@ -548,11 +650,17 @@
       const lastMonthYear = lastMonth.getFullYear();
       const lastMonthMonth = lastMonth.getMonth();
 
+      const sheet = getCachedSheet();
+      const cols = getCachedColumnIndices(sheet);
+      if (!cols) {
+        throw new Error('Không thể lấy thông tin cột từ Google Sheet.');
+      }
+
       // Tính tổng khách tháng trước
       let lastMonthCount = 0;
       data.forEach(row => {
-        const timestampDate = parseDateCell(row[COL_INDEX.TIMESTAMP]);
-        const groupSize = parseGroupSizeCell(row[COL_INDEX.GROUP_SIZE]);
+        const timestampDate = parseDateCell(row[cols[COL_TIMESTAMP] - 1]);
+        const groupSize = parseGroupSizeCell(row[cols[COL_GROUP_SIZE] - 1]);
         if (timestampDate && groupSize !== null) {
           const rowYear = timestampDate.getFullYear();
           const rowMonth = timestampDate.getMonth();
@@ -603,8 +711,8 @@
       let currentWeekCount = 0;
       let lastWeekCount = 0;
       data.forEach(row => {
-        const timestampDate = parseDateCell(row[COL_INDEX.TIMESTAMP]);
-        const groupSize = parseGroupSizeCell(row[COL_INDEX.GROUP_SIZE]);
+        const timestampDate = parseDateCell(row[cols[COL_TIMESTAMP] - 1]);
+        const groupSize = parseGroupSizeCell(row[cols[COL_GROUP_SIZE] - 1]);
         if (timestampDate && groupSize !== null) {
           if (timestampDate >= weekStart && timestampDate <= today) {
             currentWeekCount += groupSize;
@@ -664,18 +772,33 @@
         let members = [];
         let found = false;
         
-        // Search from bottom to top for most recent registration
-        for (let i = data.length - 1; i >= 0; i--) {
-          const row = data[i];
-          const sheetPhone = String(row[COL_INDEX.PHONE] || '').replace(/^'/, '').trim();
+        const sheet = getCachedSheet();
+        const cols = getCachedColumnIndices(sheet);
+        if (!cols) {
+          return { success: false, message: 'Không thể lấy thông tin cột từ Google Sheet.' };
+        }
+
+        // Get all data from sheet (including headers)
+        const allData = sheet.getDataRange().getValues();
+        
+        // Search from bottom to top for most recent registration (skip header row)
+        Logger.log(`Searching through ${allData.length - 1} data rows for phone: ${phoneNumber}`);
+        for (let i = allData.length - 1; i >= 1; i--) {
+          const row = allData[i];
+          const sheetPhone = String(row[cols[COL_PHONE_NUMBER] - 1] || '').replace(/^'/, '').trim();
+          
+          // Debug: Log first few phone numbers to check format
+          if (i >= allData.length - 5) {
+            Logger.log(`Row ${i + 1}: Phone="${row[cols[COL_PHONE_NUMBER] - 1]}" -> Cleaned="${sheetPhone}"`);
+          }
           
           if (sheetPhone === phoneNumber) {
-            const listStr = String(row[COL_INDEX.MEMBER_LIST] || '').trim();
+            const listStr = String(row[cols[COL_MEMBER_LIST] - 1] || '').trim();
             if (listStr) {
               members = listStr.split('\n').map(name => name.trim()).filter(Boolean);
             }
             found = true;
-            Logger.log(`Found members for ${phoneNumber} at row ${i + 2}. Count: ${members.length}`);
+            Logger.log(`Found members for ${phoneNumber} at row ${i + 1}. Count: ${members.length}`);
             break;
           }
         }
@@ -833,11 +956,11 @@
 
       // Update sheet with certificate links
       try {
-        const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-        const sheet = ss.getSheetByName(SHEET_NAME);
-        if (sheet && rowIndex) {
-          if (COL_INDEX.STATUS) sheet.getRange(rowIndex, COL_INDEX.STATUS + 1).setValue(statusMsg);
-          if (COL_INDEX.CERTIFICATE_LINKS) sheet.getRange(rowIndex, COL_INDEX.CERTIFICATE_LINKS + 1).setValue(pdfLinks.length > 0 ? JSON.stringify(pdfLinks) : '');
+        const sheet = getCachedSheet();
+        const cols = getCachedColumnIndices(sheet);
+        if (sheet && rowIndex && cols) {
+          if (cols[COL_STATUS]) sheet.getRange(rowIndex, cols[COL_STATUS]).setValue(statusMsg);
+          if (cols[COL_CERT_LINKS]) sheet.getRange(rowIndex, cols[COL_CERT_LINKS]).setValue(pdfLinks.length > 0 ? JSON.stringify(pdfLinks) : '');
           SpreadsheetApp.flush();
           Logger.log(`Updated Sheet: Row ${rowIndex}, Status=${statusMsg}`);
         }
@@ -895,22 +1018,33 @@
 
     // Find registration details by phone number
     function findRegistrationDetails(data, phoneNumber) {
-      for (let i = data.length - 1; i >= 0; i--) {
-        const row = data[i];
-        const sheetPhone = String(row[COL_INDEX.PHONE] || '').replace(/^'/, '').trim();
+      const sheet = getCachedSheet();
+      const cols = getCachedColumnIndices(sheet);
+      if (!cols) {
+        Logger.log('findRegDetails: Cannot get column indices.');
+        return null;
+      }
+
+      // Get all data from sheet (including headers)
+      const allData = sheet.getDataRange().getValues();
+      
+      // Search from bottom to top for most recent registration (skip header row)
+      for (let i = allData.length - 1; i >= 1; i--) {
+        const row = allData[i];
+        const sheetPhone = String(row[cols[COL_PHONE_NUMBER] - 1] || '').replace(/^'/, '').trim();
         
         if (sheetPhone === phoneNumber) {
-          const climbDateValue = row[COL_INDEX.CLIMB_DATE];
-          const climbTimeValue = String(row[COL_INDEX.CLIMB_TIME] || '').trim();
-          const registrationTsValue = row[COL_INDEX.TIMESTAMP];
-          const leaderNameValue = String(row[COL_INDEX.LEADER_NAME] || 'Bạn').trim();
-          const userEmailValue = String(row[COL_INDEX.EMAIL] || '').trim().toLowerCase();
-          const memberListStrValue = String(row[COL_INDEX.MEMBER_LIST] || '').trim();
+          const climbDateValue = row[cols[COL_CLIMB_DATE] - 1];
+          const climbTimeValue = String(row[cols[COL_CLIMB_TIME] - 1] || '').trim();
+          const registrationTsValue = row[cols[COL_TIMESTAMP] - 1];
+          const leaderNameValue = String(row[cols[COL_LEADER_NAME] - 1] || 'Bạn').trim();
+          const userEmailValue = String(row[cols[COL_EMAIL] - 1] || '').trim().toLowerCase();
+          const memberListStrValue = String(row[cols[COL_MEMBER_LIST] - 1] || '').trim();
           
           Logger.log(`DEBUG findRegDetails: Found Row ${i+1}. Leader=${leaderNameValue}, Email=${userEmailValue}, Date=${climbDateValue}`);
           
           return {
-            rowIndex: i + 2, // +2 because data starts from row 2 and we're 0-indexed
+            rowIndex: i + 1, // +1 because we're using actual sheet row numbers
             leaderName: leaderNameValue, 
             userEmail: userEmailValue || null,
             memberListString: memberListStrValue,

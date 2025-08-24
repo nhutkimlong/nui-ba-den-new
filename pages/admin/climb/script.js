@@ -2116,14 +2116,16 @@ async function loadRegistrationDataByPhone() {
         
         if (response.ok) {
             const result = await response.json();
+            console.log('getMembersByPhone response:', result);
             
-            if (result.success && result.data && result.data.members && result.data.members.length > 0) {
+            // Check if we have valid data structure
+            if (result.success && result.data && result.data.success && result.data.data && result.data.data.members && result.data.data.members.length > 0) {
                 // Update member list
                 const memberList = document.getElementById('manualMemberList');
                 if (memberList) {
                     memberList.innerHTML = '';
                     
-                    result.data.members.forEach((memberName, index) => {
+                    result.data.data.members.forEach((memberName, index) => {
                         const memberItem = document.createElement('div');
                         memberItem.className = 'member-item flex items-center space-x-3 p-3 border border-slate-200 rounded-lg';
                         memberItem.innerHTML = `
@@ -2158,7 +2160,6 @@ async function loadRegistrationDataByPhone() {
                 
                 if (regResponse.ok) {
                     const regResult = await regResponse.json();
-                    console.log('SearchPhone response:', regResult);
                     
                     if (regResult.success && regResult.data && regResult.data.length > 0) {
                         const registration = regResult.data[0]; // Get most recent
@@ -2196,10 +2197,19 @@ async function loadRegistrationDataByPhone() {
                 if (loadingData) loadingData.classList.add('hidden');
                 if (loadedDataSection) loadedDataSection.classList.remove('hidden');
                 
-                showMessage(`Đã tải ${result.data.members.length} thành viên từ đăng ký gốc`, 'success');
+                showMessage(`Đã tải ${result.data.data.members.length} thành viên từ đăng ký gốc`, 'success');
                 
             } else {
                 // No data found
+                console.log('Data structure check failed:', {
+                    resultSuccess: result.success,
+                    hasData: !!result.data,
+                    dataSuccess: result.data?.success,
+                    hasDataData: !!result.data?.data,
+                    hasMembers: !!result.data?.data?.members,
+                    membersLength: result.data?.data?.members?.length
+                });
+                
                 if (loadingData) loadingData.classList.add('hidden');
                 if (errorData) {
                     errorData.classList.remove('hidden');
