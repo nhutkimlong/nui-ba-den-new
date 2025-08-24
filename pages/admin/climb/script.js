@@ -166,6 +166,8 @@ function setupEventListeners() {
     // Registration time settings
     if (elements.registrationTimeEnabled) {
         elements.registrationTimeEnabled.addEventListener('change', toggleRegistrationTimeSettings);
+        // Also call toggleRegistrationTimeSettings initially to set the correct state
+        toggleRegistrationTimeSettings();
     }
     
     // QR Settings
@@ -909,7 +911,9 @@ async function loadNotifications() {
 
 // Update notifications list
 function updateNotificationsList() {
-    if (!elements.activeNotificationsList) return;
+    if (!elements.activeNotificationsList) {
+        return;
+    }
     
     const activeNotifications = notifications.filter(n => n.active);
     
@@ -1345,12 +1349,14 @@ function toggleRegistrationTimeSettings() {
     const isEnabled = elements.registrationTimeEnabled.checked;
     const settingsDiv = elements.registrationTimeSettings;
     
-    if (isEnabled) {
-        settingsDiv.style.display = 'grid';
-        settingsDiv.style.opacity = '1';
-    } else {
-        settingsDiv.style.display = 'none';
-        settingsDiv.style.opacity = '0.5';
+    if (settingsDiv) {
+        if (isEnabled) {
+            settingsDiv.style.display = 'grid';
+            settingsDiv.style.opacity = '1';
+        } else {
+            settingsDiv.style.display = 'none';
+            settingsDiv.style.opacity = '0.5';
+        }
     }
 }
 
@@ -1439,7 +1445,10 @@ function resetGpsSettings() {
             registrationRadius: CONFIG.DEFAULT_REGISTRATION_RADIUS,
             certificateRadius: CONFIG.DEFAULT_CERTIFICATE_RADIUS,
             requireGpsRegistration: true,
-            requireGpsCertificate: true
+            requireGpsCertificate: true,
+            registrationTimeEnabled: false,
+            registrationStartTime: '06:00',
+            registrationEndTime: '18:00'
         };
         
         updateGpsSettingsForm();
