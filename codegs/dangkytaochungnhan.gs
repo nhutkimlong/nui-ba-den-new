@@ -144,6 +144,27 @@ function handleRegistration(requestData) {
     const signatureData = String(requestData.signatureData || '').trim();
     const cccd = String(requestData.cccd || '').trim();
 
+    // Tự động thêm tên người trưởng nhóm vào danh sách thành viên nếu chưa có
+    let processedMemberList = memberList;
+    if (leaderName && leaderName.trim()) {
+        const leaderNameTrimmed = leaderName.trim();
+        const memberArray = memberList ? memberList.split('\n').map(name => name.trim()).filter(Boolean) : [];
+        
+        // Kiểm tra xem tên người trưởng đã có trong danh sách chưa
+        const leaderExists = memberArray.some(member => 
+            member.toLowerCase() === leaderNameTrimmed.toLowerCase()
+        );
+        
+        if (!leaderExists) {
+            // Thêm tên người trưởng vào đầu danh sách
+            memberArray.unshift(leaderNameTrimmed);
+            processedMemberList = memberArray.join('\n');
+            Logger.log(`Auto-added leader "${leaderNameTrimmed}" to member list`);
+        } else {
+            Logger.log(`Leader "${leaderNameTrimmed}" already exists in member list`);
+        }
+    }
+
     if (!leaderName || !phoneNumber || !address || !email || !groupSize || groupSize <= 0 || !safetyCommit ) {
         Logger.log(`Reg Validation Failed: leader=${leaderName}, phone=${phoneNumber}, address=${address}, email=${email}, size=${groupSize}, commit=${safetyCommit}`);
         return createJsonResponse({ success: false, message: 'Thiếu thông tin bắt buộc.' });
@@ -218,7 +239,7 @@ function handleRegistration(requestData) {
         [COL_BIRTHDAY]: birthday,
         [COL_CCCD]: cccd,
         [COL_SIGNATURE_IMAGE]: signatureFileUrl,
-        [COL_SAFETY_COMMIT]: safetyCommitValue, [COL_MEMBER_LIST]: memberList,
+        [COL_SAFETY_COMMIT]: safetyCommitValue, [COL_MEMBER_LIST]: processedMemberList,
         [COL_STATUS]: status, [COL_CERT_LINKS]: '',
         [COL_COMMITMENT_PDF]: commitmentPDFUrl
     });
