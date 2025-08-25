@@ -13,15 +13,29 @@ export const handler = async function(event, context) {
   const encodedTime = Buffer.from(creationTime.toString()).toString('base64');
   console.log('Encoded time:', encodedTime);
 
-  // Tạo đường dẫn xác thực
+  // Tạo URL thật (có thể là domain khác hoặc cùng domain)
+  const realDomain = 'nuibaden.netlify.app'; // Domain thật
   const verificationPath = `/v/${encodedTime}`;
-  console.log('Verification path:', verificationPath);
+  const realUrl = `https://${realDomain}${verificationPath}`;
+  
+  // Cách 1: Sử dụng URL rút gọn - KHÔNG cần tạo domain mới
+  // is.gd tự động tạo URL ngắn và che giấu domain thật
+  const shortenerUrl = `https://is.gd/create.php?format=simple&url=${encodeURIComponent(realUrl)}`;
+  
+  // Cách 2: Hoặc dùng v.gd (cũng không cần tạo domain)
+  // const shortenerUrl = `https://v.gd/create.php?format=simple&url=${encodeURIComponent(realUrl)}`;
+  
+  // Cách 3: Hoặc dùng tinyurl (cũng không cần tạo domain)
+  // const shortenerUrl = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(realUrl)}`;
+  
+  console.log('Real URL (hidden):', realUrl);
+  console.log('Shortener URL:', shortenerUrl);
 
-  // Chuyển hướng người dùng đến đường dẫn xác thực
+  // Chuyển hướng người dùng đến URL rút gọn
   const response = {
     statusCode: 302,
     headers: {
-      "Location": verificationPath,
+      "Location": shortenerUrl,
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Headers": "Content-Type",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS"
