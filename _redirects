@@ -7,5 +7,5 @@
 # Root index redirect
 /index.html /home.html 301
 
-# Fallback for SPA routing - DISABLED for QR system
+# Fallback for SPA routing
 # /* /home.html 200 

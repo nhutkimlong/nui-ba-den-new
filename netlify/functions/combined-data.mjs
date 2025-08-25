@@ -17,11 +17,10 @@ export default async (request, context) => {
 
   const notificationsStore = getStore('climb-notifications');
   const gpsStore = getStore('climb-gps-settings');
-  const qrSettingsStore = getStore('qr-settings');
   
   try {
     if (method === 'GET') {
-      // Get notifications, GPS settings, and QR settings
+      // Get notifications and GPS settings
       const [notifications, notificationsLastModified] = await Promise.all([
         notificationsStore.get('active', { type: 'json' }),
         notificationsStore.get('lastModified', { type: 'json' })
@@ -30,11 +29,6 @@ export default async (request, context) => {
       const [gpsSettings, gpsLastModified] = await Promise.all([
         gpsStore.get('current', { type: 'json' }),
         gpsStore.get('lastModified', { type: 'json' })
-      ]);
-      
-      const [qrSettings, qrSettingsLastModified] = await Promise.all([
-        qrSettingsStore.get('settings', { type: 'json' }),
-        qrSettingsStore.get('lastModified', { type: 'json' })
       ]);
       
       const defaultGpsSettings = {
@@ -47,11 +41,7 @@ export default async (request, context) => {
         registrationEndTime: '18:00'
       };
       
-      const defaultQrSettings = {
-        expirationHours: 12,
-        targetUrl: "https://nuibaden.netlify.app/pages/climb.html",
-        lastUpdated: new Date().toISOString()
-      };
+
       
       const result = {
         notifications: {
@@ -62,10 +52,7 @@ export default async (request, context) => {
           data: gpsSettings || defaultGpsSettings,
           lastModified: gpsLastModified || Date.now()
         },
-        qrSettings: {
-          data: qrSettings || defaultQrSettings,
-          lastModified: qrSettingsLastModified || Date.now()
-        }
+
       };
       
       return Response.json(result, { headers });
@@ -122,31 +109,7 @@ export default async (request, context) => {
           await gpsStore.setJSON('lastModified', Date.now());
           return Response.json(data, { headers });
 
-        case 'updateQrSettings':
-          // Update QR settings
-          const newQrSettings = {
-            expirationHours: parseInt(data.expirationHours) || 12,
-            targetUrl: data.targetUrl || "https://nuibaden.netlify.app/pages/climb.html",
-            lastUpdated: new Date().toISOString()
-          };
 
-          // Validate expiration hours (1-168 hours = 1 week max)
-          if (newQrSettings.expirationHours < 1 || newQrSettings.expirationHours > 168) {
-            return new Response(JSON.stringify({ 
-              error: "Thời gian hiệu lực phải từ 1 đến 168 giờ (1 tuần)" 
-            }), { 
-              status: 400, 
-              headers: { ...headers, 'Content-Type': 'application/json' } 
-            });
-          }
-
-          await qrSettingsStore.setJSON('settings', newQrSettings);
-          await qrSettingsStore.setJSON('lastModified', Date.now());
-          
-          return Response.json({
-            message: "Cài đặt QR đã được cập nhật thành công",
-            settings: newQrSettings
-          }, { headers });
 
         default:
           return new Response('Invalid action', { status: 400, headers });

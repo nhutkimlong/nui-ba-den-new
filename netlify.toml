@@ -21,22 +21,6 @@
 # Functions are automatically accessible at /.netlify/functions/
 # No redirect needed for functions
 
-# QR Code redirect to go function
-[[redirects]]
-  from = "/go"
-  to = "/.netlify/functions/go"
-  status = 302
-
-# Verification redirect to verify function (internal redirect, user still sees /v/*)
-[[redirects]]
-  from = "/v/*"
-  to = "/.netlify/functions/verify/:splat"
-  status = 200
-  force = true
-  headers = {X-Original-URL = "/v/:splat"}
-
-
-
 # Redirect /pages/climb.html to climb page
 [[redirects]]
   from = "/pages/climb.html"
@@ -70,7 +54,7 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=*, geolocation=*"
-    Content-Security-Policy = "default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self' https:;"
+    Content-Security-Policy = "default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; media-src 'self' https:; connect-src 'self' https:; frame-src 'self' https:;"
     Cache-Control = "public, max-age=60"
     Accept-Encoding = "gzip, br"
     Vary = "Accept-Encoding"

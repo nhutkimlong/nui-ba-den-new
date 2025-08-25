@@ -170,8 +170,8 @@ function setupEventListeners() {
         toggleRegistrationTimeSettings();
     }
     
-    // QR Settings
-    initQRSettings();
+
+
     
     // Manual Certificate Generation
     initializeManualCertificateForm();
@@ -857,18 +857,9 @@ async function loadAllDataFromAPI() {
             };
             localStorage.setItem('gpsSettings', JSON.stringify(gpsSettings));
             
-            // Process QR settings
-            const qrSettings = result.qrSettings.data || {
-                expirationHours: 12,
-                targetUrl: "https://nuibaden.netlify.app/pages/climb.html",
-                lastUpdated: new Date().toISOString()
-            };
-            localStorage.setItem('qrSettings', JSON.stringify(qrSettings));
-            
             // Update UI
             updateNotificationsList();
             updateGpsSettingsForm();
-            updateQRSettingsForm();
             updateGpsStatus();
             updateStats();
             
@@ -1789,149 +1780,7 @@ function getStatusText(status) {
 
 
 
-// QR Settings Functions
-async function loadQRSettings() {
-    try {
-        // First try to get from localStorage (faster)
-        const stored = localStorage.getItem('qrSettings');
-        if (stored) {
-            const settings = JSON.parse(stored);
-            updateQRSettingsForm();
-            showMessage('Tải cài đặt QR thành công', 'success');
-            return;
-        }
-        
-        // Fallback to API call
-        const response = await fetch('/.netlify/functions/combined-data', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Không thể tải cài đặt QR');
-        }
-        
-        const result = await response.json();
-        const settings = result.qrSettings.data;
-        
-        // Store in localStorage for future use
-        localStorage.setItem('qrSettings', JSON.stringify(settings));
-        
-        // Update form
-        updateQRSettingsForm();
-        
-        showMessage('Tải cài đặt QR thành công', 'success');
-    } catch (error) {
-        console.error('Error loading QR settings:', error);
-        showMessage('Lỗi khi tải cài đặt QR: ' + error.message, 'error');
-    }
-}
 
-async function saveQRSettings(event) {
-    event.preventDefault();
-    
-    const expirationHours = parseInt(document.getElementById('expirationHours').value);
-    const targetUrl = document.getElementById('targetUrl').value;
-    
-    // Validation
-    if (!expirationHours || expirationHours < 1 || expirationHours > 168) {
-        showMessage('Thời gian hiệu lực phải từ 1 đến 168 giờ', 'error');
-        return;
-    }
-    
-    if (!targetUrl || !targetUrl.startsWith('http')) {
-        showMessage('URL trang đích không hợp lệ', 'error');
-        return;
-    }
-    
-    try {
-        setLoadingState(true);
-        
-        const response = await fetch('/.netlify/functions/combined-data', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                action: 'updateQrSettings',
-                data: {
-                    expirationHours: expirationHours,
-                    targetUrl: targetUrl
-                }
-            })
-        });
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Lỗi khi lưu cài đặt');
-        }
-        
-        const result = await response.json();
-        
-        // Store updated settings in localStorage
-        const updatedSettings = {
-            expirationHours: expirationHours,
-            targetUrl: targetUrl,
-            lastUpdated: new Date().toISOString()
-        };
-        localStorage.setItem('qrSettings', JSON.stringify(updatedSettings));
-        
-        // Update form display
-        updateQRSettingsForm();
-        
-        showMessage('Lưu cài đặt QR thành công', 'success');
-    } catch (error) {
-        console.error('Error saving QR settings:', error);
-        showMessage('Lỗi khi lưu cài đặt QR: ' + error.message, 'error');
-    } finally {
-        setLoadingState(false);
-    }
-}
-
-// Initialize QR settings form
-function initQRSettings() {
-    const form = document.getElementById('qrSettingsForm');
-    if (form) {
-        form.addEventListener('submit', saveQRSettings);
-        // Don't load here, will be loaded by loadAllDataFromAPI
-    }
-}
-
-// Update QR settings form with current data
-function updateQRSettingsForm() {
-    const stored = localStorage.getItem('qrSettings');
-    if (stored) {
-        const settings = JSON.parse(stored);
-        
-        // Populate form fields
-        const expirationHoursInput = document.getElementById('expirationHours');
-        const targetUrlInput = document.getElementById('targetUrl');
-        
-        if (expirationHoursInput) {
-            expirationHoursInput.value = settings.expirationHours;
-        }
-        if (targetUrlInput) {
-            targetUrlInput.value = settings.targetUrl;
-        }
-        
-        // Update info display
-        const currentExpiration = document.getElementById('currentExpiration');
-        const currentTargetUrl = document.getElementById('currentTargetUrl');
-        const lastUpdated = document.getElementById('lastUpdated');
-        
-        if (currentExpiration) {
-            currentExpiration.textContent = `${settings.expirationHours} giờ`;
-        }
-        if (currentTargetUrl) {
-            currentTargetUrl.textContent = settings.targetUrl;
-        }
-        if (lastUpdated) {
-            lastUpdated.textContent = new Date(settings.lastUpdated).toLocaleString('vi-VN');
-        }
-    }
-}
 
 // ===== MANUAL CERTIFICATE GENERATION =====
 
@@ -2382,5 +2231,4 @@ window.toggleNotification = toggleNotification;
 window.deleteNotification = deleteNotification;
 window.resetGpsSettings = resetGpsSettings;
 window.refreshAllData = refreshAllData;
-window.loadQRSettings = loadQRSettings;
-window.saveQRSettings = saveQRSettings;
+
