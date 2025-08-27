@@ -28,7 +28,7 @@ export interface Activity {
 
 // Utility function for API calls
 async function apiCall<T>(
-  endpoint: string, 
+  endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   try {
@@ -42,8 +42,36 @@ async function apiCall<T>(
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      // Check if response is HTML (error page) or JSON
+      const contentType = response.headers.get('content-type') || '';
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+
+      if (contentType.includes('application/json')) {
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // Failed to parse JSON, use status text
+        }
+      } else {
+        // Likely HTML error page from Netlify
+        const errorText = await response.text();
+        if (errorText.includes('<!doctype') || errorText.includes('<html')) {
+          errorMessage = `Service unavailable (${response.status}). The API endpoint may not be deployed.`;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const responseText = await response.text();
+      if (responseText.includes('<!doctype') || responseText.includes('<html')) {
+        throw new Error('Service returned HTML instead of JSON. The API endpoint may not be deployed correctly.');
+      }
+      throw new Error('Invalid response format. Expected JSON.');
     }
 
     const data = await response.json();
@@ -273,7 +301,7 @@ export const apiUtils = {
     }
     
     if (error.includes('404') || error.includes('Not Found')) {
-      return 'Không tìm thấy dữ liệu yêu cầu.';
+      return 'Không tìm thấy d��� liệu yêu cầu.';
     }
     
     if (error.includes('500') || error.includes('Internal Server Error')) {
