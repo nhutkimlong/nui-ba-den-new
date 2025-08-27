@@ -60,14 +60,17 @@ const POIMarkers = React.memo(({ pois, currentLang, onMarkerClick }: {
 })
 
 // Map Controls Component
-const MapControls = ({ onLocate, onSearch, onTutorial, onContact }: {
+const MapControls = ({ onLocate, onSearch, onTutorial, onContact, onToggleTiles, tileProvider, topOffsetPx }: {
   onLocate: () => void
   onSearch: () => void
   onTutorial: () => void
   onContact: () => void
+  onToggleTiles: () => void
+  tileProvider: 'google' | 'osm'
+  topOffsetPx?: number
 }) => {
   return (
-    <div className="map-controls-container absolute top-3 right-3 md:top-4 md:right-4 z-[1000] flex-col gap-2 hidden md:flex">
+    <div className="map-controls-container absolute right-3 md:right-4 z-[1000] flex-col gap-2 hidden md:flex" style={{ top: topOffsetPx ?? 12 }}>
       <button 
         onClick={onLocate}
         className="map-action-button" 
@@ -88,6 +91,13 @@ const MapControls = ({ onLocate, onSearch, onTutorial, onContact }: {
         title="Xem hướng dẫn"
       >
         <MapPin className="w-5 h-5 text-yellow-500" />
+      </button>
+      <button 
+        onClick={onToggleTiles}
+        className="map-action-button" 
+        title={tileProvider === 'google' ? 'Đổi sang OpenStreetMap' : 'Đổi sang Google Vệ tinh'}
+      >
+        <Globe className="w-5 h-5 text-green-600" />
       </button>
     </div>
   )
@@ -125,7 +135,10 @@ const FloatingActionButtons = ({ onSearch, onDirections, onLocate, onTutorial }:
   onTutorial: () => void
 }) => {
   return (
-    <div className="floating-action-buttons md:hidden absolute bottom-4 right-4 z-[1000] flex flex-col gap-3">
+    <div
+      className="floating-action-buttons md:hidden absolute right-4 z-[1000] flex flex-col gap-3"
+      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 84px)' }}
+    >
       <button 
         onClick={onSearch}
         className="fab bg-white hover:bg-gray-100 text-gray-700" 
@@ -391,13 +404,15 @@ const DescentChoicePopup = ({ isOpen, onClose, onCableCar, onAlpineCoaster, desc
 }
 
 // POI Info Panel Component
-const POIInfoPanel = ({ poi, isVisible, onClose, onGetDirections, currentLang, operatingHours }: {
+const POIInfoPanel = ({ poi, isVisible, onClose, onGetDirections, currentLang, operatingHours, expanded, setExpanded }: {
   poi: any
   isVisible: boolean
   onClose: () => void
   onGetDirections: (poi: any, direction: 'from' | 'to') => void
   currentLang: string
   operatingHours: any[]
+  expanded: boolean
+  setExpanded: (val: boolean) => void
 }) => {
   if (!poi) return null
 
@@ -499,8 +514,43 @@ const POIInfoPanel = ({ poi, isVisible, onClose, onGetDirections, currentLang, o
   // Check if this is a descent route scenario (Chua Ba to Chan Nui)
   const isDescentRoute = poi.area === 'Chùa Bà' && area === 'Chân núi'
 
+  const isMobile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 768px)').matches
+  const touchDataRef = useRef<{ startY: number, startExpanded: boolean } | null>(null)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchDataRef.current = { startY: e.touches[0].clientY, startExpanded: expanded }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchDataRef.current) return
+    const deltaY = e.changedTouches[0].clientY - touchDataRef.current.startY
+    if (Math.abs(deltaY) < 20) {
+      setExpanded(!expanded)
+    } else if (deltaY > 30) {
+      setExpanded(false)
+    } else if (deltaY < -30) {
+      setExpanded(true)
+    }
+    touchDataRef.current = null
+  }
+
   return (
-    <div className={cn("poi-panel", isVisible && "visible")}>
+    <div 
+      className={cn("poi-panel", isVisible && "visible")}
+      style={isMobile ? {
+        transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
+        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 72px)'
+      } : undefined}
+    >
+      {/* Drag handle area (mobile) */}
+      {isMobile && (
+        <div 
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="absolute top-0 left-0 right-0 h-6 z-20"
+          aria-label="Kéo để mở rộng hoặc thu gọn"
+        />
+      )}
       {/* Header with close button */}
       <button 
         onClick={onClose}
@@ -550,7 +600,7 @@ const POIInfoPanel = ({ poi, isVisible, onClose, onGetDirections, currentLang, o
           {/* Description */}
           {description && (
             <div className="mb-4">
-              <p className="text-xs sm:text-sm text-gray-700 leading-relaxed">
+              <p className="text-xs sm:text-sm text-gray-700 leading-relaxed line-clamp-3 sm:line-clamp-none">
                 {description}
               </p>
             </div>
@@ -602,7 +652,7 @@ const POIInfoPanel = ({ poi, isVisible, onClose, onGetDirections, currentLang, o
 
           {/* Audio guide button */}
           {poi.audio_url && (
-            <button className="w-full flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 mb-3 shadow-sm">
+            <button className="w-full flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 mb-3 shadow-sm tap-target">
               <Globe className="w-5 h-5" />
               {t('audioGuide')}
             </button>
@@ -616,7 +666,7 @@ const POIInfoPanel = ({ poi, isVisible, onClose, onGetDirections, currentLang, o
                    <FontAwesomeIcon icon={faStickyNote} className="text-yellow-600 text-lg" />
                    <span className="text-sm font-semibold text-yellow-800">Lưu ý</span>
                  </div>
-                <p className="text-xs text-yellow-700 leading-relaxed">
+                <p className="text-xs text-yellow-700 leading-relaxed line-clamp-3 sm:line-clamp-none">
                   {poi.notes}
                 </p>
               </div>
@@ -639,14 +689,14 @@ const POIInfoPanel = ({ poi, isVisible, onClose, onGetDirections, currentLang, o
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => onGetDirections({ ...poi, descentChoice: 'cable_car' }, 'to')}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-xs shadow-sm"
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-xs shadow-sm tap-target"
                 >
                                      <FontAwesomeIcon icon={faCableCar} className="text-lg" />
                    <span>Cáp treo</span>
                 </button>
                 <button
                   onClick={() => onGetDirections({ ...poi, descentChoice: 'alpine_coaster' }, 'to')}
-                  className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-xs shadow-sm"
+                  className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-xs shadow-sm tap-target"
                 >
                                      <FontAwesomeIcon icon={faPersonWalking} className="text-lg" />
                    <span>Máng trượt</span>
@@ -660,14 +710,14 @@ const POIInfoPanel = ({ poi, isVisible, onClose, onGetDirections, currentLang, o
             <div className="flex gap-2 text-xs sm:text-sm">
               <button
                 onClick={() => onGetDirections(poi, 'from')}
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-sm"
+                className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-sm tap-target"
               >
                 <Map className="w-4 h-4" />
                 {t('routeFromHere')}
               </button>
               <button
                 onClick={() => onGetDirections(poi, 'to')}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-sm"
+                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-sm tap-target"
               >
                 <Route className="w-4 h-4" />
                 {t('routeToHere')}
@@ -681,12 +731,14 @@ const POIInfoPanel = ({ poi, isVisible, onClose, onGetDirections, currentLang, o
 }
 
 // Route Display Component
-const RouteDisplay = ({ route, isVisible, onClose, currentLang, poiData }: {
+const RouteDisplay = ({ route, isVisible, onClose, currentLang, poiData, expanded, setExpanded }: {
   route: any
   isVisible: boolean
   onClose: () => void
   currentLang: string
   poiData: any[]
+  expanded: boolean
+  setExpanded: (val: boolean) => void
 }) => {
   if (!route || !route.path) return null
 
@@ -878,6 +930,26 @@ const RouteDisplay = ({ route, isVisible, onClose, currentLang, poiData }: {
     return sum + 0 // Walking is free
   }, 0)
 
+  const isMobile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 768px)').matches
+  const touchDataRef = useRef<{ startY: number, startExpanded: boolean } | null>(null)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchDataRef.current = { startY: e.touches[0].clientY, startExpanded: expanded }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchDataRef.current) return
+    const deltaY = e.changedTouches[0].clientY - touchDataRef.current.startY
+    if (Math.abs(deltaY) < 20) {
+      setExpanded(!expanded)
+    } else if (deltaY > 30) {
+      setExpanded(false)
+    } else if (deltaY < -30) {
+      setExpanded(true)
+    }
+    touchDataRef.current = null
+  }
+
   return (
     <>
       {/* Route line on map */}
@@ -891,7 +963,15 @@ const RouteDisplay = ({ route, isVisible, onClose, currentLang, poiData }: {
       )}
 
       {/* Route instructions panel */}
-      <div className={cn("route-instructions-panel", isVisible && "visible")}>
+      <div 
+        className={cn("route-instructions-panel", isVisible && "visible")}
+        style={isMobile ? {
+          transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 72px)'
+        } : undefined}
+        onTouchStart={isMobile ? handleTouchStart : undefined}
+        onTouchEnd={isMobile ? handleTouchEnd : undefined}
+      > 
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-t-lg">
           <div className="flex items-center justify-between">
@@ -1066,11 +1146,14 @@ const MapPage = () => {
   const [startPointText, setStartPointText] = useState('')
   const [endPointText, setEndPointText] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const [tileProvider, setTileProvider] = useState<'google' | 'osm'>('google')
 
   // POI Info Panel state
   const [selectedPOI, setSelectedPOI] = useState<any>(null)
   const [isPOIPanelVisible, setIsPOIPanelVisible] = useState(false)
   const [isRoutePanelVisible, setIsRoutePanelVisible] = useState(false)
+  const [isPoiExpanded, setIsPoiExpanded] = useState(false)
+  const [isRouteExpanded, setIsRouteExpanded] = useState(false)
 
   // Autocomplete states
   const [searchSuggestions, setSearchSuggestions] = useState<any[]>([])
@@ -1120,12 +1203,25 @@ const MapPage = () => {
   }, [currentLang, setRouteLanguage])
 
   const handleSearch = () => {
-    toggleTopBar()
-    // setIsRouteInputsVisible(false) // This is now handled by handleGetDirections
+    // Ensure only top bar is visible
+    if (!isTopBarVisible) {
+      toggleTopBar()
+    }
+    if (isRouteInputsVisible) {
+      toggleRouteInputs()
+    }
     searchInputRef.current?.focus()
   }
 
   const handleDirections = () => {
+    // Toggle route inputs; ensure exclusivity with Top bar
+    if (isRouteInputsVisible) {
+      toggleRouteInputs()
+      return
+    }
+    if (isTopBarVisible) {
+      toggleTopBar()
+    }
     toggleRouteInputs()
   }
 
@@ -1139,6 +1235,10 @@ const MapPage = () => {
 
   const handleContact = () => {
     openContact()
+  }
+
+  const handleToggleTiles = () => {
+    setTileProvider(prev => prev === 'google' ? 'osm' : 'google')
   }
 
   const handleCableCar = () => {
@@ -1179,8 +1279,8 @@ const MapPage = () => {
     }
 
     try {
-      // Check if this is a descent route from Chua Ba to Chan Nui
-      if (startPoint.area === 'Ch��a Bà' && endPoint.area === 'Chân núi') {
+      // Check if this is a descent route from Chùa Bà to Chân núi
+      if (startPoint.area === 'Chùa Bà' && endPoint.area === 'Chân núi') {
         console.log('DEBUG: Found descent route from Chua Ba to Chan Nui')
         console.log('DEBUG: Operating hours data:', operatingHours)
         const descentOptions = checkDescentOptionsFromChuaBa(operatingHours)
@@ -1205,6 +1305,7 @@ const MapPage = () => {
 
         // Update the current route in the hook
         setCurrentRoute(enhancedRoute)
+        setIsPOIPanelVisible(false)
         setIsRoutePanelVisible(true)
         toggleRouteInputs() // Hide route inputs after finding route
       } else {
@@ -1245,6 +1346,7 @@ const MapPage = () => {
           }
 
           setCurrentRoute(enhancedRoute)
+          setIsPOIPanelVisible(false)
           setIsRoutePanelVisible(true)
           toggleRouteInputs()
           return
@@ -1262,6 +1364,7 @@ const MapPage = () => {
           descentChoice: choice
         }
         setCurrentRoute(enhancedRoute)
+        setIsPOIPanelVisible(false)
         setIsRoutePanelVisible(true)
         toggleRouteInputs()
       }
@@ -1275,8 +1378,11 @@ const MapPage = () => {
 
   // Handle POI click to show info panel
   const handlePOIClick = useCallback((poi: any) => {
+    // Close route panel if open to avoid overlap on mobile
+    setIsRoutePanelVisible(false)
     setSelectedPOI(poi)
     setIsPOIPanelVisible(true)
+    setIsPoiExpanded(true)
   }, [])
 
   // Handle get directions
@@ -1294,16 +1400,19 @@ const MapPage = () => {
     // Show route inputs
     toggleRouteInputs()
     setIsPOIPanelVisible(false)
+    setIsPoiExpanded(false)
   }, [currentLang, toggleRouteInputs])
 
   const handleClosePOIPanel = useCallback(() => {
     setIsPOIPanelVisible(false)
     setSelectedPOI(null)
+    setIsPoiExpanded(false)
   }, [])
 
   const handleCloseRoutePanel = useCallback(() => {
     setIsRoutePanelVisible(false)
     clearRoute()
+    setIsRouteExpanded(false)
   }, [clearRoute])
 
   // Autocomplete functions
@@ -1459,10 +1568,10 @@ const MapPage = () => {
   }
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col" onClick={hideAllSuggestions}>
+    <div className="h-[100dvh] bg-gray-50 flex flex-col overflow-hidden" onClick={hideAllSuggestions}>
       {/* Top Bar */}
       <div className={cn(
-        "top-bar bg-white border-b border-gray-200 p-2 sm:p-3 md:p-4 shadow-sm transition-opacity duration-200",
+        "hidden top-bar bg-white border-b border-gray-200 p-2 sm:p-3 md:p-4 shadow-sm transition-opacity duration-200",
         !isTopBarVisible && "opacity-0 pointer-events-none"
       )}>
         {/* Search Bar */}
@@ -1562,9 +1671,9 @@ const MapPage = () => {
         </div>
       </div>
 
-      {/* Route Inputs */}
+      {/* Route Inputs (hidden here; rendered inside map overlay) */}
       <div className={cn(
-        "p-4 bg-white border-b border-gray-200 shadow-md",
+        "hidden",
         !isRouteInputsVisible && "hidden"
       )} onClick={(e) => e.stopPropagation()}>
         <div className="space-y-3">
@@ -1690,6 +1799,107 @@ const MapPage = () => {
 
       {/* Map Container */}
       <div className="map-area relative bg-gray-200 flex-1 overflow-hidden">
+        {/* Map Top Bar overlay (inside map area) */}
+        <div className={cn(
+          "absolute top-0 left-0 right-0 z-[1001] p-2 sm:p-3 md:p-4",
+          isTopBarVisible ? "opacity-100" : "opacity-0 pointer-events-none",
+          "transition-opacity duration-200"
+        )}>
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-2 sm:p-3 md:max-w-5xl md:mx-auto">
+            {/* Search Bar */}
+            <div className="search-bar relative flex items-center bg-gray-100 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 mb-2 sm:mb-3" onClick={(e) => e.stopPropagation()}>
+              <input 
+                ref={searchInputRef}
+                type="text" 
+                placeholder="Tìm kiếm địa điểm..." 
+                value={searchTerm}
+                onChange={handleSearchInputChange}
+                onFocus={() => {
+                  if (searchSuggestions.length > 0) {
+                    setShowSearchSuggestions(true)
+                  }
+                }}
+                onBlur={() => {
+                  setTimeout(() => setShowSearchSuggestions(false), 200)
+                }}
+                className="flex-grow border-none outline-none bg-transparent text-sm sm:text-base text-gray-700 placeholder-gray-500"
+              />
+              <Search className="text-gray-400 pl-2 cursor-pointer w-5 h-5" />
+              <button 
+                type="button" 
+                className="icon text-primary-500 hover:text-primary-600 pl-2 hidden md:inline-flex items-center justify-center" 
+                aria-label="Tìm đường"
+                onClick={handleDirections}
+              >
+                <Route className="w-5 h-5" />
+              </button>
+              {showSearchSuggestions && searchSuggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-[1100]">
+                  {searchSuggestions.map((poi) => (
+                    <div
+                      key={poi.id}
+                      className="p-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                      onClick={() => handleSearchSuggestionClick(poi)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                          <FontAwesomeIcon icon={getCategoryIcon(poi.category)} className="text-primary-600 text-sm" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate">
+                            {poi.displayName}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {poi.area && `${poi.area} • `}{t(poi.category || 'attraction')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Filter Categories */}
+            <div className="filter-categories-wrapper relative flex items-center">
+              <button className="hidden md:hidden absolute left-0 z-10 h-full items-center justify-center px-2 bg-white/80 hover:bg-white rounded-l-lg shadow transition-all">
+                <span className="text-gray-600">‹</span>
+              </button>
+              <div className="filter-categories flex gap-1.5 sm:gap-2 overflow-x-auto md:overflow-visible md:flex-wrap md:justify-center pb-1 w-full scrollbar-hide">
+                <button 
+                  onClick={() => setActiveCategory(null)}
+                  className={cn(
+                    "flex items-center px-2.5 py-1.5 text-xs sm:text-sm rounded-full transition-colors duration-200 whitespace-nowrap",
+                    !activeCategory 
+                      ? "bg-primary-500 text-white" 
+                      : "bg-gray-200 hover:bg-gray-300"
+                  )}
+                >
+                  <FontAwesomeIcon icon={faClipboardList} className="mr-1.5" />
+                  Tất cả
+                </button>
+                {categories.map((category) => (
+                  <button
+                    key={category.key}
+                    onClick={() => setActiveCategory(category.key)}
+                    className={cn(
+                      "flex items-center px-2.5 py-1.5 text-xs sm:text-sm rounded-full transition-colors duration-200 whitespace-nowrap",
+                      activeCategory === category.key 
+                        ? "bg-primary-500 text-white" 
+                        : "bg-gray-200 hover:bg-gray-300"
+                    )}
+                  >
+                    <FontAwesomeIcon icon={category.icon} className="mr-1.5" />
+                    {category.name}
+                  </button>
+                ))}
+              </div>
+              <button className="hidden md:hidden absolute right-0 z-10 h-full items-center justify-center px-2 bg-white/80 hover:bg-white rounded-r-lg shadow transition-all">
+                <span className="text-gray-600">›</span>
+              </button>
+            </div>
+          </div>
+        </div>
         {loading ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center">
@@ -1729,10 +1939,19 @@ const MapPage = () => {
             zoomControl={false}
             style={{ height: '100%', width: '100%' }}
           >
-          <TileLayer
-            url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
-            attribution="© Google Maps"
-          />
+          {/* Reserve space top for overlay so map controls are not hidden */}
+          <div className="absolute top-0 left-0 right-0 h-0 pointer-events-none" />
+          {tileProvider === 'google' ? (
+            <TileLayer
+              url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+              attribution="© Google"
+            />
+          ) : (
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution="© OpenStreetMap contributors"
+            />
+          )}
           
           {/* Map Controls */}
           <MapControls 
@@ -1740,6 +1959,9 @@ const MapPage = () => {
             onSearch={handleSearch}
             onTutorial={handleTutorial}
             onContact={handleContact}
+            onToggleTiles={handleToggleTiles}
+            tileProvider={tileProvider}
+            topOffsetPx={isTopBarVisible ? 112 : (isRouteInputsVisible ? 112 : 16)}
           />
           
           {/* Zoom Controls */}
@@ -1759,6 +1981,8 @@ const MapPage = () => {
             onClose={handleCloseRoutePanel}
             currentLang={currentLang}
             poiData={poiData}
+            expanded={isRouteExpanded}
+            setExpanded={setIsRouteExpanded}
           />
           
           {/* Debug Info */}
@@ -1775,9 +1999,145 @@ const MapPage = () => {
           onLocate={handleLocate}
           onTutorial={handleTutorial}
         />
+        {/* Route Inputs overlay inside map area */}
+        <div className={cn(
+          "absolute left-0 right-0 z-[1001] p-3",
+          isRouteInputsVisible ? "top-20" : "hidden"
+        )} onClick={(e) => e.stopPropagation()}>
+          <div className="mx-2 md:mx-auto md:max-w-3xl bg-white border border-gray-200 rounded-2xl shadow-md p-4">
+            <div className="space-y-3">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Điểm bắt đầu"
+                  value={startPointText}
+                  onChange={handleStartPointChange}
+                  onFocus={() => {
+                    if (startSuggestions.length > 0) {
+                      setShowStartSuggestions(true)
+                    }
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => setShowStartSuggestions(false), 200)
+                  }}
+                  className="w-full p-4 border border-gray-300 rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation"
+                />
+                {showStartSuggestions && startSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto mt-2">
+                    {startSuggestions.map((poi) => (
+                      <div
+                        key={poi.id}
+                        className="p-4 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0 first:rounded-t-2xl last:rounded-b-2xl touch-manipulation"
+                        onClick={() => handleStartSuggestionClick(poi)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                            <FontAwesomeIcon icon={getCategoryIcon(poi.category)} className="text-primary-600 text-sm" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 text-sm truncate">
+                              {poi.displayName}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {poi.area && `${poi.area} • `}{t(poi.category || 'attraction')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Điểm kết thúc"
+                  value={endPointText}
+                  onChange={handleEndPointChange}
+                  onFocus={() => {
+                    if (endSuggestions.length > 0) {
+                      setShowEndSuggestions(true)
+                    }
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => setShowEndSuggestions(false), 200)
+                  }}
+                  className="w-full p-4 border border-gray-300 rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation"
+                />
+                {showEndSuggestions && endSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto mt-2">
+                    {endSuggestions.map((poi) => (
+                      <div
+                        key={poi.id}
+                        className="p-4 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0 first:rounded-t-2xl last:rounded-b-2xl touch-manipulation"
+                        onClick={() => handleEndSuggestionClick(poi)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                            <FontAwesomeIcon icon={getCategoryIcon(poi.category)} className="text-primary-600 text-sm" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 text-sm truncate">
+                              {poi.displayName}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {poi.area && `${poi.area} • `}{t(poi.category || 'attraction')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 mt-4">
+              <button
+                onClick={handleFindRoute}
+                disabled={routeLoading}
+                className="flex-1 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-2xl text-base transition duration-150 flex items-center justify-center min-h-[48px] touch-manipulation shadow-md"
+              >
+                {routeLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Đang tìm...
+                  </>
+                ) : (
+                  <>
+                    <Route className="w-5 h-5 mr-2" />
+                    Tìm đường
+                  </>
+                )}
+              </button>
+              <button 
+                onClick={handleDirections}
+                aria-label="Đóng tìm đường" 
+                className="ml-2 w-8 h-8 flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 hover:text-red-500 transition-all z-10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {routeError && (
+              <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md">
+                <p className="text-red-600 text-sm">{routeError}</p>
+              </div>
+            )}
+          </div>
+        </div>
+        {/* POI Info Panel (keep within map area) */}
+        <POIInfoPanel 
+          poi={selectedPOI}
+          isVisible={isPOIPanelVisible}
+          onClose={handleClosePOIPanel}
+          onGetDirections={handleGetDirections}
+          currentLang={currentLang}
+          operatingHours={operatingHours}
+          expanded={isPoiExpanded}
+          setExpanded={setIsPoiExpanded}
+        />
       </div>
 
-      {/* Popups */}
+      {/* Popups (global fixed overlays) */}
       <TutorialPopup 
         isOpen={isTutorialOpen} 
         onClose={closeTutorial} 
@@ -1794,16 +2154,6 @@ const MapPage = () => {
         onCableCar={handleCableCar}
         onAlpineCoaster={handleAlpineCoaster}
         descentOptions={startPoint?.area === 'Chùa Bà' && endPoint?.area === 'Chân núi' ? checkDescentOptionsFromChuaBa(operatingHours) : undefined}
-      />
-
-      {/* POI Info Panel */}
-      <POIInfoPanel 
-        poi={selectedPOI}
-        isVisible={isPOIPanelVisible}
-        onClose={handleClosePOIPanel}
-        onGetDirections={handleGetDirections}
-        currentLang={currentLang}
-        operatingHours={operatingHours}
       />
     </div>
   )

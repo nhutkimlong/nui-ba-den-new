@@ -3,8 +3,6 @@ import {
   MapPin, 
   Mountain, 
   BookOpen, 
-  Calendar, 
-  Star, 
   ArrowRight,
   Search,
   Navigation,
@@ -156,7 +154,7 @@ const HomePage = () => {
           <div className="flex flex-wrap justify-center gap-4">
             <a 
               href="#features" 
-              className="bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 px-6 rounded-full inline-flex items-center space-x-2 transition duration-300 md:transform md:hover:scale-105 shadow-lg"
+              className="bg-primary-500 hover:bg-primary-600 text-white font-bold py-3 px-6 rounded-full inline-flex items-center space-x-2 transition duration-300 md:transform md:hover:scale-105 shadow-lg tap-target"
             >
               <span>Khám phá ngay</span>
               <ArrowRight className="w-5 h-5" />
@@ -165,7 +163,7 @@ const HomePage = () => {
               href="https://booking.sunworld.vn/catalog?land=SunParadiseLandTayNinh" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="bg-accent-500 hover:bg-accent-600 text-white font-bold py-3 px-6 rounded-full inline-flex items-center space-x-2 transition duration-300 md:transform md:hover:scale-105 shadow-lg"
+              className="bg-accent-500 hover:bg-accent-600 text-white font-bold py-3 px-6 rounded-full inline-flex items-center space-x-2 transition duration-300 md:transform md:hover:scale-105 shadow-lg tap-target"
             >
               <span>Đặt vé trực tuyến</span>
               <Ticket className="w-5 h-5" />
@@ -175,12 +173,12 @@ const HomePage = () => {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-12 px-4 -mt-20 sm:-mt-24 md:-mt-32 relative z-20">
+      <section id="features" className="py-8 px-4 sm:py-10 md:py-12 -mt-16 sm:-mt-20 md:-mt-24 relative z-20">
         <div className="container mx-auto max-w-5xl">
           <p className="text-center text-lg sm:text-xl font-semibold text-white mb-8">
             Xin kính chào quý du khách!
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
             {features.map((feature, index) => {
               const colors = getColorClasses(feature.color)
               return (
@@ -192,21 +190,21 @@ const HomePage = () => {
                     <h2 className={`text-xl sm:text-2xl font-bold ${colors.title} mb-3`}>
                       {feature.title}
                     </h2>
-                    <p className="text-gray-600 mb-4">{feature.description}</p>
+                    <p className="text-gray-600 mb-4 line-clamp-2 sm:line-clamp-none">{feature.description}</p>
                     <ul className="space-y-2 mb-8">
                       {feature.items.map((item, itemIndex) => (
                         <li key={itemIndex} className="flex items-start">
                           <span className={`${colors.text} mt-1 w-5`}>
                             {item.icon}
                           </span>
-                          <span className="ml-2 text-gray-600">{item.text}</span>
+                          <span className="ml-2 text-gray-600 line-clamp-2 sm:line-clamp-none">{item.text}</span>
                         </li>
                       ))}
                     </ul>
                     <div className="mt-auto">
                       <Link
                         to={feature.link}
-                        className={`inline-block ${colors.button} text-white font-bold py-3 px-6 rounded-full shadow-md transition duration-300 md:transform md:hover:scale-105 flex items-center justify-center space-x-2`}
+                        className={`inline-block ${colors.button} text-white font-bold py-3 px-6 rounded-full shadow-md transition duration-300 md:transform md:hover:scale-105 flex items-center justify-center space-x-2 tap-target`}
                       >
                         <span>{feature.buttonText}</span>
                         <ArrowRight className="w-4 h-4" />
@@ -229,15 +227,15 @@ const HomePage = () => {
           <div className="bg-white p-6 md:p-8 rounded-xl shadow-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
               <div>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 mb-4 line-clamp-3 md:line-clamp-none">
                   Núi Bà Đen là ngọn núi cao nhất Nam Bộ với độ cao 986m, nằm tại tỉnh Tây Ninh, Việt Nam. 
                   Núi Bà được mệnh danh là "Đệ nhất thiên sơn" của vùng Đông Nam Bộ.
                 </p>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 mb-4 line-clamp-3 md:line-clamp-none">
                   Đây không chỉ là điểm du lịch sinh thái hấp dẫn mà còn là trung tâm tâm linh với nhiều 
                   di tích lịch sử văn hoá quan trọng như Điện Bà, chùa Linh Sơn Tiên Thạch.
                 </p>
-                <p className="text-gray-600">
+                <p className="text-gray-600 line-clamp-3 md:line-clamp-none">
                   Hệ thống cáp treo hiện đại và các tiện ích du lịch ngày càng được đầu tư đã giúp 
                   Núi Bà Đen trở thành điểm đến hấp dẫn cho du khách từ khắp nơi.
                 </p>

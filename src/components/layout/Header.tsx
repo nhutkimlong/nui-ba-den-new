@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Globe } from 'lucide-react'
+import { X, Globe } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
-const Header = () => {
+type HeaderProps = {
+  hideOnMobile?: boolean
+}
+
+const Header = ({ hideOnMobile = false }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false)
@@ -30,10 +34,11 @@ const Header = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
+      const currentY = window.scrollY
+      setIsScrolled(currentY > 10)
     }
 
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
@@ -94,8 +99,9 @@ const Header = () => {
   return (
     <>
       <header className={cn(
-        "bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-gray-100",
-        isScrolled && "shadow-lg"
+        "bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-gray-100 pt-safe transition-transform duration-300 will-change-transform",
+        isScrolled && "shadow-lg",
+        hideOnMobile && "-translate-y-full md:translate-y-0"
       )}>
         <div className="container mx-auto px-4 py-3">
           <div className="flex justify-between items-center">

@@ -182,7 +182,7 @@ const ClimbPage: React.FC = () => {
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-150 ease-in-out"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-150 ease-in-out tap-target"
           >
             <i className="fas fa-redo mr-2"></i>
             Thử lại
@@ -282,7 +282,7 @@ const ClimbPage: React.FC = () => {
               </p>
               <button
                 onClick={handleStartRegistration}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out flex items-center justify-center text-lg shadow hover:shadow-md"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out flex items-center justify-center text-lg shadow hover:shadow-md tap-target"
               >
                 <i className="fa-solid fa-play mr-2"></i>
                 <span>Bắt đầu đăng ký</span>

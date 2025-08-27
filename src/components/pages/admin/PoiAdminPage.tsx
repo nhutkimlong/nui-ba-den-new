@@ -422,7 +422,7 @@ const PoiAdminPage: React.FC = () => {
                         <MapContainer center={formCoordinates || [11.374232, 106.175094]} zoom={16} style={{ height: '100%', width: '100%' }}>
                             <TileLayer
                                 url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
-                                attribution="&copy; Google"
+                                attribution="© Google"
                             />
                             <MapPicker />
                         </MapContainer>

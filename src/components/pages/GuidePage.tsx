@@ -108,12 +108,12 @@ const TourCard: React.FC<{ item: Tour }> = ({ item }) => (
             alt={item.name || 'Hình ảnh tour'} className="w-full h-40 sm:h-48 object-cover" />
         <div className="p-3 sm:p-4 flex flex-col flex-grow">
             <h3 className="text-md sm:text-lg font-semibold text-primary-600 mb-1 sm:mb-2">{item.name || 'Tên tour không xác định'}</h3>
-            <p className="text-xs sm:text-sm text-gray-600 mb-2 flex-grow mobile-description-truncate">{item.description || 'Không có mô tả.'}</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-2 flex-grow line-clamp-3 sm:line-clamp-none">{item.description || 'Không có mô tả.'}</p>
             <div className="text-xs text-gray-500 mb-2 mt-auto">
                 {item.duration && <><span className="font-semibold">Thời gian:</span> {item.duration}<br className="sm:hidden" /> </>}
                 {item.activities && <><span className="font-semibold mobile-hideable tour-activities">Hoạt động:</span> <span className="mobile-hideable tour-activities-content">{item.activities}</span></>}
             </div>
-            <a href={item.detailsLink || item.detailslink || '#'} target="_blank" rel="noopener noreferrer" className="inline-block bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-md transition duration-150 self-start">
+            <a href={item.detailsLink || item.detailslink || '#'} target="_blank" rel="noopener noreferrer" className="inline-block bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-md transition duration-150 self-start tap-target">
                 {item.buttonText || 'Xem chi tiết'}
             </a>
         </div>
@@ -138,10 +138,10 @@ const AccommodationCard: React.FC<{ item: Accommodation }> = ({ item }) => {
                     </div>
                 )}
                 <div className="flex-grow text-xs sm:text-sm">
-                    {item.address && <p className="text-gray-600 mb-1 mobile-address-truncate"><i className="fa-solid fa-map-marker-alt mr-1 sm:mr-2 text-gray-400"></i>{item.address}</p>}
+                    {item.address && <p className="text-gray-600 mb-1 line-clamp-1 sm:line-clamp-none"><i className="fa-solid fa-map-marker-alt mr-1 sm:mr-2 text-gray-400"></i>{item.address}</p>}
                     {item.phone && <p className="text-gray-600 mb-2"><i className="fa-solid fa-phone mr-1 sm:mr-2 text-gray-400"></i>{item.phone}</p>}
                 </div>
-                <a href={item.mapLink || item.maplink || '#'} target="_blank" rel="noopener noreferrer" className="inline-block bg-accent-500 hover:bg-accent-600 text-white text-xs sm:text-sm font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-md transition duration-150 self-start mt-auto">
+                <a href={item.mapLink || item.maplink || '#'} target="_blank" rel="noopener noreferrer" className="inline-block bg-accent-500 hover:bg-accent-600 text-white text-xs sm:text-sm font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-md transition duration-150 self-start mt-auto tap-target">
                     Xem trên bản đồ
                 </a>
             </div>
@@ -159,10 +159,10 @@ const RestaurantCard: React.FC<{ item: Restaurant }> = ({ item }) => (
         <div className="p-3 sm:p-4 flex flex-col flex-grow">
             <h3 className="text-md sm:text-lg font-semibold text-orange-600 mb-1 sm:mb-2">{item.name || 'Tên nhà hàng không xác định'}</h3>
             <div className="flex-grow text-xs sm:text-sm">
-                {item.address && <p className="text-gray-600 mb-1 mobile-address-truncate"><i className="fa-solid fa-map-marker-alt mr-1 sm:mr-2 text-gray-400"></i>{item.address}</p>}
+                {item.address && <p className="text-gray-600 mb-1 line-clamp-1 sm:line-clamp-none"><i className="fa-solid fa-map-marker-alt mr-1 sm:mr-2 text-gray-400"></i>{item.address}</p>}
                 {item.cuisine && <p className="text-gray-600 mb-2 mobile-hideable"><i className="fa-solid fa-tags mr-1 sm:mr-2 text-gray-400"></i>{item.cuisine}</p>}
             </div>
-            <a href={item.mapLink || item.maplink || '#'} target="_blank" rel="noopener noreferrer" className="inline-block bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-md transition duration-150 self-start mt-auto">
+            <a href={item.mapLink || item.maplink || '#'} target="_blank" rel="noopener noreferrer" className="inline-block bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-md transition duration-150 self-start mt-auto tap-target">
                 Xem trên bản đồ
             </a>
         </div>
@@ -178,7 +178,7 @@ const SpecialtyCard: React.FC<{ item: Specialty }> = ({ item }) => (
             alt={item.name || 'Hình ảnh đặc sản'} className="w-full h-40 sm:h-48 object-cover" />
         <div className="p-3 sm:p-4 flex flex-col flex-grow">
             <h3 className="text-md sm:text-lg font-semibold text-lime-600 mb-1 sm:mb-2">{item.name || 'Tên đặc sản không xác định'}</h3>
-            <p className="text-xs sm:text-sm text-gray-600 mb-2 flex-grow mobile-description-truncate">{item.description || 'Không có mô tả.'}</p>
+            <p className="text-xs sm:text-sm text-gray-600 mb-2 flex-grow line-clamp-3 sm:line-clamp-none">{item.description || 'Không có mô tả.'}</p>
             {item.purchaseLocation && <p className="text-xs text-gray-500 mt-auto mobile-hideable"><i className="fa-solid fa-store mr-1 sm:mr-2 text-gray-400"></i>{item.purchaseLocation}</p>}
         </div>
     </div>
