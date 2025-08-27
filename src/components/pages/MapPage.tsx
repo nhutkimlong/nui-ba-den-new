@@ -1202,16 +1202,20 @@ const MapPage = () => {
           startName: getPoiName(startPoint, currentLang),
           endName: getPoiName(endPoint, currentLang)
         }
-        
+
         // Update the current route in the hook
         setCurrentRoute(enhancedRoute)
         setIsRoutePanelVisible(true)
         toggleRouteInputs() // Hide route inputs after finding route
+      } else {
+        // Show user-friendly error message when no route found
+        alert('Không tìm thấy đường đi giữa hai điểm này. Vui lòng thử lại với các điểm khác.')
       }
-      
+
     } catch (error) {
       console.error('Error finding route:', error)
-      // Error will be handled by the hook
+      // Show user-friendly error message
+      alert('Có lỗi xảy ra khi tìm đường. Vui lòng thử lại sau.')
     }
   }
 
