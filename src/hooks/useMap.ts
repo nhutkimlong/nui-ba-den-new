@@ -193,7 +193,9 @@ export const useMapControls = () => {
 
   const toggleRouteInputs = useCallback(() => {
     setIsRouteInputsVisible(!isRouteInputsVisible)
-    setIsTopBarVisible(!isRouteInputsVisible)
+    // When opening route inputs (was false -> true), hide top bar.
+    // When closing route inputs (was true -> false), show top bar.
+    setIsTopBarVisible(isRouteInputsVisible)
   }, [isRouteInputsVisible])
 
   const openTutorial = useCallback(() => {

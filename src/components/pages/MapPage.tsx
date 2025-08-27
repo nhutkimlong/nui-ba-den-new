@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { MapContainer, TileLayer, Marker, useMap, Polyline } from 'react-leaflet'
-import { Search, MapPin, Route, Navigation, X, Globe, Phone, Mail, Facebook, ExternalLink, Clock, Map, Info } from 'lucide-react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet'
+// @ts-ignore - types may be missing from package
+import MarkerClusterGroup from 'react-leaflet-cluster'
+import { Search, MapPin, Route, Navigation, X, Globe, Phone, Mail, Facebook, ExternalLink } from 'lucide-react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faOm, faSearch, faLandmark, faUtensils, faBus, faParking, faBell, faClipboardList, faStickyNote, faCableCar, faPersonWalking, faRuler, faCheck, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons'
+import { faOm, faSearch, faLandmark, faUtensils, faBus, faParking, faBell, faClipboardList, faCableCar, faPersonWalking } from '@fortawesome/free-solid-svg-icons'
 import { cn } from '@/utils/cn'
 import { useMap as useMapData, useMapControls, useRouteFinding, useGeolocation } from '@/hooks/useMap'
 import { 
-  findPath, 
-  checkOperationalStatus, 
-  checkCableStationsOperational,
   checkDescentOptionsFromChuaBa,
   getPoiName, 
   getPoiDescription, 
@@ -17,7 +16,11 @@ import {
   COASTER_END_ID
 } from '@/services/mapService'
 import L from 'leaflet'
-import { POI, OperatingHoursData } from '@/types'
+//
+import POIInfoSheet from '@/components/map/POIInfoSheet'
+import RouteInstructionsSheet from '@/components/map/RouteInstructionsSheet'
+import SearchBarWithActions from '@/components/map/SearchBarWithActions'
+import MobileActionsBar from '@/components/map/MobileActionsBar'
 
 // Fix for default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl
@@ -35,7 +38,6 @@ const POIMarkers = React.memo(({ pois, currentLang, onMarkerClick }: {
 }) => {
   return pois.map((poi) => {
     const name = getPoiName(poi, currentLang)
-    const description = getPoiDescription(poi, currentLang)
     
     // Create custom icon using POI's iconurl
     const customIcon = poi.iconurl ? L.divIcon({
@@ -59,114 +61,7 @@ const POIMarkers = React.memo(({ pois, currentLang, onMarkerClick }: {
   })
 })
 
-// Map Controls Component
-const MapControls = ({ onLocate, onSearch, onTutorial, onContact, onToggleTiles, tileProvider, topOffsetPx = 12 }: {
-  onLocate: () => void
-  onSearch: () => void
-  onTutorial: () => void
-  onContact: () => void
-  onToggleTiles: () => void
-  tileProvider: 'google' | 'osm'
-  topOffsetPx?: number
-}) => {
-  return (
-    <div className="map-controls-container absolute right-3 md:right-4 z-[1000] flex-col gap-2 hidden md:flex" style={{ top: topOffsetPx }}>
-      <button 
-        onClick={onLocate}
-        className="map-action-button" 
-        title="Định vị của tôi"
-      >
-        <Navigation className="w-5 h-5 text-blue-600" />
-      </button>
-      <button 
-        onClick={onSearch}
-        className="map-action-button" 
-        title="Tìm kiếm"
-      >
-        <Search className="w-5 h-5 text-purple-600" />
-      </button>
-      <button 
-        onClick={onTutorial}
-        className="map-action-button" 
-        title="Xem hướng dẫn"
-      >
-        <MapPin className="w-5 h-5 text-yellow-500" />
-      </button>
-      <button 
-        onClick={onToggleTiles}
-        className="map-action-button" 
-        title={tileProvider === 'google' ? 'Đổi sang OpenStreetMap' : 'Đổi sang Google Vệ tinh'}
-      >
-        <Globe className="w-5 h-5 text-green-600" />
-      </button>
-    </div>
-  )
-}
-
-// Zoom Controls Component
-const ZoomControls = () => {
-  const map = useMap()
-
-  return (
-    <div className="zoom-controls-desktop hidden md:flex flex-col bg-white rounded-full shadow-md overflow-hidden z-[1001]">
-      <button 
-        onClick={() => map.zoomIn()}
-        className="map-action-button text-gray-700 hover:bg-gray-100 p-2.5 border-b border-gray-200" 
-        title="Phóng to"
-      >
-        <span className="text-lg">+</span>
-      </button>
-      <button 
-        onClick={() => map.zoomOut()}
-        className="map-action-button text-gray-700 hover:bg-gray-100 p-2.5" 
-        title="Thu nhỏ"
-      >
-        <span className="text-lg">−</span>
-      </button>
-    </div>
-  )
-}
-
-// Floating Action Buttons (Mobile)
-const FloatingActionButtons = ({ onSearch, onDirections, onLocate, onTutorial }: {
-  onSearch: () => void
-  onDirections: () => void
-  onLocate: () => void
-  onTutorial: () => void
-}) => {
-  return (
-    <div className="floating-action-buttons">
-      <button 
-        onClick={onSearch}
-        className="fab bg-white hover:bg-gray-100 text-gray-700" 
-        title="Tìm kiếm"
-      >
-        <Search className="w-5 h-5" />
-      </button>
-      <button 
-        onClick={onDirections}
-        className="fab bg-white hover:bg-gray-100 text-green-600" 
-        title="Tìm đường"
-      >
-        <Route className="w-5 h-5" />
-      </button>
-      <button 
-        onClick={onLocate}
-        className="fab bg-blue-600 hover:bg-blue-700 text-white" 
-        title="Định vị của tôi"
-      >
-        <Navigation className="w-5 h-5" />
-      </button>
-      <button 
-        onClick={onTutorial}
-        className="fab bg-white hover:bg-gray-100 text-yellow-500" 
-        title="Hướng dẫn sử dụng"
-      >
-        <MapPin className="w-5 h-5" />
-      </button>
-    </div>
-  )
-}
+// Map Toolbar Component removed in favor of inline desktop actions and MobileActionsBar
 
 // Tutorial Popup Component
 const TutorialPopup = ({ isOpen, onClose }: {
@@ -400,681 +295,6 @@ const DescentChoicePopup = ({ isOpen, onClose, onCableCar, onAlpineCoaster, desc
   )
 }
 
-// POI Info Panel Component
-const POIInfoPanel = ({ poi, isVisible, onClose, onGetDirections, currentLang, operatingHours, expanded, setExpanded }: {
-  poi: any
-  isVisible: boolean
-  onClose: () => void
-  onGetDirections: (poi: any, direction: 'from' | 'to') => void
-  currentLang: string
-  operatingHours: any[]
-  expanded: boolean
-  setExpanded: (val: boolean) => void
-}) => {
-  if (!poi) return null
-
-  const name = getPoiName(poi, currentLang)
-  const description = getPoiDescription(poi, currentLang)
-  const area = poi.area || 'N/A'
-  const t = (key: string, ...args: any[]) => getUIText(key, currentLang, ...args)
-
-  // Check operational status with operating hours
-  const checkOperationalStatus = (poi: any) => {
-    if (!poi || !['transport', 'attraction', 'food', 'amenities'].includes(poi.category)) {
-      return { operational: true, message: '' }
-    }
-
-    // Check if POI has operating hours data from Netlify function
-    let hoursData = null
-    if (operatingHours && operatingHours.length > 0) {
-      const hoursRecord = operatingHours.find(h => String(h.id) === String(poi.id))
-      if (hoursRecord && hoursRecord.operating_hours) {
-        try {
-          hoursData = typeof hoursRecord.operating_hours === 'string' 
-            ? JSON.parse(hoursRecord.operating_hours) 
-            : hoursRecord.operating_hours
-        } catch (e) {
-          console.error('Error parsing operating_hours:', e)
-          hoursData = null
-        }
-      }
-    }
-
-    // Fallback to POI's own operating_hours if no data from Netlify
-    if (!hoursData && poi.operating_hours) {
-      try {
-        hoursData = typeof poi.operating_hours === 'string' 
-          ? JSON.parse(poi.operating_hours) 
-          : poi.operating_hours
-      } catch (e) {
-        console.error('Error parsing POI operating_hours:', e)
-        hoursData = null
-      }
-    }
-
-    if (!hoursData) {
-      return { operational: true, message: '' }
-    }
-
-    const now = new Date()
-    const currentDayOfWeek = now.getDay()
-    const currentHour = now.getHours()
-    const currentMinute = now.getMinutes()
-
-    const dayKeys = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
-    let timeString = hoursData[dayKeys[currentDayOfWeek]] ?? hoursData['default'] ?? hoursData['monfri']
-    
-    if (timeString === undefined) {
-      return { operational: false, message: t('statusNoSchedule') }
-    }
-    
-    if (String(timeString).toLowerCase() === "closed") {
-      return { operational: false, message: t('statusClosedToday') }
-    }
-    
-    const timeParts = String(timeString).match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/)
-    if (!timeParts) {
-      return { operational: false, message: t('statusErrorFormat') }
-    }
-    
-    const openHour = parseInt(timeParts[1])
-    const openMinute = parseInt(timeParts[2])
-    const closeHour = parseInt(timeParts[3])
-    const closeMinute = parseInt(timeParts[4])
-    
-    const nowMinutes = currentHour * 60 + currentMinute
-    const openMinutes = openHour * 60 + openMinute
-    const closeMinutes = closeHour * 60 + closeMinute
-    
-    if (nowMinutes < openMinutes) {
-      return { 
-        operational: false, 
-        message: t('statusNotOpenYet', `${openHour}:${openMinute.toString().padStart(2, '0')}`) 
-      }
-    }
-    
-    if (nowMinutes >= closeMinutes) {
-      return { 
-        operational: false, 
-        message: t('statusAlreadyClosed', `${closeHour}:${closeMinute.toString().padStart(2, '0')}`) 
-      }
-    }
-    
-    return { 
-      operational: true, 
-      message: t('statusOperational', `${closeHour}:${closeMinute.toString().padStart(2, '0')}`) 
-    }
-  }
-  
-  const status = checkOperationalStatus(poi)
-
-  // Check if this is a descent route scenario (Chua Ba to Chan Nui)
-  const isDescentRoute = poi.area === 'Chùa Bà' && area === 'Chân núi'
-
-  const isMobile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 768px)').matches
-  const touchDataRef = useRef<{ startY: number, startExpanded: boolean } | null>(null)
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchDataRef.current = { startY: e.touches[0].clientY, startExpanded: expanded }
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchDataRef.current) return
-    const deltaY = e.changedTouches[0].clientY - touchDataRef.current.startY
-    if (Math.abs(deltaY) < 20) {
-      setExpanded(!expanded)
-    } else if (deltaY > 30) {
-      setExpanded(false)
-    } else if (deltaY < -30) {
-      setExpanded(true)
-    }
-    touchDataRef.current = null
-  }
-
-  return (
-    <div 
-      className={cn("poi-panel", isVisible && "visible")}
-      style={isMobile ? {
-        transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
-        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 72px)'
-      } : undefined}
-    >
-      {/* Drag handle area (mobile) */}
-      {isMobile && (
-        <div 
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          className="absolute top-0 left-0 right-0 h-6 z-20"
-          aria-label="Kéo để mở rộng hoặc thu gọn"
-        />
-      )}
-      {/* Header with close button */}
-      <button 
-        onClick={onClose}
-        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-2 z-10 rounded-lg shadow-lg transition-all"
-        aria-label={t('close')}
-      >
-        <X className="w-4 h-4" />
-      </button>
-
-      {/* Content container with scroll */}
-      <div className="relative max-h-[inherit] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-        {/* Image section */}
-        {poi.imageurl && (
-          <div className="w-full h-[200px] sm:h-[280px] bg-gray-100 rounded-t-lg overflow-hidden flex items-center justify-center">
-            <img 
-              src={poi.imageurl} 
-              alt={name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
-
-        {/* Info content */}
-        <div className="p-3 sm:p-4">
-          {/* Title and basic info */}
-          <h3 className="text-lg sm:text-xl font-bold mb-1 text-primary-600">{name}</h3>
-          <p className="text-xs text-gray-600 mb-2">
-            {t('poiInfoArea')}: {area}
-          </p>
-
-          {/* Operational status */}
-          {status.message && (
-            <div className={`poi-status text-xs sm:text-sm font-semibold mb-3 p-2 rounded-lg ${
-              status.operational 
-                ? 'bg-green-50 text-green-700 border border-green-200' 
-                : 'bg-red-50 text-red-700 border border-red-200'
-            }`}>
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full ${status.operational ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                <span>{status.message}</span>
-              </div>
-            </div>
-          )}
-
-          
-
-          {/* Description */}
-          {description && (
-            <div className="mb-4">
-              <p className="text-xs sm:text-sm text-gray-700 leading-relaxed line-clamp-3 sm:line-clamp-none">
-                {description}
-              </p>
-            </div>
-          )}
-
-
-
-          {/* Contact Information */}
-          {(poi.phone || poi.email || poi.website || poi.facebook) && (
-            <div className="mb-3">
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Info className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm font-semibold text-gray-800">Thông tin liên hệ</span>
-                </div>
-                <div className="space-y-1 text-xs">
-                  {poi.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-3 h-3 text-gray-500" />
-                      <span className="text-gray-700">{poi.phone}</span>
-                    </div>
-                  )}
-                  {poi.email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-3 h-3 text-gray-500" />
-                      <span className="text-gray-700">{poi.email}</span>
-                    </div>
-                  )}
-                  {poi.website && (
-                    <div className="flex items-center gap-2">
-                      <ExternalLink className="w-3 h-3 text-gray-500" />
-                      <a href={poi.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                        Website
-                      </a>
-                    </div>
-                  )}
-                  {poi.facebook && (
-                    <div className="flex items-center gap-2">
-                      <Facebook className="w-3 h-3 text-gray-500" />
-                      <a href={poi.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                        Facebook
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Audio guide button */}
-          {poi.audio_url && (
-            <button className="w-full flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 mb-3 shadow-sm tap-target">
-              <Globe className="w-5 h-5" />
-              {t('audioGuide')}
-            </button>
-          )}
-
-          {/* Special Notes */}
-          {poi.notes && (
-            <div className="mb-3">
-              <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
-                                 <div className="flex items-center gap-2 mb-2">
-                   <FontAwesomeIcon icon={faStickyNote} className="text-yellow-600 text-lg" />
-                   <span className="text-sm font-semibold text-yellow-800">Lưu ý</span>
-                 </div>
-                <p className="text-xs text-yellow-700 leading-relaxed line-clamp-3 sm:line-clamp-none">
-                  {poi.notes}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Special descent route buttons for Chua Ba to Chan Nui */}
-          {isDescentRoute && (
-            <div className="mb-3">
-              <div className="bg-orange-50 rounded-lg p-3 border border-orange-200 mb-3">
-                                 <div className="flex items-center gap-2 mb-2">
-                   <FontAwesomeIcon icon={faCableCar} className="text-orange-600 text-lg" />
-                   <span className="text-sm font-semibold text-orange-800">Chọn phương tiện xuống núi</span>
-                 </div>
-                <p className="text-xs text-orange-700">
-                  Máng trượt hoạt động theo lịch vận hành. Cáp treo hoạt động thường xuyên.
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => onGetDirections({ ...poi, descentChoice: 'cable_car' }, 'to')}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-xs shadow-sm tap-target"
-                >
-                                     <FontAwesomeIcon icon={faCableCar} className="text-lg" />
-                   <span>Cáp treo</span>
-                </button>
-                <button
-                  onClick={() => onGetDirections({ ...poi, descentChoice: 'alpine_coaster' }, 'to')}
-                  className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-xs shadow-sm tap-target"
-                >
-                                     <FontAwesomeIcon icon={faPersonWalking} className="text-lg" />
-                   <span>Máng trượt</span>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Regular route action buttons */}
-          {!isDescentRoute && (
-            <div className="flex gap-2 text-xs sm:text-sm">
-              <button
-                onClick={() => onGetDirections(poi, 'from')}
-                className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-sm tap-target"
-              >
-                <Map className="w-4 h-4" />
-                {t('routeFromHere')}
-              </button>
-              <button
-                onClick={() => onGetDirections(poi, 'to')}
-                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-sm tap-target"
-              >
-                <Route className="w-4 h-4" />
-                {t('routeToHere')}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Route Display Component
-const RouteDisplay = ({ route, isVisible, onClose, currentLang, poiData, expanded, setExpanded }: {
-  route: any
-  isVisible: boolean
-  onClose: () => void
-  currentLang: string
-  poiData: any[]
-  expanded: boolean
-  setExpanded: (val: boolean) => void
-}) => {
-  if (!route || !route.path) return null
-
-  const t = (key: string, ...args: any[]) => getUIText(key, currentLang, ...args)
-
-  // Convert route path to Leaflet coordinates
-  const routeCoordinates = route.path.map((nodeId: string) => {
-    const poi = poiData.find((p: any) => String(p.id) === String(nodeId))
-    return poi ? [poi.latitude, poi.longitude] : null
-  }).filter(Boolean)
-
-  // Generate detailed route instructions based on map.js logic
-  const generateRouteInstructions = (path: string[]) => {
-    const instructions: any[] = []
-    let currentTransport = null
-    let currentRoute = null
-    let lastPOI = null
-    let walkingStart = null
-    let walkingEnd = null
-    let hasCoaster = false
-
-    // Helper function to check if two POIs are in the same area
-    const areInSameArea = (poi1: any, poi2: any) => {
-      if (!poi1?.position || !poi2?.position) return false
-      if (poi1.area && poi2.area && poi1.area === poi2.area && String(poi1.area).trim() !== '') return true
-      
-      const dist = calculateDistance(poi1.position, poi2.position)
-      if (poi1.id === 'user_location' && poi2.area && String(poi2.area).trim() !== '' && dist < 150) return true
-      if (poi2.id === 'user_location' && poi1.area && String(poi1.area).trim() !== '' && dist < 150) return true
-      
-      if (!poi1.area && !poi2.area && dist < 75) return true
-      return false
-    }
-
-    // Helper function to check if two stations are on the same cable route
-    const areOnSameCableRoute = (station1: any, station2: any) => {
-      if (!station1?.cable_route || !station2?.cable_route || station1.category !== 'transport' || station2.category !== 'transport') return false
-      const routes1 = String(station1.cable_route).split(',').map((r: string) => r.trim()).filter((r: string) => r)
-      const routes2 = String(station2.cable_route).split(',').map((r: string) => r.trim()).filter((r: string) => r)
-      return routes1.length > 0 && routes2.length > 0 && routes1.some((route: string) => routes2.includes(route))
-    }
-
-    // Helper function to calculate distance
-    const calculateDistance = (pos1: [number, number], pos2: [number, number]) => {
-      if (!pos1 || !pos2 || !Array.isArray(pos1) || !Array.isArray(pos2)) return 0
-      const R = 6371e3 // Earth's radius in meters
-      const φ1 = pos1[0] * Math.PI / 180
-      const φ2 = pos2[0] * Math.PI / 180
-      const Δφ = (pos2[0] - pos1[0]) * Math.PI / 180
-      const Δλ = (pos2[1] - pos1[1]) * Math.PI / 180
-
-      const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-
-      return R * c
-    }
-
-    for (let i = 0; i < path.length - 1; i++) {
-      const currentPOI = poiData.find((p: any) => String(p.id) === String(path[i]))
-      const nextPOI = poiData.find((p: any) => String(p.id) === String(path[i + 1]))
-      if (!currentPOI || !nextPOI) continue
-
-      // Check transfer types
-      const isTransferWalk = currentPOI.category === 'transport' && nextPOI.category === 'transport' && areInSameArea(currentPOI, nextPOI)
-      const isCableCar = currentPOI.category === 'transport' && nextPOI.category === 'transport' && !areInSameArea(currentPOI, nextPOI)
-      const isCoaster = currentPOI.id === '24' && nextPOI.id === '18' // Coaster start to end
-
-      // Handle walking segment before transport
-      if (walkingStart && (isCableCar || isCoaster || isTransferWalk)) {
-        if (walkingStart.id !== currentPOI.id) {
-          const distance = calculateDistance(walkingStart.position, currentPOI.position)
-          const duration = Math.ceil(distance / 80) // 80m per minute walking
-          instructions.push({
-            type: 'walk',
-            text: `Đi bộ từ ${getPoiName(walkingStart, currentLang)} đến ${getPoiName(currentPOI, currentLang)}`,
-            distance: distance,
-            duration: duration
-          })
-        }
-        walkingStart = null
-        walkingEnd = null
-      }
-
-      // Handle transfer walk (same area)
-      if (isTransferWalk) {
-        const distance = calculateDistance(currentPOI.position, nextPOI.position)
-        const duration = Math.ceil(distance / 80)
-        instructions.push({
-          type: 'walk',
-          text: `Đi bộ từ ${getPoiName(currentPOI, currentLang)} đến ${getPoiName(nextPOI, currentLang)}`,
-          distance: distance,
-          duration: duration
-        })
-        walkingStart = nextPOI
-        continue
-      }
-
-      // Handle coaster
-      if (isCoaster) {
-        instructions.push({
-          type: 'coaster',
-          text: `Đi Máng trượt từ ${getPoiName(currentPOI, currentLang)} xu��ng ${getPoiName(nextPOI, currentLang)}`,
-          distance: 0,
-          duration: 15,
-          routeName: 'Máng trượt'
-        })
-        currentTransport = 'coaster'
-        hasCoaster = true
-        walkingStart = nextPOI
-        continue
-      }
-
-      // Handle cable car
-      if (isCableCar) {
-        const routes1 = String(currentPOI.cable_route || '').split(',').map((r: string) => r.trim()).filter((r: string) => r)
-        const routes2 = String(nextPOI.cable_route || '').split(',').map((r: string) => r.trim()).filter((r: string) => r)
-        const commonRoutes = routes1.filter((r: string) => routes2.includes(r))
-
-        if (commonRoutes.length === 0) {
-          if (walkingStart && walkingStart.id !== currentPOI.id) {
-            const distance = calculateDistance(walkingStart.position, currentPOI.position)
-            const duration = Math.ceil(distance / 80)
-            instructions.push({
-              type: 'walk',
-              text: `Đi bộ từ ${getPoiName(walkingStart, currentLang)} đến ${getPoiName(currentPOI, currentLang)}`,
-              distance: distance,
-              duration: duration
-            })
-          }
-          const distance = calculateDistance(currentPOI.position, nextPOI.position)
-          const duration = Math.ceil(distance / 80)
-          instructions.push({
-            type: 'walk',
-            text: `Đi bộ từ ${getPoiName(currentPOI, currentLang)} đến ${getPoiName(nextPOI, currentLang)}`,
-            distance: distance,
-            duration: duration
-          })
-          walkingStart = nextPOI
-          continue
-        }
-
-        const routeName = commonRoutes[0]
-        instructions.push({
-          type: 'cable',
-          text: `Đi ${routeName} từ ${getPoiName(currentPOI, currentLang)} đến ${getPoiName(nextPOI, currentLang)}`,
-          distance: 0,
-          duration: 10,
-          routeName: routeName
-        })
-        currentTransport = 'cable_car'
-        currentRoute = routeName
-        walkingStart = nextPOI
-      } else if (!isCableCar && !isCoaster) {
-        // Walking segment
-        if (!walkingStart) {
-          walkingStart = currentPOI
-        }
-        walkingEnd = nextPOI
-      }
-
-      lastPOI = nextPOI
-    }
-
-    // Handle final walking segment
-    if (walkingStart && walkingEnd && walkingStart.id !== walkingEnd.id) {
-      const distance = calculateDistance(walkingStart.position, walkingEnd.position)
-      const duration = Math.ceil(distance / 80)
-      instructions.push({
-        type: 'walk',
-        text: `Đi bộ từ ${getPoiName(walkingStart, currentLang)} đến ${getPoiName(walkingEnd, currentLang)}`,
-        distance: distance,
-        duration: duration
-      })
-    }
-
-    return { instructions, hasCoaster }
-  }
-
-  const { instructions, hasCoaster } = generateRouteInstructions(route.path)
-
-  // Calculate totals
-  const totalDistance = instructions.reduce((sum, inst) => sum + (inst.distance || 0), 0)
-  const totalTime = instructions.reduce((sum, inst) => sum + (inst.duration || 0), 0)
-  const totalCost = instructions.reduce((sum, inst) => {
-    if (inst.type === 'cable') return sum + 150000 // 150k VND for cable car
-    if (inst.type === 'coaster') return sum + 200000 // 200k VND for coaster
-    return sum + 0 // Walking is free
-  }, 0)
-
-  const isMobile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 768px)').matches
-  const touchDataRef = useRef<{ startY: number, startExpanded: boolean } | null>(null)
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchDataRef.current = { startY: e.touches[0].clientY, startExpanded: expanded }
-  }
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchDataRef.current) return
-    const deltaY = e.changedTouches[0].clientY - touchDataRef.current.startY
-    if (Math.abs(deltaY) < 20) {
-      setExpanded(!expanded)
-    } else if (deltaY > 30) {
-      setExpanded(false)
-    } else if (deltaY < -30) {
-      setExpanded(true)
-    }
-    touchDataRef.current = null
-  }
-
-  return (
-    <>
-      {/* Route line on map */}
-      {routeCoordinates.length > 1 && (
-        <Polyline
-          positions={routeCoordinates}
-          color="#3B82F6"
-          weight={4}
-          opacity={0.8}
-        />
-      )}
-
-      {/* Route instructions panel */}
-      <div 
-        className={cn("route-instructions-panel", isVisible && "visible")}
-        style={isMobile ? {
-          transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
-          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 72px)'
-        } : undefined}
-        onTouchStart={isMobile ? handleTouchStart : undefined}
-        onTouchEnd={isMobile ? handleTouchEnd : undefined}
-      > 
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-t-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <Route className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold">
-                  {route.startName && route.endName 
-                    ? `${route.startName} → ${route.endName}`
-                    : 'Lộ trình'
-                  }
-                </h2>
-                <p className="text-white/80 text-sm">
-                  {route.path?.length || 0} điểm dừng
-                </p>
-              </div>
-            </div>
-            <button 
-              onClick={onClose}
-              className="w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all"
-            >
-              <X className="w-4 h-4 text-white" />
-            </button>
-          </div>
-        </div>
-
-        {/* Route steps */}
-        <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
-          {instructions && instructions.length > 0 ? (
-            instructions.map((instruction: any, index: number) => {
-              const getIconColor = (type: string) => {
-                switch (type) {
-                  case 'walk': return 'bg-green-500'
-                  case 'cable': return 'bg-blue-500'
-                  case 'coaster': return 'bg-orange-500'
-                  default: return 'bg-gray-500'
-                }
-              }
-
-              const getIcon = (type: string) => {
-                switch (type) {
-                  case 'walk': return faPersonWalking
-                  case 'cable': return faCableCar
-                  case 'coaster': return faPersonWalking
-                  default: return faSearch
-                }
-              }
-
-              return (
-                <div key={index} className="bg-white rounded-lg border border-gray-200 p-3 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold ${getIconColor(instruction.type)}`}>
-                      <FontAwesomeIcon icon={getIcon(instruction.type)} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-gray-900 font-medium text-sm leading-relaxed">
-                        {instruction.text}
-                      </p>
-                      {instruction.routeName && (
-                        <div className="mt-1">
-                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                            {instruction.routeName}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )
-            })
-          ) : (
-            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <FontAwesomeIcon icon={faCheck} className="text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-blue-900 font-medium text-sm">
-                    Lộ trình đã được tìm thấy
-                  </p>
-                  <p className="text-blue-700 text-xs mt-1">
-                    {route.path?.length || 0} điểm dừng
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Cable routes info */}
-        {instructions.some((inst: any) => inst.type === 'cable') && (
-          <div className="bg-gray-50 p-4 border-t border-gray-200">
-            <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faCableCar} className="text-blue-600" />
-              <span className="text-sm text-gray-700">
-                Tuyến: {instructions.filter((inst: any) => inst.type === 'cable').map((inst: any) => inst.routeName).join(', ')}
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-    </>
-  )
-}
 
 const MapPage = () => {
   // Use the custom hooks for data and state management
@@ -1087,16 +307,10 @@ const MapPage = () => {
     searchTerm,
     activeCategory,
     currentLang,
-    userLocation,
     setSearchTerm,
     setActiveCategory,
-    setCurrentLang,
     setUserLocation,
-    searchPOIs,
-    getPOIById,
-    getPOIStatus,
-    addToHistory,
-    getHistory
+    addToHistory
   } = useMapData()
 
   const {
@@ -1109,21 +323,15 @@ const MapPage = () => {
     toggleRouteInputs,
     openTutorial,
     closeTutorial,
-    openContact,
     closeContact,
     openDescentChoice,
     closeDescentChoice
   } = useMapControls()
 
   const {
-    startPOI,
-    endPOI,
     currentRoute,
     routeLoading,
     routeError,
-    currentLang: routeLang,
-    setStartPOI,
-    setEndPOI,
     setCurrentRoute,
     findRoute,
     clearRoute,
@@ -1132,8 +340,6 @@ const MapPage = () => {
 
   const {
     location,
-    locationError,
-    locationLoading,
     getCurrentLocation
   } = useGeolocation()
 
@@ -1146,7 +352,6 @@ const MapPage = () => {
   const topBarRef = useRef<HTMLDivElement>(null)
   const routeInputsRef = useRef<HTMLDivElement>(null)
   const mapAreaRef = useRef<HTMLDivElement>(null)
-  const [mapControlsOffset, setMapControlsOffset] = useState(12)
   const [tileProvider, setTileProvider] = useState<'google' | 'osm'>('google')
 
   // POI Info Panel state
@@ -1203,42 +408,46 @@ const MapPage = () => {
     setRouteLanguage(currentLang)
   }, [currentLang, setRouteLanguage])
 
-  // Calculate top offset for map controls based on visible overlays
-  useEffect(() => {
-    const padding = 12
-    const updateOffset = () => {
-      const mapRect = mapAreaRef.current?.getBoundingClientRect()
-      let offset = padding
-      if (mapRect) {
-        if (isRouteInputsVisible && routeInputsRef.current) {
-          const rect = routeInputsRef.current.getBoundingClientRect()
-          offset = rect.bottom - mapRect.top + padding
-        } else if (isTopBarVisible && topBarRef.current) {
-          const rect = topBarRef.current.getBoundingClientRect()
-          offset = rect.bottom - mapRect.top + padding
-        }
+  // Removed desktop toolbar offset logic
+
+  // Operating status helper for a POI using operatingHours data
+  const getOperatingStatusForPoi = useCallback((poi: any) => {
+    if (!poi) return null
+    try {
+      const entry = (operatingHours as any[]).find((e: any) => String(e.id) === String(poi.id))
+      if (!entry) return null
+      const schedule: Record<string, string> = JSON.parse(entry.operating_hours || '{}')
+      const dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+      const key = dayKeys[new Date().getDay()]
+      const range = schedule?.[key] ?? schedule?.default
+      if (!range) return null
+      if (String(range).toLowerCase() === 'closed') {
+        const msg = currentLang === 'en' ? 'Closed today' : 'Hôm nay đóng cửa'
+        return { operational: false, message: entry.status_message_en && currentLang === 'en' ? entry.status_message_en : (entry.status_message || msg) }
       }
-      setMapControlsOffset(offset)
+      const [start, end] = String(range).split('-')
+      const toMinutes = (hhmm: string) => {
+        const [hh, mm] = hhmm.split(':').map((n: string) => parseInt(n, 10) || 0)
+        return hh * 60 + mm
+      }
+      const now = new Date()
+      const nowMin = now.getHours() * 60 + now.getMinutes()
+      const open = nowMin >= toMinutes(start) && nowMin <= toMinutes(end)
+      const label = `${start}–${end}`
+      const msg = open ? (currentLang === 'en' ? `Open • ${label}` : `Đang mở • ${label}`) : (currentLang === 'en' ? `Closed • ${label}` : `Đang đóng cửa • ${label}`)
+      const override = currentLang === 'en' ? (entry.status_message_en || null) : (entry.status_message || null)
+      return { operational: open, message: override || msg }
+    } catch {
+      return null
     }
-
-    updateOffset()
-    window.addEventListener('resize', updateOffset)
-    return () => window.removeEventListener('resize', updateOffset)
-  }, [isTopBarVisible, isRouteInputsVisible])
-
-  const handleSearch = () => {
-    // Ensure only top bar is visible
-    if (!isTopBarVisible) {
-      toggleTopBar()
-    }
-    if (isRouteInputsVisible) {
-      toggleRouteInputs()
-    }
-    searchInputRef.current?.focus()
-  }
+  }, [operatingHours, currentLang])
 
   const handleDirections = () => {
     // Toggle route inputs; ensure exclusivity with Top bar
+    // Hide panels
+    setIsPOIPanelVisible(false)
+    setSelectedPOI(null)
+    setIsRoutePanelVisible(false)
     if (isRouteInputsVisible) {
       toggleRouteInputs()
       return
@@ -1257,13 +466,10 @@ const MapPage = () => {
     openTutorial()
   }
 
-  const handleContact = () => {
-    openContact()
-  }
 
-  const handleToggleTiles = () => {
-    setTileProvider(prev => prev === 'google' ? 'osm' : 'google')
-  }
+  const handleToggleTiles = useCallback(() => {
+    setTileProvider((prev: 'google' | 'osm') => prev === 'google' ? 'osm' : 'google')
+  }, [])
 
   const handleCableCar = () => {
     closeDescentChoice()
@@ -1273,25 +479,6 @@ const MapPage = () => {
   const handleAlpineCoaster = () => {
     closeDescentChoice()
     findRouteWithDescentChoice('alpine_coaster')
-  }
-
-  // Helper function to calculate distance between two points
-  const calculateDistance = (point1: [number, number], point2: [number, number]): number => {
-    const [lat1, lon1] = point1
-    const [lat2, lon2] = point2
-    
-    const R = 6371e3 // Earth's radius in meters
-    const φ1 = lat1 * Math.PI / 180
-    const φ2 = lat2 * Math.PI / 180
-    const Δφ = (lat2 - lat1) * Math.PI / 180
-    const Δλ = (lon2 - lon1) * Math.PI / 180
-
-    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-
-    return R * c
   }
 
   // Handle find route with operating hours check
@@ -1309,11 +496,27 @@ const MapPage = () => {
         console.log('DEBUG: Operating hours data:', operatingHours)
         const descentOptions = checkDescentOptionsFromChuaBa(operatingHours)
         console.log('DEBUG: Descent options:', descentOptions)
-        
-        // Always show popup for descent route from Chua Ba to Chan Nui
-        console.log('DEBUG: Showing descent choice popup')
-        openDescentChoice()
-        return
+
+        // Auto-select when only one option is available; show popup only if both available
+        if (descentOptions.onlyCoaster) {
+          console.log('DEBUG: Auto-select Alpine Coaster (only option available)')
+          handleAlpineCoaster()
+          return
+        }
+        if (descentOptions.onlyCable) {
+          console.log('DEBUG: Auto-select Cable Car (only option available)')
+          handleCableCar()
+          return
+        }
+        if (descentOptions.bothCableAndCoaster || descentOptions.popupAvailable) {
+          console.log('DEBUG: Showing descent choice popup (both options available)')
+          openDescentChoice()
+          return
+        }
+        if (descentOptions.allClosed) {
+          alert('Hiện tại cả Cáp treo và Máng trượt đều không hoạt động. Vui lòng thử lại sau.')
+          return
+        }
       }
 
       // Use the findRoute function from the hook for normal routes
@@ -1330,6 +533,7 @@ const MapPage = () => {
         // Update the current route in the hook
         setCurrentRoute(enhancedRoute)
         setIsPOIPanelVisible(false)
+        setSelectedPOI(null)
         setIsRoutePanelVisible(true)
         toggleRouteInputs() // Hide route inputs after finding route
       } else {
@@ -1371,6 +575,7 @@ const MapPage = () => {
 
           setCurrentRoute(enhancedRoute)
           setIsPOIPanelVisible(false)
+          setSelectedPOI(null)
           setIsRoutePanelVisible(true)
           toggleRouteInputs()
           return
@@ -1389,6 +594,7 @@ const MapPage = () => {
         }
         setCurrentRoute(enhancedRoute)
         setIsPOIPanelVisible(false)
+        setSelectedPOI(null)
         setIsRoutePanelVisible(true)
         toggleRouteInputs()
       }
@@ -1411,21 +617,173 @@ const MapPage = () => {
 
   // Handle get directions
   const handleGetDirections = useCallback((poi: any, direction: 'from' | 'to') => {
+    // Clear existing route when starting new directions
+    let didReset = false
+    if (currentRoute) {
+      clearRoute()
+      setIsRoutePanelVisible(false)
+      // Fully reset previous start/end so we don't keep any old point
+      setStartPoint(null)
+      setEndPoint(null)
+      setStartPointText('')
+      setEndPointText('')
+      didReset = true
+    }
+
     if (direction === 'from') {
       // Set start point for "Từ đây"
       setStartPoint(poi)
       setStartPointText(getPoiName(poi, currentLang))
+      // Close POI panel when setting start point
+      setIsPOIPanelVisible(false)
+      setSelectedPOI(null)
+      setIsPoiExpanded(false)
+      // If we just reset from an existing route, open inputs and stop here
+      if (didReset) {
+        toggleRouteInputs()
+        return
+      }
+      
+      // Automatically find route if we have both start and end points
+      if (endPoint) {
+        // Use setTimeout to ensure state updates are processed first
+        setTimeout(() => {
+          // Check if this is a descent route from Chùa Bà to Chân núi
+          if (poi.area === 'Chùa Bà' && endPoint.area === 'Chân núi') {
+            console.log('DEBUG: Found descent route from Chua Ba to Chan Nui')
+            const descentOptions = checkDescentOptionsFromChuaBa(operatingHours)
+            console.log('DEBUG: Descent options:', descentOptions)
+
+            // Auto-select when only one option is available; show popup only if both available
+            if (descentOptions.onlyCoaster) {
+              console.log('DEBUG: Auto-select Alpine Coaster (only option available)')
+              handleAlpineCoaster()
+              return
+            }
+            if (descentOptions.onlyCable) {
+              console.log('DEBUG: Auto-select Cable Car (only option available)')
+              handleCableCar()
+              return
+            }
+            if (descentOptions.bothCableAndCoaster || descentOptions.popupAvailable) {
+              console.log('DEBUG: Showing descent choice popup (both options available)')
+              openDescentChoice()
+              return
+            }
+            if (descentOptions.allClosed) {
+              alert('Hiện tại cả Cáp treo và Máng trượt đều không hoạt động. Vui lòng thử lại sau.')
+              return
+            }
+          }
+
+          // Use the findRoute function from the hook for normal routes
+          findRoute(poi.id, endPoint.id).then(routeResult => {
+            if (routeResult) {
+              // Add start and end names to the route result
+              const enhancedRoute = {
+                ...routeResult,
+                startName: getPoiName(poi, currentLang),
+                endName: getPoiName(endPoint, currentLang)
+              }
+
+              // Update the current route in the hook
+              setCurrentRoute(enhancedRoute)
+              setIsPOIPanelVisible(false)
+              setSelectedPOI(null)
+              setIsRoutePanelVisible(true)
+              toggleRouteInputs() // Hide route inputs after finding route
+            } else {
+              // Show user-friendly error message when no route found
+              alert('Không tìm thấy đường đi giữa hai điểm này. Vui lòng thử lại với các điểm khác.')
+            }
+          }).catch(error => {
+            console.error('Error finding route:', error)
+            // Show user-friendly error message
+            alert('Có lỗi xảy ra khi tìm đường. Vui lòng thử lại sau.')
+          })
+        }, 100)
+      } else {
+        // If no end point, show route inputs to let user choose end point
+        toggleRouteInputs()
+      }
     } else {
-      // Set end point for "Đến đây"
+      // Set end point for "Đến đây" and automatically find route
       setEndPoint(poi)
       setEndPointText(getPoiName(poi, currentLang))
+      // Close POI panel when setting end point
+      setIsPOIPanelVisible(false)
+      setSelectedPOI(null)
+      setIsPoiExpanded(false)
+      // If we just reset from an existing route, open inputs and stop here
+      if (didReset) {
+        toggleRouteInputs()
+        return
+      }
+      
+      // Automatically find route if we have both start and end points
+      if (startPoint) {
+        // Use setTimeout to ensure state updates are processed first
+        setTimeout(() => {
+          // Check if this is a descent route from Chùa Bà to Chân núi
+          if (startPoint.area === 'Chùa Bà' && poi.area === 'Chân núi') {
+            console.log('DEBUG: Found descent route from Chua Ba to Chan Nui')
+            const descentOptions = checkDescentOptionsFromChuaBa(operatingHours)
+            console.log('DEBUG: Descent options:', descentOptions)
+
+            // Auto-select when only one option is available; show popup only if both available
+            if (descentOptions.onlyCoaster) {
+              console.log('DEBUG: Auto-select Alpine Coaster (only option available)')
+              handleAlpineCoaster()
+              return
+            }
+            if (descentOptions.onlyCable) {
+              console.log('DEBUG: Auto-select Cable Car (only option available)')
+              handleCableCar()
+              return
+            }
+            if (descentOptions.bothCableAndCoaster || descentOptions.popupAvailable) {
+              console.log('DEBUG: Showing descent choice popup (both options available)')
+              openDescentChoice()
+              return
+            }
+            if (descentOptions.allClosed) {
+              alert('Hiện tại cả Cáp treo và Máng trượt đều không hoạt động. Vui lòng thử lại sau.')
+              return
+            }
+          }
+
+          // Use the findRoute function from the hook for normal routes
+          findRoute(startPoint.id, poi.id).then(routeResult => {
+            if (routeResult) {
+              // Add start and end names to the route result
+              const enhancedRoute = {
+                ...routeResult,
+                startName: getPoiName(startPoint, currentLang),
+                endName: getPoiName(poi, currentLang)
+              }
+
+              // Update the current route in the hook
+              setCurrentRoute(enhancedRoute)
+              setIsPOIPanelVisible(false)
+              setSelectedPOI(null)
+              setIsRoutePanelVisible(true)
+              toggleRouteInputs() // Hide route inputs after finding route
+            } else {
+              // Show user-friendly error message when no route found
+              alert('Không tìm thấy đường đi giữa hai điểm này. Vui lòng thử lại với các điểm khác.')
+            }
+          }).catch(error => {
+            console.error('Error finding route:', error)
+            // Show user-friendly error message
+            alert('Có lỗi xảy ra khi tìm đường. Vui lòng thử lại sau.')
+          })
+        }, 100)
+      } else {
+        // If no start point, show route inputs to let user choose start point
+        toggleRouteInputs()
+      }
     }
-    
-    // Show route inputs
-    toggleRouteInputs()
-    setIsPOIPanelVisible(false)
-    setIsPoiExpanded(false)
-  }, [currentLang, toggleRouteInputs])
+  }, [currentLang, toggleRouteInputs, startPoint, endPoint, findRoute, setCurrentRoute, operatingHours, openDescentChoice, currentRoute, clearRoute])
 
   const handleClosePOIPanel = useCallback(() => {
     setIsPOIPanelVisible(false)
@@ -1435,9 +793,10 @@ const MapPage = () => {
 
   const handleCloseRoutePanel = useCallback(() => {
     setIsRoutePanelVisible(false)
-    clearRoute()
+    // Don't clear the route - keep it visible on the map
+    // clearRoute()
     setIsRouteExpanded(false)
-  }, [clearRoute])
+  }, [])
 
   // Autocomplete functions
   const generateSuggestions = useCallback((input: string, maxResults: number = 8) => {
@@ -1463,16 +822,26 @@ const MapPage = () => {
   const handleSearchInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setSearchTerm(value)
-    
-    if (value.trim().length >= 2) {
-      const suggestions = generateSuggestions(value)
-      setSearchSuggestions(suggestions)
-      setShowSearchSuggestions(suggestions.length > 0)
-    } else {
-      setSearchSuggestions([])
-      setShowSearchSuggestions(false)
+  }, [setSearchTerm])
+
+  // Debounce suggestions generation based on searchTerm
+  useEffect(() => {
+    const trimmed = searchTerm.trim()
+    const timer = window.setTimeout(() => {
+      if (trimmed.length >= 2) {
+        const suggestions = generateSuggestions(trimmed)
+        setSearchSuggestions(suggestions)
+        setShowSearchSuggestions(suggestions.length > 0)
+      } else {
+        setSearchSuggestions([])
+        setShowSearchSuggestions(false)
+      }
+    }, 180)
+
+    return () => {
+      window.clearTimeout(timer)
     }
-  }, [generateSuggestions])
+  }, [searchTerm, generateSuggestions])
 
   const handleStartPointChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -1509,6 +878,11 @@ const MapPage = () => {
     setShowSearchSuggestions(false)
     setSearchSuggestions([])
     addToHistory(poi.displayName)
+    // Show POI info panel immediately when selecting a suggestion
+    setSelectedPOI(poi)
+    setIsPOIPanelVisible(true)
+    setIsPoiExpanded(true)
+    setIsRoutePanelVisible(false)
   }, [addToHistory])
 
   const handleStartSuggestionClick = useCallback((poi: any) => {
@@ -1546,6 +920,122 @@ const MapPage = () => {
       console.log('Test descent options result:', testDescentOptions)
     }
   }, [operatingHours])
+
+  // Generate route instructions for RouteInstructionsSheet
+  const generateRouteInstructionsForPath = useCallback((path: string[]) => {
+    const instructions: any[] = []
+    let walkingStart: any = null
+    let walkingEnd: any = null
+
+    const calculateDistance = (pos1: [number, number], pos2: [number, number]) => {
+      if (!pos1 || !pos2 || !Array.isArray(pos1) || !Array.isArray(pos2)) return 0
+      const R = 6371e3
+      const φ1 = pos1[0] * Math.PI / 180
+      const φ2 = pos2[0] * Math.PI / 180
+      const Δφ = (pos2[0] - pos1[0]) * Math.PI / 180
+      const Δλ = (pos2[1] - pos1[1]) * Math.PI / 180
+      const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+      return R * c
+    }
+
+    const getPos = (poi: any): [number, number] | null => {
+      if (typeof poi?.latitude === 'number' && typeof poi?.longitude === 'number') {
+        return [poi.latitude, poi.longitude]
+      }
+      return null
+    }
+
+    const areInSameArea = (poi1: any, poi2: any) => {
+      const p1 = getPos(poi1)
+      const p2 = getPos(poi2)
+      if (!p1 || !p2) return false
+      if (poi1.area && poi2.area && poi1.area === poi2.area && String(poi1.area).trim() !== '') return true
+      const dist = calculateDistance(p1, p2)
+      if (String(poi1.id) === 'user_location' && poi2.area && String(poi2.area).trim() !== '' && dist < 150) return true
+      if (String(poi2.id) === 'user_location' && poi1.area && String(poi1.area).trim() !== '' && dist < 150) return true
+      if (!poi1.area && !poi2.area && dist < 75) return true
+      return false
+    }
+
+    for (let i = 0; i < path.length - 1; i++) {
+      const currentPOI = poiData.find((p: any) => String(p.id) === String(path[i]))
+      const nextPOI = poiData.find((p: any) => String(p.id) === String(path[i + 1]))
+      if (!currentPOI || !nextPOI) continue
+
+      const isTransferWalk = currentPOI.category === 'transport' && nextPOI.category === 'transport' && areInSameArea(currentPOI, nextPOI)
+      const isCableCar = currentPOI.category === 'transport' && nextPOI.category === 'transport' && !areInSameArea(currentPOI, nextPOI)
+      const isCoaster = String(currentPOI.id) === '24' && String(nextPOI.id) === '18'
+
+      if (walkingStart && (isCableCar || isCoaster || isTransferWalk)) {
+        if (walkingStart.id !== currentPOI.id) {
+          const pStart = getPos(walkingStart)
+          const pCur = getPos(currentPOI)
+          const distance = pStart && pCur ? calculateDistance(pStart, pCur) : 0
+          const duration = Math.ceil(distance / 80)
+          instructions.push({ type: 'walk', text: `Đi bộ từ ${getPoiName(walkingStart, currentLang)} đến ${getPoiName(currentPOI, currentLang)}`, distance, duration })
+        }
+        walkingStart = null
+        walkingEnd = null
+      }
+
+      if (isTransferWalk) {
+        const pCur = getPos(currentPOI)
+        const pNext = getPos(nextPOI)
+        const distance = pCur && pNext ? calculateDistance(pCur, pNext) : 0
+        const duration = Math.ceil(distance / 80)
+        instructions.push({ type: 'walk', text: `Đi bộ từ ${getPoiName(currentPOI, currentLang)} đến ${getPoiName(nextPOI, currentLang)}`, distance, duration })
+        walkingStart = nextPOI
+        continue
+      }
+
+      if (isCoaster) {
+        instructions.push({ type: 'coaster', text: `Đi Máng trượt từ ${getPoiName(currentPOI, currentLang)} xuống ${getPoiName(nextPOI, currentLang)}`, distance: 0, duration: 15, routeName: 'Máng trượt' })
+        walkingStart = nextPOI
+        continue
+      }
+
+      if (isCableCar) {
+        const routes1 = String(currentPOI.cable_route || '').split(',').map((r: string) => r.trim()).filter(Boolean)
+        const routes2 = String(nextPOI.cable_route || '').split(',').map((r: string) => r.trim()).filter(Boolean)
+        const commonRoutes = routes1.filter((r: string) => routes2.includes(r))
+        if (commonRoutes.length === 0) {
+          if (walkingStart && walkingStart.id !== currentPOI.id) {
+            const pStart = getPos(walkingStart)
+            const pCur = getPos(currentPOI)
+            const distance = pStart && pCur ? calculateDistance(pStart, pCur) : 0
+            const duration = Math.ceil(distance / 80)
+            instructions.push({ type: 'walk', text: `Đi bộ từ ${getPoiName(walkingStart, currentLang)} đến ${getPoiName(currentPOI, currentLang)}`, distance, duration })
+          }
+          const pCur2 = getPos(currentPOI)
+          const pNext2 = getPos(nextPOI)
+          const distance = pCur2 && pNext2 ? calculateDistance(pCur2, pNext2) : 0
+          const duration = Math.ceil(distance / 80)
+          instructions.push({ type: 'walk', text: `Đi bộ từ ${getPoiName(currentPOI, currentLang)} đến ${getPoiName(nextPOI, currentLang)}`, distance, duration })
+          walkingStart = nextPOI
+          continue
+        }
+        const routeName = commonRoutes[0]
+        instructions.push({ type: 'cable', text: `Đi ${routeName} từ ${getPoiName(currentPOI, currentLang)} đến ${getPoiName(nextPOI, currentLang)}`, distance: 0, duration: 10, routeName })
+        walkingStart = nextPOI
+      } else if (!isCoaster) {
+        if (!walkingStart) {
+          walkingStart = currentPOI
+        }
+        walkingEnd = nextPOI
+      }
+    }
+
+    if (walkingStart && walkingEnd && walkingStart.id !== walkingEnd.id) {
+      const pStart = getPos(walkingStart)
+      const pEnd = getPos(walkingEnd)
+      const distance = pStart && pEnd ? calculateDistance(pStart, pEnd) : 0
+      const duration = Math.ceil(distance / 80)
+      instructions.push({ type: 'walk', text: `Đi bộ từ ${getPoiName(walkingStart, currentLang)} đến ${getPoiName(walkingEnd, currentLang)}`, distance, duration })
+    }
+
+    return { instructions }
+  }, [poiData, currentLang])
 
   if (loading) {
     return (
@@ -1593,7 +1083,9 @@ const MapPage = () => {
 
   return (
     <div className="h-[100dvh] bg-gray-50 flex flex-col overflow-hidden" onClick={hideAllSuggestions}>
-      {/* Top Bar */}
+      {/* Top bar removed here; rendered as map overlay below for consistency */}
+      {/* (previous hidden desktop top bar markup deleted to avoid duplication and accidental overlap) */}
+      {false && (
       <div className={cn(
         "hidden top-bar bg-white border-b border-gray-200 p-2 sm:p-3 md:p-4 shadow-sm transition-opacity duration-200",
         !isTopBarVisible && "opacity-0 pointer-events-none"
@@ -1694,6 +1186,7 @@ const MapPage = () => {
           </button>
         </div>
       </div>
+      )}
 
       {/* Route Inputs (hidden here; rendered inside map overlay) */}
       <div className={cn(
@@ -1742,6 +1235,15 @@ const MapPage = () => {
                 ))}
               </div>
             )}
+            {showStartSuggestions && startSuggestions.length === 0 && (
+              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg mt-2">
+                <div className="p-4 text-sm text-gray-500">
+                  {startPointText.trim().length < 2
+                    ? 'Gõ ít nhất 2 ký tự'
+                    : 'Không tìm thấy. Thử từ khóa khác hoặc chọn theo danh mục.'}
+                </div>
+              </div>
+            )}
           </div>
           <div className="relative">
             <input
@@ -1784,6 +1286,15 @@ const MapPage = () => {
                 ))}
               </div>
             )}
+            {showEndSuggestions && endSuggestions.length === 0 && (
+              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg mt-2">
+                <div className="p-4 text-sm text-gray-500">
+                  {endPointText.trim().length < 2
+                    ? 'Gõ ít nhất 2 ký tự'
+                    : 'Không tìm thấy. Thử từ khóa khác hoặc chọn theo danh mục.'}
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3 mt-4">
@@ -1807,7 +1318,7 @@ const MapPage = () => {
           <button 
             onClick={handleDirections}
             aria-label="Đóng tìm đường" 
-            className="ml-2 w-8 h-8 flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 hover:text-red-500 transition-all z-10"
+            className="ml-2 w-8 h-8 flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 hover:text-red-500 transition-all"
           >
             <X className="w-4 h-4" />
           </button>
@@ -1829,60 +1340,40 @@ const MapPage = () => {
           isTopBarVisible ? "opacity-100" : "opacity-0 pointer-events-none",
           "transition-opacity duration-200"
         )}>
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-2 sm:p-3 md:max-w-5xl md:mx-auto">
-            {/* Search Bar */}
-            <div className="search-bar relative flex items-center bg-gray-100 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 mb-2 sm:mb-3" onClick={(e) => e.stopPropagation()}>
-              <input 
-                ref={searchInputRef}
-                type="text" 
-                placeholder="Tìm kiếm địa điểm..." 
-                value={searchTerm}
-                onChange={handleSearchInputChange}
-                onFocus={() => {
-                  if (searchSuggestions.length > 0) {
-                    setShowSearchSuggestions(true)
-                  }
-                }}
-                onBlur={() => {
-                  setTimeout(() => setShowSearchSuggestions(false), 200)
-                }}
-                className="flex-grow border-none outline-none bg-transparent text-sm sm:text-base text-gray-700 placeholder-gray-500"
-              />
-              <Search className="text-gray-400 pl-2 cursor-pointer w-5 h-5" />
-              <button 
-                type="button" 
-                className="icon text-primary-500 hover:text-primary-600 pl-2 hidden md:inline-flex items-center justify-center" 
-                aria-label="Tìm đường"
-                onClick={handleDirections}
-              >
-                <Route className="w-5 h-5" />
-              </button>
-              {showSearchSuggestions && searchSuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-[1100]">
-                  {searchSuggestions.map((poi) => (
-                    <div
-                      key={poi.id}
-                      className="p-3 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                      onClick={() => handleSearchSuggestionClick(poi)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                          <FontAwesomeIcon icon={getCategoryIcon(poi.category)} className="text-primary-600 text-sm" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 truncate">
-                            {poi.displayName}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {poi.area && `${poi.area} • `}{t(poi.category || 'attraction')}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+          <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-2 sm:p-3 md:max-w-5xl md:mx-auto" onClick={(e) => e.stopPropagation()}>
+            <SearchBarWithActions
+              searchTerm={searchTerm}
+              onChange={handleSearchInputChange}
+              onFocus={() => { if (searchSuggestions.length > 0) setShowSearchSuggestions(true) }}
+              onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
+              suggestions={searchSuggestions}
+              showSuggestions={showSearchSuggestions}
+              onSuggestionClick={handleSearchSuggestionClick}
+              onDirections={handleDirections}
+              onLocate={handleLocate}
+              onTutorial={handleTutorial}
+              onToggleTiles={handleToggleTiles}
+              inputRef={searchInputRef}
+              onClear={() => {
+                setSearchTerm('')
+                setSearchSuggestions([])
+                setShowSearchSuggestions(false)
+                searchInputRef.current?.focus()
+              }}
+              rightExtra={searchTerm ? (
+                <button
+                  aria-label="Xóa ô tìm kiếm"
+                  onClick={() => {
+                    setSearchTerm('')
+                    setSearchSuggestions([])
+                    setShowSearchSuggestions(false)
+                  }}
+                  className="p-1 rounded-full hover:bg-gray-200"
+                >
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              ) : null}
+            />
 
             {/* Filter Categories */}
             <div className="filter-categories-wrapper relative flex items-center">
@@ -1977,62 +1468,74 @@ const MapPage = () => {
             />
           )}
           
-          {/* Map Controls */}
-          <MapControls
-            onLocate={handleLocate}
-            onSearch={handleSearch}
-            onTutorial={handleTutorial}
-            onContact={handleContact}
-            onToggleTiles={handleToggleTiles}
-            tileProvider={tileProvider}
-            topOffsetPx={mapControlsOffset}
-          />
-          
-          {/* Zoom Controls */}
-          <ZoomControls />
 
-          {/* POI Markers */}
-          <POIMarkers 
-            pois={filteredPOIs} 
-            currentLang={currentLang} 
-            onMarkerClick={handlePOIClick}
-          />
+          {/* POI Markers with clustering */}
+          <MarkerClusterGroup
+            showCoverageOnHover={false}
+            spiderfyOnEveryZoom={false}
+            maxClusterRadius={48}
+            disableClusteringAtZoom={18}
+            iconCreateFunction={(cluster: any) => {
+              const count = cluster.getChildCount()
+              return L.divIcon({
+                html: `<div style="background:#2563eb;color:#fff;border-radius:9999px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.25);font-size:13px;">${count}</div>`,
+                className: 'custom-cluster-icon',
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
+              })
+            }}
+            spiderfyOnClick={false}
+            spiderfyOnMaxZoom
+            removeOutsideVisibleBounds
+            animate
+            animateAddingMarkers
+            zoomToBoundsOnClick
+            polygonOptions={{ opacity: 0, fillOpacity: 0 }}
+            spiderLegPolylineOptions={{ weight: 2, color: '#2563eb', opacity: 0.7 }}
+            spiderfyDistanceMultiplier={1.2}
+          >
+            <POIMarkers 
+              pois={filteredPOIs} 
+              currentLang={currentLang} 
+              onMarkerClick={handlePOIClick}
+            />
+          </MarkerClusterGroup>
 
-          {/* Route Display */}
-          <RouteDisplay 
-            route={currentRoute}
-            isVisible={isRoutePanelVisible}
-            onClose={handleCloseRoutePanel}
-            currentLang={currentLang}
-            poiData={poiData}
-            expanded={isRouteExpanded}
-            setExpanded={setIsRouteExpanded}
-          />
+                     {/* Route polyline */}
+           {currentRoute?.path && currentRoute.path.length > 1 && (
+             <Polyline
+               positions={currentRoute.path
+                 .map((nodeId: string) => {
+                   const poi = poiData.find((p: any) => String(p.id) === String(nodeId))
+                   return poi ? [poi.latitude, poi.longitude] : null
+                 })
+                 .filter(Boolean) as any}
+               color="#22C55E"
+               weight={4}
+               opacity={0.8}
+             />
+           )}
           
-          {/* Debug Info */}
-          <div className="absolute top-2 left-2 bg-white p-2 rounded shadow z-[1002] text-xs">
-            POIs: {filteredPOIs.length} | Loading: {loading ? 'Yes' : 'No'} | Error: {error || 'None'}
-          </div>
+          {/* Desktop actions are embedded in the top search bar; mobile uses MobileActionsBar */}
+          {/* Debug Info (dev only) */}
+          {false && (
+            <div className="absolute top-2 left-2 bg-white/90 p-2 rounded shadow z-[900] text-xs pointer-events-none">
+              POIs: {filteredPOIs.length} | Loading: {loading ? 'Yes' : 'No'} | Error: {error || 'None'}
+            </div>
+          )}
         </MapContainer>
         )}
 
-        {/* Floating Action Buttons (Mobile) */}
-        <FloatingActionButtons 
-          onSearch={handleSearch}
-          onDirections={handleDirections}
-          onLocate={handleLocate}
-          onTutorial={handleTutorial}
-        />
         {/* Route Inputs overlay inside map area */}
         <div
           ref={routeInputsRef}
           className={cn(
-            "absolute left-0 right-0 z-[1001] p-3",
-            isRouteInputsVisible ? "top-20" : "hidden"
+            "absolute left-0 right-0 z-[1001] p-2 sm:p-3",
+            isRouteInputsVisible ? "top-0" : "hidden"
           )}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="mx-2 md:mx-auto md:max-w-3xl bg-white border border-gray-200 rounded-2xl shadow-md p-4">
+          <div className="mx-2 md:mx-auto md:max-w-3xl bg-white/95 backdrop-blur-lg border border-gray-200 rounded-2xl shadow-xl p-4 ring-1 ring-gray-200">
             <div className="space-y-3">
               <div className="relative">
                 <input
@@ -2048,7 +1551,7 @@ const MapPage = () => {
                   onBlur={() => {
                     setTimeout(() => setShowStartSuggestions(false), 200)
                   }}
-                  className="w-full p-4 border border-gray-300 rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation"
+                  className="w-full p-3.5 sm:p-4 border border-gray-300 rounded-xl sm:rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation shadow-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-400"
                 />
                 {showStartSuggestions && startSuggestions.length > 0 && (
                   <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto mt-2">
@@ -2075,6 +1578,15 @@ const MapPage = () => {
                     ))}
                   </div>
                 )}
+                {showStartSuggestions && startSuggestions.length === 0 && (
+                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg mt-2">
+                    <div className="p-4 text-sm text-gray-500">
+                      {startPointText.trim().length < 2
+                        ? 'Gõ ít nhất 2 ký tự'
+                        : 'Không tìm thấy. Thử từ khóa khác hoặc chọn theo danh mục.'}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="relative">
                 <input
@@ -2090,7 +1602,7 @@ const MapPage = () => {
                   onBlur={() => {
                     setTimeout(() => setShowEndSuggestions(false), 200)
                   }}
-                  className="w-full p-4 border border-gray-300 rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation"
+                  className="w-full p-3.5 sm:p-4 border border-gray-300 rounded-xl sm:rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation shadow-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-400"
                 />
                 {showEndSuggestions && endSuggestions.length > 0 && (
                   <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto mt-2">
@@ -2117,13 +1629,22 @@ const MapPage = () => {
                     ))}
                   </div>
                 )}
+                {showEndSuggestions && endSuggestions.length === 0 && (
+                  <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg mt-2">
+                    <div className="p-4 text-sm text-gray-500">
+                      {endPointText.trim().length < 2
+                        ? 'Gõ ít nhất 2 ký tự'
+                        : 'Không tìm thấy. Thử từ khóa khác hoặc chọn theo danh mục.'}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="flex items-center gap-3 mt-4">
+            <div className="flex items-center gap-3 mt-3">
               <button
                 onClick={handleFindRoute}
                 disabled={routeLoading}
-                className="flex-1 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-2xl text-base transition duration-150 flex items-center justify-center min-h-[48px] touch-manipulation shadow-md"
+                className="flex-1 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white font-semibold py-3.5 sm:py-4 px-6 rounded-xl sm:rounded-2xl text-base transition duration-150 flex items-center justify-center min-h-[48px] touch-manipulation shadow-md"
               >
                 {routeLoading ? (
                   <>
@@ -2140,7 +1661,7 @@ const MapPage = () => {
               <button 
                 onClick={handleDirections}
                 aria-label="Đóng tìm đường" 
-                className="ml-2 w-8 h-8 flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 hover:text-red-500 transition-all z-10"
+                className="ml-2 w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-100 hover:text-red-500 transition-all"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -2152,18 +1673,46 @@ const MapPage = () => {
             )}
           </div>
         </div>
-        {/* POI Info Panel (keep within map area) */}
-        <POIInfoPanel 
+        {/* POI Info Sheet (map overlay) */}
+        <POIInfoSheet
           poi={selectedPOI}
-          isVisible={isPOIPanelVisible}
-          onClose={handleClosePOIPanel}
-          onGetDirections={handleGetDirections}
-          currentLang={currentLang}
-          operatingHours={operatingHours}
+          visible={isPOIPanelVisible}
           expanded={isPoiExpanded}
           setExpanded={setIsPoiExpanded}
+          onClose={handleClosePOIPanel}
+          onGetDirections={handleGetDirections}
+          t={(key: string, ...args: any[]) => getUIText(key, currentLang, ...args)}
+          getPoiName={(p: any) => getPoiName(p, currentLang)}
+          getPoiDesc={(p: any) => getPoiDescription(p, currentLang)}
+          operatingStatus={selectedPOI ? getOperatingStatusForPoi(selectedPOI) : null}
+          isDescentRoute={selectedPOI?.area === 'Chùa Bà' && selectedPOI?.area === 'Chân núi' ? true : false}
+          currentLang={currentLang}
+        />
+
+        {/* Route Instructions Sheet (map overlay) */}
+        <RouteInstructionsSheet
+          visible={isRoutePanelVisible}
+          onClose={handleCloseRoutePanel}
+          route={currentRoute}
+          instructions={currentRoute?.path ? generateRouteInstructionsForPath(currentRoute.path).instructions : []}
+          currentLang={currentLang}
+          expanded={isRouteExpanded}
+          setExpanded={setIsRouteExpanded}
         />
       </div>
+
+      {/* Mobile bottom actions bar */}
+      <MobileActionsBar
+        onLocate={handleLocate}
+        onDirections={handleDirections}
+        onFocusSearch={() => {
+          if (!isTopBarVisible) toggleTopBar()
+          if (isRouteInputsVisible) toggleRouteInputs()
+          setTimeout(() => searchInputRef.current?.focus(), 0)
+        }}
+        onTutorial={handleTutorial}
+        onToggleTiles={handleToggleTiles}
+      />
 
       {/* Popups (global fixed overlays) */}
       <TutorialPopup 

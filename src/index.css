@@ -253,7 +253,6 @@
   .map-controls-container {
     @apply absolute top-3 right-3 md:top-4 md:right-4 z-[1000] flex-col gap-2 hidden md:flex pt-safe;
   }
-
   .map-action-button {
     @apply w-12 h-12 flex items-center justify-center bg-white border-none rounded-xl shadow-lg cursor-pointer transition-all duration-200;
   }
@@ -358,7 +357,7 @@
 
   /* Route instructions panel */
   .route-instructions-panel {
-    @apply absolute bottom-0 left-0 right-0 md:left-0 md:top-0 md:bottom-auto md:right-auto md:w-80 lg:w-96 bg-white shadow-2xl rounded-t-3xl md:rounded-none md:rounded-r-2xl p-0 z-[1001] max-h-[75vh] md:max-h-[calc(100%-2rem)] overflow-hidden transform translate-y-full md:-translate-x-full transition-all duration-300 ease-out;
+    @apply absolute bottom-0 left-0 right-0 md:left-0 md:top-0 md:bottom-auto md:right-auto md:w-80 lg:w-96 bg-white shadow-2xl rounded-t-3xl md:rounded-none md:rounded-r-2xl p-0 z-[1300] max-h-[75vh] md:max-h-[calc(100%-2rem)] overflow-hidden transform translate-y-full md:-translate-x-full transition-all duration-300 ease-out;
   }
 
   .route-instructions-panel.visible {
@@ -367,7 +366,7 @@
 
   .route-instructions-panel::before {
     content: '';
-    @apply absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-gray-300 rounded-full md:hidden;
+    @apply absolute top-2 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-gray-300 rounded-full md:hidden;
   }
 
   .route-step {
@@ -380,7 +379,7 @@
 
   /* POI Info Panel */
   .poi-panel {
-    @apply absolute bottom-0 left-0 right-0 md:left-0 md:top-0 md:bottom-auto md:right-auto md:w-80 lg:w-96 bg-white shadow-2xl rounded-t-3xl md:rounded-none md:rounded-r-2xl p-0 z-[1001] max-h-[75vh] md:max-h-[calc(100%-2rem)] overflow-hidden transform translate-y-full md:-translate-x-full transition-all duration-300 ease-out;
+    @apply absolute bottom-0 left-0 right-0 md:left-0 md:top-0 md:bottom-auto md:right-auto md:w-80 lg:w-96 bg-white shadow-2xl rounded-t-3xl md:rounded-none md:rounded-r-2xl p-0 z-[1301] max-h-[75vh] md:max-h-[calc(100%-2rem)] overflow-hidden transform translate-y-full md:-translate-x-full transition-all duration-300 ease-out;
   }
 
   .poi-panel.visible {
@@ -389,7 +388,7 @@
 
   .poi-panel::before {
     content: '';
-    @apply absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-gray-300 rounded-full md:hidden;
+    @apply absolute top-2 left-1/2 transform -translate-x-1/2 w-6 h-1 bg-gray-300 rounded-full md:hidden;
   }
 
   .poi-info-card {
@@ -472,10 +471,6 @@
       @apply px-4 py-2 text-sm min-h-[40px];
     }
 
-    .floating-action-buttons {
-      @apply gap-3 bottom-6;
-    }
-
     .fab {
       @apply w-14 h-14;
     }
@@ -532,14 +527,6 @@
 
     .filter-categories button {
       @apply px-4 py-2 text-sm min-h-[40px];
-    }
-
-    .zoom-controls-desktop {
-      @apply right-8 bottom-8;
-    }
-
-    .map-controls-container {
-      @apply top-6 right-6 gap-3;
     }
 
     .map-area {
@@ -822,4 +809,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   input[type="date"]:focus {
     background-color: rgba(16, 185, 129, 0.05);
   }
+}
+/* tailwind layer utilities */
+.icon-btn {
+  @apply p-2 rounded-full hover:bg-white transition-colors duration-150;
 }

@@ -33,7 +33,10 @@ const MobileBottomNav = ({ visible = false }: MobileBottomNavProps) => {
       visible ? "translate-y-0" : "translate-y-full"
     )}>
       <div className="w-full">
-        <div className="bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-gray-200 shadow-lg" style={{height: 56}}>
+        <div
+          className="bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/70 border-t border-gray-200 shadow-lg"
+          style={{ height: 'calc(56px + env(safe-area-inset-bottom, 0px))', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        >
           <ul className="grid grid-cols-5 w-full h-full">
             {items.map((item) => {
               const Icon = item.icon
