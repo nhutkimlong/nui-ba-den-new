@@ -150,7 +150,7 @@ const FloatingActionButtons = ({ onSearch, onDirections, onLocate, onTutorial }:
       <button 
         onClick={onTutorial}
         className="fab bg-white hover:bg-gray-100 text-yellow-500" 
-        title="Hướng dẫn sử dụng"
+        title="Hướng d��n sử dụng"
       >
         <MapPin className="w-5 h-5" />
       </button>
@@ -632,7 +632,7 @@ const POIInfoPanel = ({ poi, isVisible, onClose, onGetDirections, currentLang, o
                    <span className="text-sm font-semibold text-orange-800">Chọn phương tiện xuống núi</span>
                  </div>
                 <p className="text-xs text-orange-700">
-                  Máng trượt hoạt động theo lịch vận hành. Cáp treo hoạt động thư��ng xuyên.
+                  Máng trượt hoạt động theo lịch vận hành. Cáp treo hoạt động thường xuyên.
                 </p>
               </div>
               
@@ -1428,12 +1428,23 @@ const MapPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Lỗi tải dữ liệu: {error}</p>
-          <button 
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="text-center bg-white rounded-2xl p-8 shadow-lg max-w-sm w-full">
+          <div className="w-16 h-16 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Không thể tải dữ liệu</h3>
+          <p className="text-gray-600 text-sm mb-6">
+            {error.includes('Service unavailable') || error.includes('HTML instead of JSON')
+              ? 'Dịch vụ tạm thời không khả dụng. Đang sử dụng dữ liệu cục bộ.'
+              : `Lỗi: ${error}`
+            }
+          </p>
+          <button
             onClick={() => window.location.reload()}
-            className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-md"
+            className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 px-6 rounded-2xl transition duration-200 shadow-md touch-manipulation"
           >
             Thử lại
           </button>
