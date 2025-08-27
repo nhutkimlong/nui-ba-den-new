@@ -251,7 +251,7 @@
   }
 
   .map-controls-container {
-    @apply absolute top-3 right-3 md:top-4 md:right-4 z-[1000] flex-col gap-2 hidden md:flex;
+    @apply absolute top-3 right-3 md:top-4 md:right-4 z-[1000] flex-col gap-2 hidden md:flex pt-safe;
   }
 
   .map-action-button {
@@ -263,7 +263,7 @@
   }
 
   .zoom-controls-desktop {
-    @apply absolute right-2 bottom-2 z-[1001] flex flex-col bg-white rounded-full shadow-md overflow-hidden;
+    @apply absolute right-2 bottom-2 z-[1001] flex flex-col bg-white rounded-full shadow-md overflow-hidden pb-safe;
   }
 
   .zoom-controls-desktop button {
@@ -271,7 +271,7 @@
   }
 
   .floating-action-buttons {
-    @apply absolute bottom-6 right-4 z-[1000] flex flex-col gap-3 md:hidden;
+    @apply absolute bottom-6 right-4 z-[1000] flex flex-col gap-3 md:hidden pb-safe;
   }
 
   .fab {

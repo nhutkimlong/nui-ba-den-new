@@ -135,10 +135,7 @@ const FloatingActionButtons = ({ onSearch, onDirections, onLocate, onTutorial }:
   onTutorial: () => void
 }) => {
   return (
-    <div
-      className="floating-action-buttons md:hidden absolute right-4 z-[1000] flex flex-col gap-3"
-      style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 84px)' }}
-    >
+    <div className="floating-action-buttons">
       <button 
         onClick={onSearch}
         className="fab bg-white hover:bg-gray-100 text-gray-700" 
