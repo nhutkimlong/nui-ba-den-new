@@ -60,7 +60,7 @@ const POIMarkers = React.memo(({ pois, currentLang, onMarkerClick }: {
 })
 
 // Map Controls Component
-const MapControls = ({ onLocate, onSearch, onTutorial, onContact, onToggleTiles, tileProvider, topOffsetPx }: {
+const MapControls = ({ onLocate, onSearch, onTutorial, onContact, onToggleTiles, tileProvider, topOffsetPx = 12 }: {
   onLocate: () => void
   onSearch: () => void
   onTutorial: () => void
@@ -70,7 +70,7 @@ const MapControls = ({ onLocate, onSearch, onTutorial, onContact, onToggleTiles,
   topOffsetPx?: number
 }) => {
   return (
-    <div className="map-controls-container absolute right-3 md:right-4 z-[1000] flex-col gap-2 hidden md:flex" style={{ top: topOffsetPx ?? 12 }}>
+    <div className="map-controls-container absolute right-3 md:right-4 z-[1000] flex-col gap-2 hidden md:flex" style={{ top: topOffsetPx }}>
       <button 
         onClick={onLocate}
         className="map-action-button" 
@@ -1146,6 +1146,10 @@ const MapPage = () => {
   const [startPointText, setStartPointText] = useState('')
   const [endPointText, setEndPointText] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const topBarRef = useRef<HTMLDivElement>(null)
+  const routeInputsRef = useRef<HTMLDivElement>(null)
+  const mapAreaRef = useRef<HTMLDivElement>(null)
+  const [mapControlsOffset, setMapControlsOffset] = useState(12)
   const [tileProvider, setTileProvider] = useState<'google' | 'osm'>('google')
 
   // POI Info Panel state
@@ -1201,6 +1205,29 @@ const MapPage = () => {
   useEffect(() => {
     setRouteLanguage(currentLang)
   }, [currentLang, setRouteLanguage])
+
+  // Calculate top offset for map controls based on visible overlays
+  useEffect(() => {
+    const padding = 12
+    const updateOffset = () => {
+      const mapRect = mapAreaRef.current?.getBoundingClientRect()
+      let offset = padding
+      if (mapRect) {
+        if (isRouteInputsVisible && routeInputsRef.current) {
+          const rect = routeInputsRef.current.getBoundingClientRect()
+          offset = rect.bottom - mapRect.top + padding
+        } else if (isTopBarVisible && topBarRef.current) {
+          const rect = topBarRef.current.getBoundingClientRect()
+          offset = rect.bottom - mapRect.top + padding
+        }
+      }
+      setMapControlsOffset(offset)
+    }
+
+    updateOffset()
+    window.addEventListener('resize', updateOffset)
+    return () => window.removeEventListener('resize', updateOffset)
+  }, [isTopBarVisible, isRouteInputsVisible])
 
   const handleSearch = () => {
     // Ensure only top bar is visible
@@ -1798,9 +1825,9 @@ const MapPage = () => {
       </div>
 
       {/* Map Container */}
-      <div className="map-area relative bg-gray-200 flex-1 overflow-hidden">
+      <div ref={mapAreaRef} className="map-area relative bg-gray-200 flex-1 overflow-hidden">
         {/* Map Top Bar overlay (inside map area) */}
-        <div className={cn(
+        <div ref={topBarRef} className={cn(
           "absolute top-0 left-0 right-0 z-[1001] p-2 sm:p-3 md:p-4",
           isTopBarVisible ? "opacity-100" : "opacity-0 pointer-events-none",
           "transition-opacity duration-200"
@@ -1954,14 +1981,14 @@ const MapPage = () => {
           )}
           
           {/* Map Controls */}
-          <MapControls 
+          <MapControls
             onLocate={handleLocate}
             onSearch={handleSearch}
             onTutorial={handleTutorial}
             onContact={handleContact}
             onToggleTiles={handleToggleTiles}
             tileProvider={tileProvider}
-            topOffsetPx={isTopBarVisible ? 112 : (isRouteInputsVisible ? 112 : 16)}
+            topOffsetPx={mapControlsOffset}
           />
           
           {/* Zoom Controls */}
@@ -2000,10 +2027,14 @@ const MapPage = () => {
           onTutorial={handleTutorial}
         />
         {/* Route Inputs overlay inside map area */}
-        <div className={cn(
-          "absolute left-0 right-0 z-[1001] p-3",
-          isRouteInputsVisible ? "top-20" : "hidden"
-        )} onClick={(e) => e.stopPropagation()}>
+        <div
+          ref={routeInputsRef}
+          className={cn(
+            "absolute left-0 right-0 z-[1001] p-3",
+            isRouteInputsVisible ? "top-20" : "hidden"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="mx-2 md:mx-auto md:max-w-3xl bg-white border border-gray-200 rounded-2xl shadow-md p-4">
             <div className="space-y-3">
               <div className="relative">
