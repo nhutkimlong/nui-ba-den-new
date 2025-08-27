@@ -1907,12 +1907,12 @@ function updateManualPhotoUploads() {
         photoItem.className = 'photo-upload-item flex flex-col space-y-3 p-3 border border-slate-200 rounded-lg';
         photoItem.innerHTML = `
             <div class="flex items-center space-x-3">
-            <input type="text" class="photo-name flex-1 px-3 py-2 border border-slate-300 rounded-lg" value="${memberName}" readonly>
-            <input type="file" class="photo-file" accept="image/*" style="display: none;">
-            <button type="button" class="select-photo bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm">
-                <i class="fas fa-image mr-1"></i>Chọn ảnh
-            </button>
-            <span class="photo-status text-sm text-gray-500">Chưa chọn ảnh</span>
+                <input type="text" class="photo-name flex-1 px-3 py-2 border border-slate-300 rounded-lg" value="${memberName}" readonly>
+                <input type="file" class="photo-file" accept="image/*" style="display: none;">
+                <button type="button" class="select-photo bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm">
+                    <i class="fas fa-image mr-1"></i>Chọn ảnh
+                </button>
+                <span class="photo-status text-sm text-gray-500">Chưa chọn ảnh</span>
             </div>
             <div class="photo-preview-container hidden">
                 <div class="relative">
@@ -1966,7 +1966,7 @@ function updateManualPhotoUploads() {
                     preview.src = e.target.result;
                     previewContainer.classList.remove('hidden');
                     status.textContent = file.name;
-                status.className = 'photo-status text-sm text-green-600';
+                    status.className = 'photo-status text-sm text-green-600';
                     
                     // Show file info
                     const sizeKB = (file.size / 1024).toFixed(1);
@@ -2443,13 +2443,13 @@ async function handleManualCertificateGeneration(e) {
                     return memberData;
                 } else if (originalFile) {
                     // Optimize original image before sending
-                return new Promise((resolve) => {
+                    return new Promise((resolve) => {
                         optimizeImageForCertificate(originalFile, (optimizedImage) => {
                             memberData.photoData = optimizedImage;
-                        resolve(memberData);
-                });
+                            resolve(memberData);
+                        });
                     });
-            }
+                }
             }
             
             return memberData;
