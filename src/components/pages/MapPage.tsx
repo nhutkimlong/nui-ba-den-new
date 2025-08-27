@@ -790,7 +790,7 @@ const RouteDisplay = ({ route, isVisible, onClose, currentLang, poiData }: {
       if (isCoaster) {
         instructions.push({
           type: 'coaster',
-          text: `Đi Máng trượt từ ${getPoiName(currentPOI, currentLang)} xuống ${getPoiName(nextPOI, currentLang)}`,
+          text: `Đi Máng trượt từ ${getPoiName(currentPOI, currentLang)} xu��ng ${getPoiName(nextPOI, currentLang)}`,
           distance: 0,
           duration: 15,
           routeName: 'Máng trượt'
@@ -1179,7 +1179,7 @@ const MapPage = () => {
 
     try {
       // Check if this is a descent route from Chua Ba to Chan Nui
-      if (startPoint.area === 'Chùa Bà' && endPoint.area === 'Chân núi') {
+      if (startPoint.area === 'Ch��a Bà' && endPoint.area === 'Chân núi') {
         console.log('DEBUG: Found descent route from Chua Ba to Chan Nui')
         console.log('DEBUG: Operating hours data:', operatingHours)
         const descentOptions = checkDescentOptionsFromChuaBa(operatingHours)
@@ -1542,14 +1542,14 @@ const MapPage = () => {
 
       {/* Route Inputs */}
       <div className={cn(
-        "p-2 sm:p-3 bg-white border-b border-gray-200 shadow-md",
+        "p-4 bg-white border-b border-gray-200 shadow-md",
         !isRouteInputsVisible && "hidden"
       )} onClick={(e) => e.stopPropagation()}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+        <div className="space-y-3">
           <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Điểm bắt đầu" 
+            <input
+              type="text"
+              placeholder="Điểm bắt đầu"
               value={startPointText}
               onChange={handleStartPointChange}
               onFocus={() => {
@@ -1560,18 +1560,20 @@ const MapPage = () => {
               onBlur={() => {
                 setTimeout(() => setShowStartSuggestions(false), 200)
               }}
-              className="w-full p-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700 placeholder-gray-400"
+              className="w-full p-4 border border-gray-300 rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation"
             />
             {showStartSuggestions && startSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto mt-2">
                 {startSuggestions.map((poi) => (
                   <div
                     key={poi.id}
-                    className="p-2 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                    className="p-4 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0 first:rounded-t-2xl last:rounded-b-2xl touch-manipulation"
                     onClick={() => handleStartSuggestionClick(poi)}
                   >
-                    <div className="flex items-center gap-2">
-                      <FontAwesomeIcon icon={getCategoryIcon(poi.category)} className="text-sm" />
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                        <FontAwesomeIcon icon={getCategoryIcon(poi.category)} className="text-primary-600 text-sm" />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-900 text-sm truncate">
                           {poi.displayName}
@@ -1587,9 +1589,9 @@ const MapPage = () => {
             )}
           </div>
           <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Điểm kết thúc" 
+            <input
+              type="text"
+              placeholder="Điểm kết thúc"
               value={endPointText}
               onChange={handleEndPointChange}
               onFocus={() => {
@@ -1600,18 +1602,20 @@ const MapPage = () => {
               onBlur={() => {
                 setTimeout(() => setShowEndSuggestions(false), 200)
               }}
-              className="w-full p-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700 placeholder-gray-400"
+              className="w-full p-4 border border-gray-300 rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation"
             />
             {showEndSuggestions && endSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto mt-2">
                 {endSuggestions.map((poi) => (
                   <div
                     key={poi.id}
-                    className="p-2 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                    className="p-4 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0 first:rounded-t-2xl last:rounded-b-2xl touch-manipulation"
                     onClick={() => handleEndSuggestionClick(poi)}
                   >
-                    <div className="flex items-center gap-2">
-                      <FontAwesomeIcon icon={getCategoryIcon(poi.category)} className="text-sm" />
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                        <FontAwesomeIcon icon={getCategoryIcon(poi.category)} className="text-primary-600 text-sm" />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-900 text-sm truncate">
                           {poi.displayName}
@@ -1627,20 +1631,20 @@ const MapPage = () => {
             )}
           </div>
         </div>
-        <div className="flex items-center justify-between mt-2">
-          <button 
+        <div className="flex items-center gap-3 mt-4">
+          <button
             onClick={handleFindRoute}
             disabled={routeLoading}
-            className="flex-1 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-md text-sm transition duration-150 flex items-center justify-center"
+            className="flex-1 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-2xl text-base transition duration-150 flex items-center justify-center min-h-[48px] touch-manipulation shadow-md"
           >
             {routeLoading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                 Đang tìm...
               </>
             ) : (
               <>
-                <Route className="w-4 h-4 mr-1.5" />
+                <Route className="w-5 h-5 mr-2" />
                 Tìm đường
               </>
             )}
