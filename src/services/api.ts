@@ -28,7 +28,7 @@ export interface Activity {
 
 // Utility function for API calls
 async function apiCall<T>(
-  endpoint: string, 
+  endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   try {
@@ -42,8 +42,36 @@ async function apiCall<T>(
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      // Check if response is HTML (error page) or JSON
+      const contentType = response.headers.get('content-type') || '';
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+
+      if (contentType.includes('application/json')) {
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // Failed to parse JSON, use status text
+        }
+      } else {
+        // Likely HTML error page from Netlify
+        const errorText = await response.text();
+        if (errorText.includes('<!doctype') || errorText.includes('<html')) {
+          errorMessage = `Service unavailable (${response.status}). The API endpoint may not be deployed.`;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const responseText = await response.text();
+      if (responseText.includes('<!doctype') || responseText.includes('<html')) {
+        throw new Error('Service returned HTML instead of JSON. The API endpoint may not be deployed correctly.');
+      }
+      throw new Error('Invalid response format. Expected JSON.');
     }
 
     const data = await response.json();
@@ -97,14 +125,46 @@ export const authApi = {
   },
 };
 
-// Data API for JSON files
+// Fallback data loading from static files
+async function loadStaticFile<T>(fileName: string): Promise<ApiResponse<T>> {
+  try {
+    const response = await fetch(`/data/${fileName}`);
+
+    if (!response.ok) {
+      throw new Error(`Static file ${fileName} not found (${response.status})`);
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    console.error(`Failed to load static file ${fileName}:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to load static file',
+    };
+  }
+}
+
+// Data API for JSON files with fallback
 export const dataApi = {
-  // Get JSON file data
+  // Get JSON file data with fallback
   async getFile(fileName: string): Promise<ApiResponse<any>> {
-    return apiCall(`/data-blobs?file=${encodeURIComponent(fileName)}`);
+    // Try API first
+    const apiResult = await apiCall(`/data-blobs?file=${encodeURIComponent(fileName)}`);
+
+    if (apiResult.success) {
+      return apiResult;
+    }
+
+    // Fallback to static file
+    console.warn(`API failed for ${fileName}, falling back to static file`);
+    return loadStaticFile(fileName);
   },
 
-  // Save JSON file data
+  // Save JSON file data (only via API)
   async saveFile(fileName: string, data: any): Promise<ApiResponse<{ message: string }>> {
     return apiCall(`/data-blobs?file=${encodeURIComponent(fileName)}`, {
       method: 'POST',

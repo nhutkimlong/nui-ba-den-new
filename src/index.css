@@ -159,20 +159,21 @@
 
   /* Map Styles */
   .map-container {
-    @apply flex flex-col w-full max-w-7xl mx-auto bg-white h-full;
+    @apply flex flex-col w-full max-w-7xl mx-auto bg-white h-full overflow-hidden;
   }
 
   .map-container .leaflet-container {
     height: 100% !important;
     width: 100% !important;
+    touch-action: pan-x pan-y;
   }
 
   .top-bar {
-    @apply bg-white border-b border-gray-200 p-2 sm:p-3 md:p-4 shadow-sm;
+    @apply bg-white border-b border-gray-200 p-3 sm:p-3 md:p-4 shadow-sm z-10 relative;
   }
 
   .search-bar {
-    @apply relative flex items-center bg-gray-100 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 mb-2 sm:mb-3 transition-all duration-200;
+    @apply relative flex items-center bg-gray-100 rounded-2xl px-4 py-3 mb-3 transition-all duration-200 min-h-[48px];
   }
 
   .search-bar:focus-within {
@@ -180,7 +181,7 @@
   }
 
   .search-bar input[type="text"] {
-    @apply flex-grow border-none outline-none bg-transparent text-sm sm:text-base text-gray-700 placeholder-gray-500;
+    @apply flex-grow border-none outline-none bg-transparent text-base text-gray-700 placeholder-gray-500 min-h-[24px];
   }
 
   .filter-categories-wrapper {
@@ -188,16 +189,18 @@
   }
 
   .filter-categories {
-    @apply flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 w-full scrollbar-hide;
+    @apply flex gap-2 overflow-x-auto pb-2 w-full scrollbar-hide;
     scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
   }
 
   .filter-categories button {
-    @apply flex items-center px-2.5 py-1.5 text-xs sm:text-sm rounded-full transition-colors duration-200 whitespace-nowrap bg-gray-200 hover:bg-gray-300;
+    @apply flex items-center px-4 py-2 text-sm rounded-full transition-colors duration-200 whitespace-nowrap bg-gray-200 hover:bg-gray-300 touch-manipulation min-h-[40px];
+    scroll-snap-align: start;
   }
 
   .filter-categories button.active {
-    @apply bg-primary-500 text-white;
+    @apply bg-primary-500 text-white shadow-md;
   }
 
   .map-area {
@@ -268,15 +271,19 @@
   }
 
   .floating-action-buttons {
-    @apply absolute bottom-4 right-4 z-[1000] flex flex-col gap-3 md:hidden;
+    @apply absolute bottom-6 right-4 z-[1000] flex flex-col gap-3 md:hidden;
   }
 
   .fab {
-    @apply w-12 h-12 flex items-center justify-center bg-white border-none rounded-full shadow-lg cursor-pointer transition-all duration-200;
+    @apply w-14 h-14 flex items-center justify-center bg-white border-none rounded-full shadow-lg cursor-pointer transition-all duration-200 touch-manipulation;
   }
 
   .fab:hover {
     @apply transform -translate-y-0.5 shadow-xl;
+  }
+
+  .fab:active {
+    @apply transform scale-95;
   }
 
   .custom-popup {
@@ -351,11 +358,16 @@
 
   /* Route instructions panel */
   .route-instructions-panel {
-    @apply absolute bottom-0 left-0 right-0 md:left-0 md:top-0 md:bottom-auto md:right-auto md:w-80 lg:w-96 bg-white shadow-2xl rounded-t-2xl md:rounded-none md:rounded-r-2xl p-0 z-[1001] max-h-[70vh] md:max-h-[calc(100%-2rem)] overflow-hidden transform translate-y-full md:-translate-x-full transition-all duration-300 ease-out;
+    @apply absolute bottom-0 left-0 right-0 md:left-0 md:top-0 md:bottom-auto md:right-auto md:w-80 lg:w-96 bg-white shadow-2xl rounded-t-3xl md:rounded-none md:rounded-r-2xl p-0 z-[1001] max-h-[75vh] md:max-h-[calc(100%-2rem)] overflow-hidden transform translate-y-full md:-translate-x-full transition-all duration-300 ease-out;
   }
 
   .route-instructions-panel.visible {
     @apply translate-y-0 md:translate-x-0;
+  }
+
+  .route-instructions-panel::before {
+    content: '';
+    @apply absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-gray-300 rounded-full md:hidden;
   }
 
   .route-step {
@@ -368,11 +380,16 @@
 
   /* POI Info Panel */
   .poi-panel {
-    @apply absolute bottom-0 left-0 right-0 md:left-0 md:top-0 md:bottom-auto md:right-auto md:w-80 lg:w-96 bg-white shadow-2xl rounded-t-2xl md:rounded-none md:rounded-r-2xl p-0 z-[1001] max-h-[70vh] md:max-h-[calc(100%-2rem)] overflow-hidden transform translate-y-full md:-translate-x-full transition-all duration-300 ease-out;
+    @apply absolute bottom-0 left-0 right-0 md:left-0 md:top-0 md:bottom-auto md:right-auto md:w-80 lg:w-96 bg-white shadow-2xl rounded-t-3xl md:rounded-none md:rounded-r-2xl p-0 z-[1001] max-h-[75vh] md:max-h-[calc(100%-2rem)] overflow-hidden transform translate-y-full md:-translate-x-full transition-all duration-300 ease-out;
   }
 
   .poi-panel.visible {
     @apply translate-y-0 md:translate-x-0;
+  }
+
+  .poi-panel::before {
+    content: '';
+    @apply absolute top-2 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-gray-300 rounded-full md:hidden;
   }
 
   .poi-info-card {
@@ -433,46 +450,66 @@
     @apply flex flex-col items-center gap-4 text-red-600 text-center p-4;
   }
 
-  /* Responsive adjustments */
+  /* Mobile optimizations */
   @media (max-width: 768px) {
     .map-container {
-      @apply max-w-none;
+      @apply max-w-none h-screen;
     }
 
     .top-bar {
-      @apply p-2;
+      @apply p-3 flex-shrink-0;
     }
 
     .search-bar {
-      @apply px-3 py-1.5 mb-2;
+      @apply px-4 py-3 mb-3 rounded-2xl;
     }
 
     .filter-categories {
-      @apply gap-1 pb-1;
+      @apply gap-2 pb-2;
     }
 
     .filter-categories button {
-      @apply px-2 py-1 text-xs;
+      @apply px-4 py-2 text-sm min-h-[40px];
     }
 
     .floating-action-buttons {
-      @apply gap-2;
+      @apply gap-3 bottom-6;
     }
 
     .fab {
-      @apply w-10 h-10;
+      @apply w-14 h-14;
     }
 
     .custom-popup {
-      @apply w-[95vw] p-3;
+      @apply w-[95vw] p-4 rounded-2xl;
     }
 
     .poi-panel {
-      @apply rounded-t-xl;
+      @apply rounded-t-3xl;
     }
 
     .route-instructions-panel {
-      @apply rounded-t-xl;
+      @apply rounded-t-3xl;
+    }
+
+    .map-area {
+      @apply flex-1;
+      min-height: calc(100vh - 200px);
+    }
+
+    /* Touch-friendly interactions */
+    button {
+      @apply touch-manipulation;
+    }
+
+    input {
+      @apply touch-manipulation;
+    }
+
+    /* Improve scrolling on mobile */
+    .poi-panel,
+    .route-instructions-panel {
+      -webkit-overflow-scrolling: touch;
     }
   }
 
@@ -482,19 +519,19 @@
     }
 
     .top-bar {
-      @apply p-4 flex items-center gap-8 min-h-20;
+      @apply p-4 flex items-center gap-8 min-h-20 flex-shrink-0;
     }
 
     .search-bar {
-      @apply max-w-md mx-0 mb-0;
+      @apply max-w-md mx-0 mb-0 min-h-[48px];
     }
 
     .filter-categories {
-      @apply px-9;
+      @apply px-0;
     }
 
     .filter-categories button {
-      @apply px-3 py-2 text-sm;
+      @apply px-4 py-2 text-sm min-h-[40px];
     }
 
     .zoom-controls-desktop {
@@ -503,6 +540,11 @@
 
     .map-controls-container {
       @apply top-6 right-6 gap-3;
+    }
+
+    .map-area {
+      @apply flex-1;
+      height: calc(100vh - 120px);
     }
   }
 }

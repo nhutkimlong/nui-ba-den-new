@@ -790,7 +790,7 @@ const RouteDisplay = ({ route, isVisible, onClose, currentLang, poiData }: {
       if (isCoaster) {
         instructions.push({
           type: 'coaster',
-          text: `Đi Máng trượt từ ${getPoiName(currentPOI, currentLang)} xuống ${getPoiName(nextPOI, currentLang)}`,
+          text: `Đi Máng trượt từ ${getPoiName(currentPOI, currentLang)} xu��ng ${getPoiName(nextPOI, currentLang)}`,
           distance: 0,
           duration: 15,
           routeName: 'Máng trượt'
@@ -1173,13 +1173,14 @@ const MapPage = () => {
   // Handle find route with operating hours check
   const handleFindRoute = async () => {
     if (!startPoint || !endPoint) {
-      // Error will be handled by the hook
+      // Show user-friendly error message
+      alert('Vui lòng chọn điểm bắt đầu và điểm kết thúc')
       return
     }
 
     try {
       // Check if this is a descent route from Chua Ba to Chan Nui
-      if (startPoint.area === 'Chùa Bà' && endPoint.area === 'Chân núi') {
+      if (startPoint.area === 'Ch��a Bà' && endPoint.area === 'Chân núi') {
         console.log('DEBUG: Found descent route from Chua Ba to Chan Nui')
         console.log('DEBUG: Operating hours data:', operatingHours)
         const descentOptions = checkDescentOptionsFromChuaBa(operatingHours)
@@ -1201,16 +1202,20 @@ const MapPage = () => {
           startName: getPoiName(startPoint, currentLang),
           endName: getPoiName(endPoint, currentLang)
         }
-        
+
         // Update the current route in the hook
         setCurrentRoute(enhancedRoute)
         setIsRoutePanelVisible(true)
         toggleRouteInputs() // Hide route inputs after finding route
+      } else {
+        // Show user-friendly error message when no route found
+        alert('Không tìm thấy đường đi giữa hai điểm này. Vui lòng thử lại với các điểm khác.')
       }
-      
+
     } catch (error) {
       console.error('Error finding route:', error)
-      // Error will be handled by the hook
+      // Show user-friendly error message
+      alert('Có lỗi xảy ra khi tìm đường. Vui lòng thử lại sau.')
     }
   }
 
@@ -1411,10 +1416,16 @@ const MapPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải bản đồ...</p>
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="text-center bg-white rounded-2xl p-8 shadow-lg max-w-sm w-full">
+          <div className="w-16 h-16 mx-auto mb-6 relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-primary-500"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-8 h-8 bg-primary-500 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Đang tải bản đồ</h3>
+          <p className="text-gray-600 text-sm">Vui lòng đợi trong giây lát...</p>
         </div>
       </div>
     )
@@ -1422,12 +1433,23 @@ const MapPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Lỗi tải dữ liệu: {error}</p>
-          <button 
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="text-center bg-white rounded-2xl p-8 shadow-lg max-w-sm w-full">
+          <div className="w-16 h-16 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Không thể tải dữ liệu</h3>
+          <p className="text-gray-600 text-sm mb-6">
+            {error.includes('Service unavailable') || error.includes('HTML instead of JSON')
+              ? 'Dịch vụ tạm thời không khả dụng. Đang sử dụng dữ liệu cục bộ.'
+              : `Lỗi: ${error}`
+            }
+          </p>
+          <button
             onClick={() => window.location.reload()}
-            className="bg-primary-500 hover:bg-primary-600 text-white px-4 py-2 rounded-md"
+            className="w-full bg-primary-500 hover:bg-primary-600 text-white font-semibold py-3 px-6 rounded-2xl transition duration-200 shadow-md touch-manipulation"
           >
             Thử lại
           </button>
@@ -1542,14 +1564,14 @@ const MapPage = () => {
 
       {/* Route Inputs */}
       <div className={cn(
-        "p-2 sm:p-3 bg-white border-b border-gray-200 shadow-md",
+        "p-4 bg-white border-b border-gray-200 shadow-md",
         !isRouteInputsVisible && "hidden"
       )} onClick={(e) => e.stopPropagation()}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
+        <div className="space-y-3">
           <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Điểm bắt đầu" 
+            <input
+              type="text"
+              placeholder="Điểm bắt đầu"
               value={startPointText}
               onChange={handleStartPointChange}
               onFocus={() => {
@@ -1560,18 +1582,20 @@ const MapPage = () => {
               onBlur={() => {
                 setTimeout(() => setShowStartSuggestions(false), 200)
               }}
-              className="w-full p-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700 placeholder-gray-400"
+              className="w-full p-4 border border-gray-300 rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation"
             />
             {showStartSuggestions && startSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto mt-2">
                 {startSuggestions.map((poi) => (
                   <div
                     key={poi.id}
-                    className="p-2 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                    className="p-4 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0 first:rounded-t-2xl last:rounded-b-2xl touch-manipulation"
                     onClick={() => handleStartSuggestionClick(poi)}
                   >
-                    <div className="flex items-center gap-2">
-                      <FontAwesomeIcon icon={getCategoryIcon(poi.category)} className="text-sm" />
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                        <FontAwesomeIcon icon={getCategoryIcon(poi.category)} className="text-primary-600 text-sm" />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-900 text-sm truncate">
                           {poi.displayName}
@@ -1587,9 +1611,9 @@ const MapPage = () => {
             )}
           </div>
           <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Điểm kết thúc" 
+            <input
+              type="text"
+              placeholder="Điểm kết thúc"
               value={endPointText}
               onChange={handleEndPointChange}
               onFocus={() => {
@@ -1600,18 +1624,20 @@ const MapPage = () => {
               onBlur={() => {
                 setTimeout(() => setShowEndSuggestions(false), 200)
               }}
-              className="w-full p-2 border border-gray-300 rounded-md text-sm bg-white text-gray-700 placeholder-gray-400"
+              className="w-full p-4 border border-gray-300 rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation"
             />
             {showEndSuggestions && endSuggestions.length > 0 && (
-              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto mt-1">
+              <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto mt-2">
                 {endSuggestions.map((poi) => (
                   <div
                     key={poi.id}
-                    className="p-2 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                    className="p-4 cursor-pointer hover:bg-gray-100 border-b border-gray-100 last:border-b-0 first:rounded-t-2xl last:rounded-b-2xl touch-manipulation"
                     onClick={() => handleEndSuggestionClick(poi)}
                   >
-                    <div className="flex items-center gap-2">
-                      <FontAwesomeIcon icon={getCategoryIcon(poi.category)} className="text-sm" />
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
+                        <FontAwesomeIcon icon={getCategoryIcon(poi.category)} className="text-primary-600 text-sm" />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-gray-900 text-sm truncate">
                           {poi.displayName}
@@ -1627,20 +1653,20 @@ const MapPage = () => {
             )}
           </div>
         </div>
-        <div className="flex items-center justify-between mt-2">
-          <button 
+        <div className="flex items-center gap-3 mt-4">
+          <button
             onClick={handleFindRoute}
             disabled={routeLoading}
-            className="flex-1 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-md text-sm transition duration-150 flex items-center justify-center"
+            className="flex-1 bg-primary-500 hover:bg-primary-600 disabled:bg-gray-400 text-white font-semibold py-4 px-6 rounded-2xl text-base transition duration-150 flex items-center justify-center min-h-[48px] touch-manipulation shadow-md"
           >
             {routeLoading ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                 Đang tìm...
               </>
             ) : (
               <>
-                <Route className="w-4 h-4 mr-1.5" />
+                <Route className="w-5 h-5 mr-2" />
                 Tìm đường
               </>
             )}
