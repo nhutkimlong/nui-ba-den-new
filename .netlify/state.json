@@ -1,20 +1,20 @@
 {
 	"geolocation": {
 		"data": {
-			"city": "Vũng Tàu",
+			"city": "Ho Chi Minh City",
 			"country": {
 				"code": "VN",
 				"name": "Vietnam"
 			},
 			"subdivision": {
-				"code": "43",
-				"name": "Bà Rịa–Vũng Tàu Province"
+				"code": "SG",
+				"name": "Ho Chi Minh"
 			},
 			"timezone": "Asia/Ho_Chi_Minh",
-			"latitude": 10.3444,
-			"longitude": 107.0875,
-			"postalCode": "790000"
+			"latitude": 10.822,
+			"longitude": 106.6257,
+			"postalCode": "700000"
 		},
-		"timestamp": 1753953764462
+		"timestamp": 1756269728121
 	}
 }

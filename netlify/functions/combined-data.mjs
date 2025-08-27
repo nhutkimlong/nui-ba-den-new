@@ -15,10 +15,42 @@ export default async (request, context) => {
     return new Response(null, { status: 200, headers });
   }
 
-  const notificationsStore = getStore('climb-notifications');
-  const gpsStore = getStore('climb-gps-settings');
-  
-  try {
+    try {
+    let notificationsStore, gpsStore;
+    
+    try {
+      notificationsStore = getStore('climb-notifications');
+      gpsStore = getStore('climb-gps-settings');
+    } catch (blobError) {
+      console.warn('Netlify Blobs not available, using fallback data:', blobError.message);
+      // Fallback for local development
+      if (method === 'GET') {
+        const defaultGpsSettings = {
+          registrationRadius: 50,
+          certificateRadius: 150,
+          requireGpsRegistration: true,
+          requireGpsCertificate: true,
+          registrationTimeEnabled: false,
+          registrationStartTime: '06:00',
+          registrationEndTime: '18:00'
+        };
+        
+        const result = {
+          notifications: {
+            data: [],
+            lastModified: Date.now()
+          },
+          gpsSettings: {
+            data: defaultGpsSettings,
+            lastModified: Date.now()
+          }
+        };
+        
+        return Response.json(result, { headers });
+      }
+      throw new Error('Netlify Blobs not available and no fallback for POST requests');
+    }
+    
     if (method === 'GET') {
       // Get notifications and GPS settings
       const [notifications, notificationsLastModified] = await Promise.all([

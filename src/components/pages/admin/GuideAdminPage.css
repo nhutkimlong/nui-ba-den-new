@@ -1,0 +1,14 @@
+body { font-family: 'Inter', sans-serif; min-height: 100vh; background-color: #f8fafc; }
+.modal { display: none; }
+.modal.active { display: flex; align-items: center; justify-content: center; }
+.modal-content { max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; transform: scale(0.95); opacity: 0; transition: all 0.3s ease-out; }
+.modal.active .modal-content { transform: scale(1); opacity: 1; }
+#formFieldsContainer { overflow-y: auto; flex-grow: 1; padding: 0.25rem; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+#loading-indicator i { color: #2563eb; }
+.guide-content { height: 100%; padding: 1.5rem; overflow-y: auto; background-color: #ffffff; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
