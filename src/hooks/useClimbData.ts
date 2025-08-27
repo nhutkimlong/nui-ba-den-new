@@ -65,17 +65,25 @@ export const useClimbData = () => {
       
     } catch (error) {
       console.error('Error loading combined data:', error);
-      setError('Không thể tải dữ liệu từ máy chủ');
-      
-      // Fallback to localStorage
+
+      // Fallback to localStorage first
       const storedSettings = localStorage.getItem('gpsSettings');
-      if (storedSettings) {
-        setGpsSettings(JSON.parse(storedSettings));
-      }
-      
       const storedNotifications = localStorage.getItem('climbNotifications');
-      if (storedNotifications) {
-        setNotifications(JSON.parse(storedNotifications));
+
+      if (storedSettings || storedNotifications) {
+        // We have some cached data, use it
+        if (storedSettings) {
+          setGpsSettings(JSON.parse(storedSettings));
+        }
+        if (storedNotifications) {
+          setNotifications(JSON.parse(storedNotifications));
+        }
+        setError(null); // Clear error since we have cached data
+      } else {
+        // No cached data, use defaults but don't show error
+        setGpsSettings(DEFAULT_GPS_SETTINGS);
+        setNotifications([]);
+        setError(null); // Don't show error for first time users
       }
     } finally {
       setLoading(false);
