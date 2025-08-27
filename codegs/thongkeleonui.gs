@@ -78,8 +78,30 @@
       return indices;
     }
 
+    // ----- CORS PREFLIGHT HANDLER -----
+    function doOptions(e) {
+      Logger.log("--- Handling OPTIONS request (CORS Preflight) ---");
+      try {
+        return ContentService.createTextOutput()
+          .setMimeType(ContentService.MimeType.TEXT)
+          .setHeader('Access-Control-Allow-Origin', '*')
+          .setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+          .setHeader('Access-Control-Allow-Headers', 'Content-Type')
+          .setHeader('Access-Control-Max-Age', '86400');
+      } catch (error) {
+        Logger.log(`!!! ERROR handling OPTIONS request: ${error} !!!`);
+        return ContentService.createTextOutput("Error handling OPTIONS request")
+          .setMimeType(ContentService.MimeType.TEXT)
+          .setHeader('Access-Control-Allow-Origin', '*')
+          .setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+          .setHeader('Access-Control-Allow-Headers', 'Content-Type')
+          .setHeader('Access-Control-Max-Age', '86400');
+      }
+    }
+
     // --- Main Function ---
     function doGet(e) {
+      Logger.log(`doGet called with action: ${e.parameter.action}, parameters: ${JSON.stringify(e.parameter)}`);
       let action = e.parameter.action;
       let responseData = {};
 
@@ -88,6 +110,8 @@
         let resultData = null;
 
         switch (action) {
+          case 'testCORS':
+            return testCORS();
           case 'getAllDashboardData':
             resultData = handleGetAllDashboardData(data);
             break;
@@ -135,8 +159,8 @@
         };
       }
 
-      return ContentService.createTextOutput(JSON.stringify(responseData))
-                          .setMimeType(ContentService.MimeType.JSON);
+      Logger.log(`doGet returning response: ${JSON.stringify(responseData)}`);
+      return createJsonResponse(responseData);
     }
 
     // --- POST Handler for Manual Certificate Generation ---
@@ -178,6 +202,17 @@
       testCases.forEach(testCase => {
         const parsed = parseDateCell(testCase);
         console.log(`${testCase} -> ${parsed ? parsed.toISOString() : 'INVALID'}`);
+      });
+    }
+
+    // Test CORS function
+    function testCORS() {
+      Logger.log('testCORS function called');
+      return createJsonResponse({
+        success: true,
+        message: 'CORS test successful',
+        timestamp: new Date().toISOString(),
+        headers: 'CORS headers should be present'
       });
     }
 
@@ -772,6 +807,7 @@
       Logger.log(`handleGetMembersByPhone for phone: ${phoneNumber}`);
       try {
         if (!phoneNumber || !/^[0-9]{10,11}$/.test(phoneNumber)) {
+          Logger.log(`Invalid phone number format: ${phoneNumber}`);
           return { success: false, message: 'SĐT không hợp lệ.' };
         }
         
@@ -810,9 +846,11 @@
         }
         
         if (!found) {
+          Logger.log(`No registration found for phone: ${phoneNumber}`);
           return { success: false, message: `Không tìm thấy đăng ký cho SĐT ${phoneNumber}.` };
         }
         
+        Logger.log(`Returning ${members.length} members for phone: ${phoneNumber}`);
         return { success: true, data: { members: members } };
       } catch (error) {
         Logger.log(`!!! ERROR in handleGetMembersByPhone: ${error}`);
@@ -1175,7 +1213,12 @@
 
     // Create JSON response
     function createJsonResponse(data) { 
-      return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON); 
+      return ContentService.createTextOutput(JSON.stringify(data))
+        .setMimeType(ContentService.MimeType.JSON)
+        .setHeader('Access-Control-Allow-Origin', '*')
+        .setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+        .setHeader('Access-Control-Allow-Headers', 'Content-Type')
+        .setHeader('Access-Control-Max-Age', '86400'); 
     }
 
     // Escape HTML
