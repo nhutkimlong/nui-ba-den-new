@@ -175,6 +175,9 @@ function setupEventListeners() {
     
     // Manual Certificate Generation
     initializeManualCertificateForm();
+    
+    // Member Management
+    initializeMemberManagementForm();
 }
 
 // Load initial data
@@ -1819,6 +1822,41 @@ function initializeManualCertificateForm() {
     }
 }
 
+// Initialize member management form
+function initializeMemberManagementForm() {
+    const searchBtn = document.getElementById('searchMemberBtn');
+    const addNewMemberBtn = document.getElementById('addNewMemberBtn');
+    const saveChangesBtn = document.getElementById('saveMemberChangesBtn');
+    const resetChangesBtn = document.getElementById('resetMemberChangesBtn');
+    
+    if (searchBtn) {
+        searchBtn.addEventListener('click', searchMemberRegistration);
+    }
+    
+    if (addNewMemberBtn) {
+        addNewMemberBtn.addEventListener('click', addNewMemberToList);
+    }
+    
+    if (saveChangesBtn) {
+        saveChangesBtn.addEventListener('click', saveMemberChanges);
+    }
+    
+    if (resetChangesBtn) {
+        resetChangesBtn.addEventListener('click', resetMemberChanges);
+    }
+    
+    // Add event listener for phone number input to auto-search on Enter
+    const phoneInput = document.getElementById('memberSearchPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchMemberRegistration();
+            }
+        });
+    }
+}
+
 // Add new member to manual certificate form
 function addManualMember() {
     const memberList = document.getElementById('manualMemberList');
@@ -1866,14 +1904,30 @@ function updateManualPhotoUploads() {
         const memberName = item.querySelector('.member-name').value || `Thành viên ${index + 1}`;
         
         const photoItem = document.createElement('div');
-        photoItem.className = 'photo-upload-item flex items-center space-x-3 p-3 border border-slate-200 rounded-lg';
+        photoItem.className = 'photo-upload-item flex flex-col space-y-3 p-3 border border-slate-200 rounded-lg';
         photoItem.innerHTML = `
-            <input type="text" class="photo-name flex-1 px-3 py-2 border border-slate-300 rounded-lg" value="${memberName}" readonly>
-            <input type="file" class="photo-file" accept="image/*" style="display: none;">
-            <button type="button" class="select-photo bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm">
-                <i class="fas fa-image mr-1"></i>Chọn ảnh
-            </button>
-            <span class="photo-status text-sm text-gray-500">Chưa chọn ảnh</span>
+            <div class="flex items-center space-x-3">
+                <input type="text" class="photo-name flex-1 px-3 py-2 border border-slate-300 rounded-lg" value="${memberName}" readonly>
+                <input type="file" class="photo-file" accept="image/*" style="display: none;">
+                <button type="button" class="select-photo bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm">
+                    <i class="fas fa-image mr-1"></i>Chọn ảnh
+                </button>
+                <span class="photo-status text-sm text-gray-500">Chưa chọn ảnh</span>
+            </div>
+            <div class="photo-preview-container hidden">
+                <div class="relative">
+                    <img class="photo-preview max-w-full h-32 object-cover rounded-lg border" src="" alt="Preview">
+                    <div class="absolute top-2 right-2 flex space-x-1">
+                        <button type="button" class="crop-photo bg-yellow-500 hover:bg-yellow-600 text-white p-1 rounded text-xs">
+                            <i class="fas fa-crop-alt"></i>
+                        </button>
+                        <button type="button" class="remove-photo bg-red-500 hover:bg-red-600 text-white p-1 rounded text-xs">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="photo-info text-xs text-gray-500 mt-1"></div>
+            </div>
         `;
         
         photoUploads.appendChild(photoItem);
@@ -1882,15 +1936,268 @@ function updateManualPhotoUploads() {
         const selectBtn = photoItem.querySelector('.select-photo');
         const fileInput = photoItem.querySelector('.photo-file');
         const status = photoItem.querySelector('.photo-status');
+        const previewContainer = photoItem.querySelector('.photo-preview-container');
+        const preview = photoItem.querySelector('.photo-preview');
+        const info = photoItem.querySelector('.photo-info');
+        const cropBtn = photoItem.querySelector('.crop-photo');
+        const removeBtn = photoItem.querySelector('.remove-photo');
         
         selectBtn.addEventListener('click', () => fileInput.click());
+        
         fileInput.addEventListener('change', (e) => {
             if (e.target.files[0]) {
-                status.textContent = e.target.files[0].name;
-                status.className = 'photo-status text-sm text-green-600';
+                const file = e.target.files[0];
+                
+                // Validate file type and size
+                if (!file.type.startsWith('image/')) {
+                    showMessage('Vui lòng chọn file ảnh hợp lệ', 'error');
+                    return;
+                }
+                
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                if (file.size > maxSize) {
+                    showMessage('Kích thước ảnh không được vượt quá 5MB', 'error');
+                    return;
+                }
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                    status.textContent = file.name;
+                    status.className = 'photo-status text-sm text-green-600';
+                    
+                    // Show file info
+                    const sizeKB = (file.size / 1024).toFixed(1);
+                    info.textContent = `${file.type}, ${sizeKB}KB`;
+                    
+                    // Store original file for cropping
+                    photoItem.setAttribute('data-original-file', e.target.result);
+                };
+                reader.readAsDataURL(file);
             }
         });
+        
+        cropBtn.addEventListener('click', () => {
+            const originalFile = photoItem.getAttribute('data-original-file');
+            if (originalFile) {
+                showImageCropper(originalFile, (croppedImage) => {
+                    preview.src = croppedImage;
+                    photoItem.setAttribute('data-cropped-image', croppedImage);
+                    info.textContent = 'Đã cắt ảnh (400x500px)';
+                    showMessage('Đã cắt ảnh thành công!', 'success');
+                });
+            } else {
+                showMessage('Vui lòng chọn ảnh trước khi cắt', 'warning');
+            }
+        });
+        
+        removeBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            previewContainer.classList.add('hidden');
+            status.textContent = 'Chưa chọn ảnh';
+            status.className = 'photo-status text-sm text-gray-500';
+            photoItem.removeAttribute('data-original-file');
+            photoItem.removeAttribute('data-cropped-image');
+        });
     });
+}
+
+// Image cropper function with improved cropping logic
+function showImageCropper(imageSrc, callback) {
+    // Create modal for image cropping
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold">Cắt ảnh - Chọn vùng ảnh cho chứng chỉ</h3>
+                <button class="close-cropper text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="cropper-container mb-4 relative bg-gray-100 rounded-lg overflow-hidden">
+                <div class="cropper-overlay absolute inset-0 pointer-events-none">
+                    <div class="crop-frame absolute border-2 border-white shadow-lg" style="width: 200px; height: 250px; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                        <div class="absolute -top-6 left-0 text-white text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
+                            Tỷ lệ 4:5 (Khuyến nghị cho chứng chỉ)
+                        </div>
+                    </div>
+                </div>
+                <img id="cropperImage" src="${imageSrc}" class="max-w-full max-h-96 object-contain cursor-move">
+            </div>
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-600">
+                    <p>• Kéo ảnh để điều chỉnh vị trí</p>
+                    <p>• Khung màu trắng là vùng sẽ được cắt</p>
+                </div>
+                <div class="flex space-x-2">
+                    <button class="reset-crop px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded">
+                        <i class="fas fa-undo mr-1"></i>Đặt lại
+                    </button>
+                    <button class="cancel-crop px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded">Hủy</button>
+                    <button class="apply-crop px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                        <i class="fas fa-check mr-1"></i>Áp dụng
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    const cropperImage = modal.querySelector('#cropperImage');
+    const cropFrame = modal.querySelector('.crop-frame');
+    let isDragging = false;
+    let startX, startY, startLeft, startTop;
+    
+    // Initialize image position
+    cropperImage.style.position = 'relative';
+    cropperImage.style.left = '0px';
+    cropperImage.style.top = '0px';
+    cropperImage.style.transition = 'all 0.3s ease';
+    
+    // Mouse events for dragging
+    cropperImage.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        startLeft = parseInt(cropperImage.style.left) || 0;
+        startTop = parseInt(cropperImage.style.top) || 0;
+        cropperImage.style.transition = 'none';
+        cropperImage.style.cursor = 'grabbing';
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+        
+        const newLeft = startLeft + deltaX;
+        const newTop = startTop + deltaY;
+        
+        // Limit movement to keep image visible
+        const containerRect = modal.querySelector('.cropper-container').getBoundingClientRect();
+        const imageRect = cropperImage.getBoundingClientRect();
+        const frameRect = cropFrame.getBoundingClientRect();
+        
+        const maxLeft = frameRect.right - containerRect.left - imageRect.width;
+        const minLeft = frameRect.left - containerRect.left;
+        const maxTop = frameRect.bottom - containerRect.top - imageRect.height;
+        const minTop = frameRect.top - containerRect.top;
+        
+        cropperImage.style.left = Math.max(maxLeft, Math.min(minLeft, newLeft)) + 'px';
+        cropperImage.style.top = Math.max(maxTop, Math.min(minTop, newTop)) + 'px';
+    });
+    
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+        cropperImage.style.transition = 'all 0.3s ease';
+        cropperImage.style.cursor = 'grab';
+    });
+    
+    // Reset crop position
+    const resetBtn = modal.querySelector('.reset-crop');
+    resetBtn.addEventListener('click', () => {
+        cropperImage.style.left = '0px';
+        cropperImage.style.top = '0px';
+    });
+    
+    // Close modal functions
+    const closeBtn = modal.querySelector('.close-cropper');
+    const cancelBtn = modal.querySelector('.cancel-crop');
+    const applyBtn = modal.querySelector('.apply-crop');
+    
+    const closeModal = () => {
+        document.body.removeChild(modal);
+    };
+    
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    
+    applyBtn.addEventListener('click', () => {
+        // Calculate crop coordinates
+        const containerRect = modal.querySelector('.cropper-container').getBoundingClientRect();
+        const imageRect = cropperImage.getBoundingClientRect();
+        const frameRect = cropFrame.getBoundingClientRect();
+        
+        // Calculate relative positions
+        const cropX = (frameRect.left - imageRect.left) / imageRect.width;
+        const cropY = (frameRect.top - imageRect.top) / imageRect.height;
+        const cropWidth = frameRect.width / imageRect.width;
+        const cropHeight = frameRect.height / imageRect.height;
+        
+        // Create canvas for cropping
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = function() {
+            // Set canvas size to crop frame size
+            canvas.width = 400; // Fixed width for certificate
+            canvas.height = 500; // Fixed height for certificate (4:5 ratio)
+            
+            // Calculate source coordinates
+            const srcX = cropX * img.width;
+            const srcY = cropY * img.height;
+            const srcWidth = cropWidth * img.width;
+            const srcHeight = cropHeight * img.height;
+            
+            // Draw cropped image
+            ctx.drawImage(img, srcX, srcY, srcWidth, srcHeight, 0, 0, canvas.width, canvas.height);
+            
+            // Convert to base64
+            const croppedImageData = canvas.toDataURL('image/jpeg', 0.9);
+            callback(croppedImageData);
+            closeModal();
+        };
+        
+        img.src = imageSrc;
+    });
+    
+    // Close on outside click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    // Prevent image dragging
+    cropperImage.addEventListener('dragstart', (e) => e.preventDefault());
+}
+
+// Optimize image for certificate (resize and compress)
+function optimizeImageForCertificate(imageSrc, callback) {
+    const img = new Image();
+    img.onload = function() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Calculate optimal size (max 400x500 for certificate)
+        const maxWidth = 400;
+        const maxHeight = 500;
+        let { width, height } = img;
+        
+        // Calculate scaling to fit within max dimensions while maintaining aspect ratio
+        const scale = Math.min(maxWidth / width, maxHeight / height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+        
+        // Set canvas size
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw resized image
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to base64 with compression
+        const optimizedImageData = canvas.toDataURL('image/jpeg', 0.85);
+        callback(optimizedImageData);
+    };
+    
+    img.src = imageSrc;
 }
 
 // Reset manual certificate form
@@ -2112,33 +2419,40 @@ async function handleManualCertificateGeneration(e) {
     const selectedMembers = [];
     
     // Process members and photos asynchronously
-    const memberPromises = memberItems.map(async (item, index) => {
+    const memberPromises = Array.from(memberItems).map(async (item, index) => {
         const checkbox = item.querySelector('.member-checkbox');
         const nameInput = item.querySelector('.member-name');
         
         if (checkbox.checked && nameInput.value.trim()) {
             const memberName = nameInput.value.trim();
-            const photoFile = document.querySelector(`#manualPhotoUploads .photo-upload-item:nth-child(${index + 1}) .photo-file`);
+            const photoItem = document.querySelector(`#manualPhotoUploads .photo-upload-item:nth-child(${index + 1})`);
             
             const memberData = {
                 name: memberName,
                 photoData: null
             };
             
-            // Convert photo to base64 if exists
-            if (photoFile && photoFile.files[0]) {
-                const file = photoFile.files[0];
-                return new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        memberData.photoData = e.target.result;
-                        resolve(memberData);
-                    };
-                    reader.readAsDataURL(file);
-                });
-            } else {
-                return memberData;
+            // Get photo data (cropped if available, otherwise original)
+            if (photoItem) {
+                const croppedImage = photoItem.getAttribute('data-cropped-image');
+                const originalFile = photoItem.getAttribute('data-original-file');
+                
+                if (croppedImage) {
+                    // Use cropped image (already optimized)
+                    memberData.photoData = croppedImage;
+                    return memberData;
+                } else if (originalFile) {
+                    // Optimize original image before sending
+                    return new Promise((resolve) => {
+                        optimizeImageForCertificate(originalFile, (optimizedImage) => {
+                            memberData.photoData = optimizedImage;
+                            resolve(memberData);
+                        });
+                    });
+                }
             }
+            
+            return memberData;
         }
         return null;
     });
@@ -2172,7 +2486,8 @@ async function handleManualCertificateGeneration(e) {
                     climbTime: climbTime,
                     duration: duration,
                     notes: notes
-                }
+                },
+                verificationMethod: 'admin' // Thêm để phân biệt với người dùng
             })
         });
         
@@ -2222,6 +2537,404 @@ async function handleManualCertificateGeneration(e) {
         submitBtn.disabled = false;
         spinner.classList.add('hidden');
     }
+}
+
+// ===== MEMBER MANAGEMENT FUNCTIONS =====
+
+// Global variables for member management
+let currentMemberData = null;
+let originalMemberList = [];
+
+// Search for member registration
+async function searchMemberRegistration() {
+    const phoneNumber = document.getElementById('memberSearchPhone').value.trim();
+    
+    if (!phoneNumber) {
+        showMessage('Vui lòng nhập số điện thoại', 'error');
+        return;
+    }
+    
+    // Show loading state
+    showMemberLoadingState(true);
+    hideMemberErrorState();
+    hideMemberRegistrationInfo();
+    hideMemberListSection();
+    
+    try {
+        const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'findRegistrationDetails',
+                phone: phoneNumber
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Lỗi kết nối server');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            currentMemberData = result.data;
+            originalMemberList = JSON.parse(result.data.MemberList || '[]');
+            
+            displayMemberRegistrationInfo(result.data);
+            displayMemberList(originalMemberList);
+            
+            showMemberRegistrationInfo();
+            showMemberListSection();
+        } else {
+            showMemberErrorState(result.message || 'Không tìm thấy đăng ký với số điện thoại này');
+        }
+        
+    } catch (error) {
+        console.error('Error searching member registration:', error);
+        showMemberErrorState('Lỗi khi tìm kiếm: ' + error.message);
+    } finally {
+        showMemberLoadingState(false);
+    }
+}
+
+// Display member registration info
+function displayMemberRegistrationInfo(data) {
+    document.getElementById('memberRegName').value = data.LeaderName || data.Name || '';
+    document.getElementById('memberRegEmail').value = data.Email || '';
+    
+    // Format registration date
+    let regDate = data.Timestamp || data.RegistrationDate || '';
+    if (regDate) {
+        if (regDate instanceof Date) {
+            regDate = regDate.toLocaleDateString('vi-VN');
+        } else if (typeof regDate === 'string') {
+            // Try to parse and format the date
+            const date = new Date(regDate);
+            if (!isNaN(date.getTime())) {
+                regDate = date.toLocaleDateString('vi-VN');
+            }
+        }
+    }
+    document.getElementById('memberRegDate').value = regDate;
+    
+    const memberList = JSON.parse(data.MemberList || '[]');
+    document.getElementById('memberRegCount').value = memberList.length;
+    
+    // Display detailed information
+    document.getElementById('memberRegPhone').textContent = data.PhoneNumber || data.Phone || 'N/A';
+    document.getElementById('memberRegAddress').textContent = data.Address || 'N/A';
+    
+    // Format climb date
+    let climbDate = data.ClimbDate || '';
+    if (climbDate) {
+        if (climbDate instanceof Date) {
+            climbDate = climbDate.toLocaleDateString('vi-VN');
+        } else if (typeof climbDate === 'string') {
+            const date = new Date(climbDate);
+            if (!isNaN(date.getTime())) {
+                climbDate = date.toLocaleDateString('vi-VN');
+            }
+        }
+    }
+    document.getElementById('memberRegClimbDate').textContent = climbDate || 'N/A';
+    
+    document.getElementById('memberRegClimbTime').textContent = data.ClimbTime || 'N/A';
+    document.getElementById('memberRegStatus').textContent = data.Status || 'Đã đăng ký';
+    
+    // Check if certificates exist
+    const certLinks = data.CertificateLinks || '';
+    if (certLinks && certLinks.trim()) {
+        try {
+            const certArray = JSON.parse(certLinks);
+            document.getElementById('memberRegCertificates').textContent = `${certArray.length} chứng chỉ`;
+        } catch (e) {
+            document.getElementById('memberRegCertificates').textContent = 'Có chứng chỉ';
+        }
+    } else {
+        document.getElementById('memberRegCertificates').textContent = 'Chưa có';
+    }
+}
+
+// Display member list
+function displayMemberList(memberList) {
+    const memberListContainer = document.getElementById('memberList');
+    memberListContainer.innerHTML = '';
+    
+    if (memberList.length === 0) {
+        memberListContainer.innerHTML = `
+            <div class="text-center py-4 text-gray-500">
+                <i class="fas fa-users text-2xl mb-2"></i>
+                <p>Chưa có thành viên nào</p>
+            </div>
+        `;
+        updateMemberStats();
+        return;
+    }
+    
+    memberList.forEach((member, index) => {
+        const memberItem = createMemberItem(member, index);
+        memberListContainer.appendChild(memberItem);
+    });
+    
+    updateMemberStats();
+}
+
+// Update member statistics
+function updateMemberStats() {
+    const memberItems = document.querySelectorAll('#memberList .member-item');
+    const totalCount = memberItems.length;
+    
+    // Count new members (those with "Thành viên mới" or empty names)
+    let newCount = 0;
+    memberItems.forEach(item => {
+        const nameInput = item.querySelector('.member-name');
+        const name = nameInput.value.trim();
+        if (name === 'Thành viên mới' || name === '') {
+            newCount++;
+        }
+    });
+    
+    // Calculate deleted count (original - current + new)
+    const deletedCount = Math.max(0, originalMemberList.length - totalCount + newCount);
+    
+    // Update display
+    document.getElementById('memberTotalCount').textContent = totalCount;
+    document.getElementById('memberNewCount').textContent = newCount;
+    document.getElementById('memberDeletedCount').textContent = deletedCount;
+    
+    // Show/hide stats section
+    const statsDiv = document.getElementById('memberStats');
+    if (totalCount > 0 || newCount > 0 || deletedCount > 0) {
+        statsDiv.classList.remove('hidden');
+    } else {
+        statsDiv.classList.add('hidden');
+    }
+}
+
+// Create member item element
+function createMemberItem(member, index) {
+    const memberItem = document.createElement('div');
+    memberItem.className = 'member-item flex items-center space-x-3 p-3 border border-slate-200 rounded-lg bg-white';
+    memberItem.setAttribute('data-index', index);
+    
+    memberItem.innerHTML = `
+        <div class="flex-1">
+            <input type="text" class="member-name w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" value="${member}" placeholder="Họ tên thành viên" required>
+        </div>
+        <button type="button" class="edit-member text-blue-600 hover:text-blue-800 px-2 py-1">
+            <i class="fas fa-edit"></i>
+        </button>
+        <button type="button" class="remove-member text-red-600 hover:text-red-800 px-2 py-1">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    
+    // Add event listeners
+    const editBtn = memberItem.querySelector('.edit-member');
+    const removeBtn = memberItem.querySelector('.remove-member');
+    const nameInput = memberItem.querySelector('.member-name');
+    
+    editBtn.addEventListener('click', () => {
+        nameInput.focus();
+        nameInput.select();
+    });
+    
+    removeBtn.addEventListener('click', () => {
+        if (confirm('Bạn có chắc muốn xóa thành viên này?')) {
+            memberItem.remove();
+            updateMemberIndices();
+            updateMemberStats();
+        }
+    });
+    
+    // Add event listener for name changes
+    nameInput.addEventListener('input', () => {
+        updateMemberStats();
+    });
+    
+    return memberItem;
+}
+
+// Add new member to list
+function addNewMemberToList() {
+    const memberList = document.getElementById('memberList');
+    const newMember = 'Thành viên mới';
+    const newIndex = memberList.children.length;
+    
+    const memberItem = createMemberItem(newMember, newIndex);
+    memberList.appendChild(memberItem);
+    
+    // Focus on the new member's name input
+    const nameInput = memberItem.querySelector('.member-name');
+    nameInput.focus();
+    nameInput.select();
+    
+    updateMemberStats();
+}
+
+// Update member indices after deletion
+function updateMemberIndices() {
+    const memberItems = document.querySelectorAll('#memberList .member-item');
+    memberItems.forEach((item, index) => {
+        item.setAttribute('data-index', index);
+    });
+}
+
+// Save member changes
+async function saveMemberChanges() {
+    if (!currentMemberData) {
+        showMessage('Không có dữ liệu đăng ký để lưu', 'error');
+        return;
+    }
+    
+    // Collect current member list
+    const memberItems = document.querySelectorAll('#memberList .member-item');
+    const currentMemberList = [];
+    
+    memberItems.forEach(item => {
+        const nameInput = item.querySelector('.member-name');
+        const name = nameInput.value.trim();
+        if (name) {
+            currentMemberList.push(name);
+        }
+    });
+    
+    if (currentMemberList.length === 0) {
+        showMessage('Danh sách thành viên không được để trống', 'error');
+        return;
+    }
+    
+    // Check if there are any changes
+    const hasChanges = JSON.stringify(currentMemberList.sort()) !== JSON.stringify(originalMemberList.sort());
+    if (!hasChanges) {
+        showMessage('Không có thay đổi nào để lưu', 'info');
+        return;
+    }
+    
+    // Show loading state
+    const saveBtn = document.getElementById('saveMemberChangesBtn');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang lưu...';
+    
+    try {
+        const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                action: 'updateMemberList',
+                phone: currentMemberData.Phone,
+                memberList: currentMemberList,
+                originalMemberList: originalMemberList
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Lỗi kết nối server');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Update current data
+            currentMemberData.MemberList = JSON.stringify(currentMemberList);
+            originalMemberList = [...currentMemberList];
+            
+            // Update display
+            document.getElementById('memberRegCount').value = currentMemberList.length;
+            
+            // Show success message
+            showMemberSaveResult(result.message, currentMemberList.length);
+            showMessage('Lưu thay đổi thành công!', 'success');
+        } else {
+            showMessage(result.message || 'Có lỗi khi lưu thay đổi', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error saving member changes:', error);
+        showMessage('Lỗi khi lưu thay đổi: ' + error.message, 'error');
+    } finally {
+        // Reset button state
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+    }
+}
+
+// Reset member changes
+function resetMemberChanges() {
+    if (!currentMemberData) {
+        showMessage('Không có dữ liệu để khôi phục', 'error');
+        return;
+    }
+    
+    if (confirm('Bạn có chắc muốn khôi phục danh sách thành viên về trạng thái ban đầu?')) {
+        displayMemberList(originalMemberList);
+        showMessage('Đã khôi phục danh sách thành viên', 'info');
+    }
+}
+
+// Show/hide member loading state
+function showMemberLoadingState(show) {
+    const loadingDiv = document.getElementById('memberLoadingData');
+    if (show) {
+        loadingDiv.classList.remove('hidden');
+    } else {
+        loadingDiv.classList.add('hidden');
+    }
+}
+
+// Show/hide member error state
+function showMemberErrorState(message) {
+    const errorDiv = document.getElementById('memberErrorData');
+    const errorMessage = document.getElementById('memberErrorMessage');
+    errorMessage.textContent = message;
+    errorDiv.classList.remove('hidden');
+}
+
+function hideMemberErrorState() {
+    const errorDiv = document.getElementById('memberErrorData');
+    errorDiv.classList.add('hidden');
+}
+
+// Show/hide member registration info
+function showMemberRegistrationInfo() {
+    const infoDiv = document.getElementById('memberRegistrationInfo');
+    infoDiv.classList.remove('hidden');
+}
+
+function hideMemberRegistrationInfo() {
+    const infoDiv = document.getElementById('memberRegistrationInfo');
+    infoDiv.classList.add('hidden');
+}
+
+// Show/hide member list section
+function showMemberListSection() {
+    const listDiv = document.getElementById('memberListSection');
+    listDiv.classList.remove('hidden');
+}
+
+function hideMemberListSection() {
+    const listDiv = document.getElementById('memberListSection');
+    listDiv.classList.add('hidden');
+}
+
+// Show member save result
+function showMemberSaveResult(message, memberCount) {
+    const resultDiv = document.getElementById('memberSaveResult');
+    const detailsDiv = document.getElementById('memberSaveDetails');
+    
+    detailsDiv.innerHTML = `
+        <p><strong>Thông báo:</strong> ${message}</p>
+        <p><strong>Số thành viên hiện tại:</strong> ${memberCount}</p>
+        <p><strong>Thời gian cập nhật:</strong> ${new Date().toLocaleString('vi-VN')}</p>
+    `;
+    
+    resultDiv.classList.remove('hidden');
+    resultDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
 // Export functions for global access

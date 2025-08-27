@@ -150,6 +150,10 @@
         switch (action) {
           case 'generateCertificatesWithPhotos':
             return handleGenerateCertificatesWithPhotos(requestData);
+          case 'findRegistrationDetails':
+            return handleFindRegistrationDetails(requestData);
+          case 'updateMemberList':
+            return handleUpdateMemberList(requestData);
           default:
             Logger.log(`Invalid action in doPost: ${action}`);
             return createJsonResponse({ success: false, message: 'Hành động POST không hợp lệ.' });
@@ -824,6 +828,9 @@
       const phoneNumber = String(requestData.phone || '').trim();
       const selectedMembers = requestData.members;
       const manualData = requestData.manualData || {};
+      const verificationMethod = requestData.verificationMethod || 'unknown';
+      
+      Logger.log(`Certificate generation request - Method: ${verificationMethod}, Phone: ${phoneNumber}, Members: ${selectedMembers?.length || 0}`);
 
       if (!phoneNumber || !/^[0-9]{10,11}$/.test(phoneNumber)) {
         return createJsonResponse({ success: false, message: 'Số điện thoại không hợp lệ.' });
@@ -1187,4 +1194,185 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+    }
+
+    // ===== MEMBER MANAGEMENT FUNCTIONS =====
+
+    // Find registration details by phone number
+    function handleFindRegistrationDetails(requestData) {
+      try {
+        const phoneNumber = String(requestData.phone || '').trim();
+        
+        if (!phoneNumber) {
+          return createJsonResponse({ 
+            success: false, 
+            message: 'Số điện thoại không được để trống' 
+          });
+        }
+        
+        Logger.log(`Tìm kiếm đăng ký với số điện thoại: ${phoneNumber}`);
+        
+        const sheet = getCachedSheet();
+        const columnIndices = getCachedColumnIndices(sheet);
+        
+        if (!columnIndices) {
+          return createJsonResponse({ 
+            success: false, 
+            message: 'Lỗi cấu hình cột trong Google Sheet' 
+          });
+        }
+        
+        const lastRow = sheet.getLastRow();
+        if (lastRow < 2) {
+          return createJsonResponse({ 
+            success: false, 
+            message: 'Không có dữ liệu đăng ký nào' 
+          });
+        }
+        
+        // Search from the most recent entry (bottom to top)
+        for (let row = lastRow; row >= 2; row--) {
+          const phoneCell = sheet.getRange(row, columnIndices[COL_PHONE_NUMBER]);
+          const phoneValue = String(phoneCell.getValue() || '').trim();
+          
+          if (phoneValue === phoneNumber) {
+            // Found the registration, get all data
+            const rowData = sheet.getRange(row, 1, 1, sheet.getLastColumn()).getValues()[0];
+            const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+            
+            const registrationData = {};
+            headers.forEach((header, index) => {
+              if (header) {
+                registrationData[header] = rowData[index];
+              }
+            });
+            
+            Logger.log(`Tìm thấy đăng ký cho số điện thoại ${phoneNumber} tại dòng ${row}`);
+            
+            return createJsonResponse({
+              success: true,
+              data: registrationData,
+              message: 'Tìm thấy thông tin đăng ký'
+            });
+          }
+        }
+        
+        return createJsonResponse({ 
+          success: false, 
+          message: 'Không tìm thấy đăng ký với số điện thoại này' 
+        });
+        
+      } catch (error) {
+        Logger.log(`Lỗi khi tìm kiếm đăng ký: ${error.message}`);
+        return createJsonResponse({ 
+          success: false, 
+          message: `Lỗi khi tìm kiếm: ${error.message}` 
+        });
+      }
+    }
+
+    // Update member list for a registration
+    function handleUpdateMemberList(requestData) {
+      try {
+        const phoneNumber = String(requestData.phone || '').trim();
+        const memberList = requestData.memberList || [];
+        const originalMemberList = requestData.originalMemberList || [];
+        
+        if (!phoneNumber) {
+          return createJsonResponse({ 
+            success: false, 
+            message: 'Số điện thoại không được để trống' 
+          });
+        }
+        
+        if (!Array.isArray(memberList)) {
+          return createJsonResponse({ 
+            success: false, 
+            message: 'Danh sách thành viên không hợp lệ' 
+          });
+        }
+        
+        Logger.log(`Cập nhật danh sách thành viên cho số điện thoại: ${phoneNumber}`);
+        Logger.log(`Danh sách cũ: ${JSON.stringify(originalMemberList)}`);
+        Logger.log(`Danh sách mới: ${JSON.stringify(memberList)}`);
+        
+        const sheet = getCachedSheet();
+        const columnIndices = getCachedColumnIndices(sheet);
+        
+        if (!columnIndices) {
+          return createJsonResponse({ 
+            success: false, 
+            message: 'Lỗi cấu hình cột trong Google Sheet' 
+          });
+        }
+        
+        const lastRow = sheet.getLastRow();
+        if (lastRow < 2) {
+          return createJsonResponse({ 
+            success: false, 
+            message: 'Không có dữ liệu đăng ký nào' 
+          });
+        }
+        
+        // Search for the registration
+        let foundRow = -1;
+        for (let row = lastRow; row >= 2; row--) {
+          const phoneCell = sheet.getRange(row, columnIndices[COL_PHONE_NUMBER]);
+          const phoneValue = String(phoneCell.getValue() || '').trim();
+          
+          if (phoneValue === phoneNumber) {
+            foundRow = row;
+            break;
+          }
+        }
+        
+        if (foundRow === -1) {
+          return createJsonResponse({ 
+            success: false, 
+            message: 'Không tìm thấy đăng ký với số điện thoại này' 
+          });
+        }
+        
+        // Update the member list
+        const memberListColumn = columnIndices[COL_MEMBER_LIST];
+        if (!memberListColumn) {
+          return createJsonResponse({ 
+            success: false, 
+            message: 'Không tìm thấy cột danh sách thành viên' 
+          });
+        }
+        
+        const memberListString = JSON.stringify(memberList);
+        sheet.getRange(foundRow, memberListColumn).setValue(memberListString);
+        
+        // Update group size if the column exists
+        const groupSizeColumn = columnIndices[COL_GROUP_SIZE];
+        if (groupSizeColumn) {
+          sheet.getRange(foundRow, groupSizeColumn).setValue(memberList.length);
+        }
+        
+        // Clear cache to force refresh
+        _sheetCache = null;
+        _columnCache = null;
+        
+        Logger.log(`Đã cập nhật danh sách thành viên cho dòng ${foundRow}`);
+        Logger.log(`Số thành viên mới: ${memberList.length}`);
+        
+        return createJsonResponse({
+          success: true,
+          message: `Đã cập nhật thành công danh sách thành viên. Số thành viên: ${memberList.length}`,
+          data: {
+            phoneNumber: phoneNumber,
+            memberCount: memberList.length,
+            memberList: memberList
+          }
+        });
+        
+      } catch (error) {
+        Logger.log(`Lỗi khi cập nhật danh sách thành viên: ${error.message}`);
+        return createJsonResponse({ 
+          success: false, 
+          message: `Lỗi khi cập nhật: ${error.message}` 
+        });
+      }
     }

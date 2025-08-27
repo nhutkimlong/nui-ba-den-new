@@ -280,6 +280,9 @@ function handleGenerateCertificatesWithPhotos(requestData) {
     Logger.log(`handleGenerateCertificatesWithPhotos received data: ${JSON.stringify(requestData)}`);
     const phoneNumber = String(requestData.phone || '').trim();
     const selectedMembers = requestData.members;
+    const verificationMethod = requestData.verificationMethod || 'unknown';
+    
+    Logger.log(`Certificate generation request - Method: ${verificationMethod}, Phone: ${phoneNumber}, Members: ${selectedMembers?.length || 0}`);
 
     if (!phoneNumber || !/^[0-9]{10,11}$/.test(phoneNumber)) return createJsonResponse({ success: false, message: 'Số điện thoại không hợp lệ.' });
     if (!selectedMembers || !Array.isArray(selectedMembers) || selectedMembers.length === 0) return createJsonResponse({ success: false, message: "Không có thành viên nào được chọn." });
