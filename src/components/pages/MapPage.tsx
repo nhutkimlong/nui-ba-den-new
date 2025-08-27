@@ -632,7 +632,7 @@ const POIInfoPanel = ({ poi, isVisible, onClose, onGetDirections, currentLang, o
                    <span className="text-sm font-semibold text-orange-800">Chọn phương tiện xuống núi</span>
                  </div>
                 <p className="text-xs text-orange-700">
-                  Máng trượt hoạt động theo lịch vận hành. Cáp treo hoạt động thường xuyên.
+                  Máng trượt hoạt động theo lịch vận hành. Cáp treo hoạt động thư��ng xuyên.
                 </p>
               </div>
               
@@ -1411,10 +1411,16 @@ const MapPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải bản đồ...</p>
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="text-center bg-white rounded-2xl p-8 shadow-lg max-w-sm w-full">
+          <div className="w-16 h-16 mx-auto mb-6 relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-primary-500"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-8 h-8 bg-primary-500 rounded-full animate-pulse"></div>
+            </div>
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Đang tải bản đồ</h3>
+          <p className="text-gray-600 text-sm">Vui lòng đợi trong giây lát...</p>
         </div>
       </div>
     )
