@@ -125,14 +125,46 @@ export const authApi = {
   },
 };
 
-// Data API for JSON files
+// Fallback data loading from static files
+async function loadStaticFile<T>(fileName: string): Promise<ApiResponse<T>> {
+  try {
+    const response = await fetch(`/data/${fileName}`);
+
+    if (!response.ok) {
+      throw new Error(`Static file ${fileName} not found (${response.status})`);
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    console.error(`Failed to load static file ${fileName}:`, error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to load static file',
+    };
+  }
+}
+
+// Data API for JSON files with fallback
 export const dataApi = {
-  // Get JSON file data
+  // Get JSON file data with fallback
   async getFile(fileName: string): Promise<ApiResponse<any>> {
-    return apiCall(`/data-blobs?file=${encodeURIComponent(fileName)}`);
+    // Try API first
+    const apiResult = await apiCall(`/data-blobs?file=${encodeURIComponent(fileName)}`);
+
+    if (apiResult.success) {
+      return apiResult;
+    }
+
+    // Fallback to static file
+    console.warn(`API failed for ${fileName}, falling back to static file`);
+    return loadStaticFile(fileName);
   },
 
-  // Save JSON file data
+  // Save JSON file data (only via API)
   async saveFile(fileName: string, data: any): Promise<ApiResponse<{ message: string }>> {
     return apiCall(`/data-blobs?file=${encodeURIComponent(fileName)}`, {
       method: 'POST',
@@ -301,7 +333,7 @@ export const apiUtils = {
     }
     
     if (error.includes('404') || error.includes('Not Found')) {
-      return 'Không tìm thấy d��� liệu yêu cầu.';
+      return 'Không tìm thấy dữ liệu yêu cầu.';
     }
     
     if (error.includes('500') || error.includes('Internal Server Error')) {
