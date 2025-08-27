@@ -150,7 +150,7 @@ const FloatingActionButtons = ({ onSearch, onDirections, onLocate, onTutorial }:
       <button 
         onClick={onTutorial}
         className="fab bg-white hover:bg-gray-100 text-yellow-500" 
-        title="Hướng d��n sử dụng"
+        title="Hướng dẫn sử dụng"
       >
         <MapPin className="w-5 h-5" />
       </button>
@@ -1173,7 +1173,8 @@ const MapPage = () => {
   // Handle find route with operating hours check
   const handleFindRoute = async () => {
     if (!startPoint || !endPoint) {
-      // Error will be handled by the hook
+      // Show user-friendly error message
+      alert('Vui lòng chọn điểm bắt đầu và điểm kết thúc')
       return
     }
 
