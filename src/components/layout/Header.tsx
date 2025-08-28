@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { X, Globe } from 'lucide-react'
+import { X, Globe, Menu } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 type HeaderProps = {
   hideOnMobile?: boolean
+  onTabletMenuClick?: () => void
 }
 
-const Header = ({ hideOnMobile = false }: HeaderProps) => {
+const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false)
@@ -46,13 +47,21 @@ const Header = ({ hideOnMobile = false }: HeaderProps) => {
     setIsMobileMenuOpen(false)
   }, [location.pathname])
 
-  const toggleLanguageMenu = () => {
-    setIsLanguageMenuOpen(!isLanguageMenuOpen)
-    if (!isLanguageMenuOpen) {
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen || isLanguageMenuOpen) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
     }
+
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isMobileMenuOpen, isLanguageMenuOpen])
+
+  const toggleLanguageMenu = () => {
+    setIsLanguageMenuOpen(!isLanguageMenuOpen)
   }
 
   const translatePage = (langCode: string) => {
@@ -99,7 +108,7 @@ const Header = ({ hideOnMobile = false }: HeaderProps) => {
   return (
     <>
       <header className={cn(
-        "bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-gray-100 pt-safe transition-transform duration-300 will-change-transform",
+        "bg-white/90 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-gray-100 pt-safe transition-all duration-300 will-change-transform",
         isScrolled && "shadow-lg",
         hideOnMobile && "-translate-y-full md:translate-y-0"
       )}>
@@ -110,7 +119,7 @@ const Header = ({ hideOnMobile = false }: HeaderProps) => {
               <img 
                 src="/assets/images/android-chrome-512x512.png" 
                 alt="Logo Núi Bà Đen" 
-                className="w-12 h-12 rounded-full object-cover border-2 border-primary-100"
+                className="w-12 h-12 rounded-full object-cover border-2 border-primary-100 shadow-sm"
               />
               <div>
                 <h1 className="text-base sm:text-lg md:text-xl font-bold text-primary-600">
@@ -122,8 +131,8 @@ const Header = ({ hideOnMobile = false }: HeaderProps) => {
               </div>
             </div>
             
-            {/* Desktop Navigation */}
-            <nav className="hidden md:block">
+            {/* Desktop Navigation (xl and up) */}
+            <nav className="hidden xl:block">
               <ul className="flex space-x-8 items-center">
                 {navigation.map((item) => (
                   <li key={item.name}>
@@ -131,19 +140,22 @@ const Header = ({ hideOnMobile = false }: HeaderProps) => {
                       to={item.href}
                       onClick={(e) => handleNavigationClick(item, e)}
                       className={cn(
-                        "nav-link px-2 py-2 font-medium transition duration-200",
+                        "nav-link px-2 py-2 font-medium transition-all duration-200 relative",
                         location.pathname === item.href
-                          ? "text-primary-500 border-b-2 border-primary-500"
+                          ? "text-primary-500"
                           : "text-gray-700 hover:text-primary-500"
                       )}
                     >
                       {item.name}
+                      {location.pathname === item.href && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500 rounded-full" />
+                      )}
                     </Link>
                   </li>
                 ))}
                 <li>
                   <button 
-                    className="language-selector ml-2"
+                    className="language-selector ml-2 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
                     onClick={toggleLanguageMenu}
                   >
                     <Globe className="w-5 h-5" />
@@ -152,41 +164,52 @@ const Header = ({ hideOnMobile = false }: HeaderProps) => {
               </ul>
             </nav>
             
-            {/* Mobile Language Selector & Menu Button */}
-            <div className="flex items-center md:hidden">
+            {/* Mobile & Tablet Language Selector & Menu Button (below xl) */}
+            <div className="flex items-center xl:hidden space-x-2">
               <button 
-                className="language-selector mr-2"
+                className="language-selector p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
                 onClick={toggleLanguageMenu}
               >
                 <Globe className="w-5 h-5" />
               </button>
               <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="text-gray-700 hover:text-primary-700 focus:outline-none"
+                onClick={() => {
+                  if (onTabletMenuClick) {
+                    onTabletMenuClick()
+                  } else {
+                    setIsMobileMenuOpen(!isMobileMenuOpen)
+                  }
+                }}
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 focus:outline-none"
                 aria-label="Mở menu điều hướng"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+                <Menu className="h-6 w-6 text-gray-700" />
               </button>
             </div>
           </div>
           
-          {/* Mobile Navigation */}
-          {isMobileMenuOpen && (
-            <div className="md:hidden mt-3 border-t border-gray-100 pt-3">
-              <ul className="space-y-2">
-                {navigation.map((item) => (
+          {/* Mobile Navigation (below xl) */}
+          <div className={cn(
+            "xl:hidden overflow-hidden transition-all duration-300 ease-in-out",
+            isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          )}>
+            <div className="mt-3 border-t border-gray-100 pt-3 pb-4">
+              <ul className="space-y-1">
+                {navigation.map((item, index) => (
                   <li key={item.name}>
                     <Link
                       to={item.href}
                       onClick={(e) => handleNavigationClick(item, e)}
                       className={cn(
-                        "block px-2 py-2 font-medium transition duration-200",
+                        "block px-4 py-3 font-medium transition-all duration-200 rounded-lg",
+                        "hover:bg-gray-50 active:bg-gray-100",
                         location.pathname === item.href
-                          ? "bg-gray-50 rounded-md text-primary-500"
-                          : "text-gray-700 hover:text-primary-500"
+                          ? "bg-primary-50 text-primary-600 border-l-4 border-primary-500"
+                          : "text-gray-700 hover:text-primary-600"
                       )}
+                      style={{
+                        animationDelay: `${index * 50}ms`
+                      }}
                     >
                       {item.name}
                     </Link>
@@ -194,44 +217,44 @@ const Header = ({ hideOnMobile = false }: HeaderProps) => {
                 ))}
               </ul>
             </div>
-          )}
+          </div>
         </div>
       </header>
 
       {/* Language Popup */}
       {isLanguageMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={toggleLanguageMenu}
         >
           <div 
-            className="bg-white rounded-lg p-6 max-w-sm w-full mx-4"
+            className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-800">Chọn ngôn ngữ</h3>
               <button 
                 onClick={toggleLanguageMenu}
-                className="text-gray-500 hover:text-gray-700"
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 max-h-64 overflow-y-auto">
               {languages.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => translatePage(lang.code)}
-                  className="w-full text-left px-4 py-2 rounded hover:bg-gray-100 flex items-center"
+                  className="w-full text-left px-4 py-3 rounded-xl hover:bg-gray-50 active:bg-gray-100 transition-colors duration-200 flex items-center"
                 >
-                  <span className="mr-2">
+                  <span className="mr-3">
                     <img 
                       src={lang.flag} 
                       alt={lang.code.toUpperCase()} 
-                      className="inline w-6 h-4 rounded-sm"
+                      className="inline w-6 h-4 rounded-sm shadow-sm"
                     />
                   </span>
-                  <span>{lang.name}</span>
+                  <span className="font-medium">{lang.name}</span>
                 </button>
               ))}
             </div>

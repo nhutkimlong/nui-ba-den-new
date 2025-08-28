@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { MapContainer, TileLayer, Marker, Polyline } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet'
 // @ts-ignore - types may be missing from package
 import MarkerClusterGroup from 'react-leaflet-cluster'
 import { Search, MapPin, Route, Navigation, X, Globe, Phone, Mail, Facebook, ExternalLink } from 'lucide-react'
@@ -16,6 +16,8 @@ import {
   COASTER_END_ID
 } from '@/services/mapService'
 import L from 'leaflet'
+import { ResponsiveContainer, useDevice } from '../layout'
+import CategoryChips from '@/components/map/CategoryChips'
 //
 import POIInfoSheet from '@/components/map/POIInfoSheet'
 import RouteInstructionsSheet from '@/components/map/RouteInstructionsSheet'
@@ -60,6 +62,43 @@ const POIMarkers = React.memo(({ pois, currentLang, onMarkerClick }: {
     )
   })
 })
+
+// Map Zoom Controller Component
+const MapZoomController = ({ currentRoute, poiData, onMapReady }: { currentRoute: any, poiData: any[], onMapReady: (map: any) => void }) => {
+  const map = useMap()
+
+  useEffect(() => {
+    // Store map reference when component mounts
+    onMapReady(map)
+  }, [map, onMapReady])
+
+  useEffect(() => {
+    if (currentRoute?.path && currentRoute.path.length > 1) {
+      // Get all coordinates from the route
+      const routeCoordinates = currentRoute.path
+        .map((nodeId: string) => {
+          const poi = poiData.find((p: any) => String(p.id) === String(nodeId))
+          return poi ? [poi.latitude, poi.longitude] : null
+        })
+        .filter(Boolean)
+
+      if (routeCoordinates.length > 0) {
+        // Create bounds from route coordinates
+        const bounds = L.latLngBounds(routeCoordinates)
+        
+        // Fit map to route bounds with padding
+        map.fitBounds(bounds, {
+          padding: [20, 20], // Add padding around the route
+          maxZoom: 18, // Don't zoom too close
+          animate: true,
+          duration: 1 // Animation duration in seconds
+        })
+      }
+    }
+  }, [currentRoute, poiData, map])
+
+  return null // This component doesn't render anything
+}
 
 // Map Toolbar Component removed in favor of inline desktop actions and MobileActionsBar
 
@@ -343,6 +382,9 @@ const MapPage = () => {
     getCurrentLocation
   } = useGeolocation()
 
+  // Device detection hook - must be called before any conditional logic
+  const { isMobile } = useDevice();
+
   // Route state
   const [startPoint, setStartPoint] = useState<any>(null)
   const [endPoint, setEndPoint] = useState<any>(null)
@@ -353,6 +395,7 @@ const MapPage = () => {
   const routeInputsRef = useRef<HTMLDivElement>(null)
   const mapAreaRef = useRef<HTMLDivElement>(null)
   const [tileProvider, setTileProvider] = useState<'google' | 'osm'>('google')
+  const mapRef = useRef<any>(null)
 
   // POI Info Panel state
   const [selectedPOI, setSelectedPOI] = useState<any>(null)
@@ -1082,7 +1125,8 @@ const MapPage = () => {
   }
 
   return (
-    <div className="h-[100dvh] bg-gray-50 flex flex-col overflow-hidden" onClick={hideAllSuggestions}>
+    <ResponsiveContainer maxWidth="7xl" padding="none" fluid>
+      <div className="h-[100dvh] bg-gray-50 flex flex-col overflow-hidden" onClick={hideAllSuggestions}>
       {/* Top bar removed here; rendered as map overlay below for consistency */}
       {/* (previous hidden desktop top bar markup deleted to avoid duplication and accidental overlap) */}
       {false && (
@@ -1341,78 +1385,28 @@ const MapPage = () => {
           "transition-opacity duration-200"
         )}>
           <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-2 sm:p-3 md:max-w-5xl md:mx-auto" onClick={(e) => e.stopPropagation()}>
-            <SearchBarWithActions
-              searchTerm={searchTerm}
-              onChange={handleSearchInputChange}
-              onFocus={() => { if (searchSuggestions.length > 0) setShowSearchSuggestions(true) }}
-              onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
-              suggestions={searchSuggestions}
-              showSuggestions={showSearchSuggestions}
-              onSuggestionClick={handleSearchSuggestionClick}
-              onDirections={handleDirections}
-              onLocate={handleLocate}
-              onTutorial={handleTutorial}
-              onToggleTiles={handleToggleTiles}
-              inputRef={searchInputRef}
-              onClear={() => {
-                setSearchTerm('')
-                setSearchSuggestions([])
-                setShowSearchSuggestions(false)
-                searchInputRef.current?.focus()
-              }}
-              rightExtra={searchTerm ? (
-                <button
-                  aria-label="Xóa ô tìm kiếm"
-                  onClick={() => {
-                    setSearchTerm('')
-                    setSearchSuggestions([])
-                    setShowSearchSuggestions(false)
-                  }}
-                  className="p-1 rounded-full hover:bg-gray-200"
-                >
-                  <X className="w-4 h-4 text-gray-500" />
-                </button>
-              ) : null}
-            />
+                         <SearchBarWithActions
+               searchTerm={searchTerm}
+               onChange={handleSearchInputChange}
+               onFocus={() => { if (searchSuggestions.length > 0) setShowSearchSuggestions(true) }}
+               onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
+               suggestions={searchSuggestions}
+               showSuggestions={showSearchSuggestions}
+               onSuggestionClick={handleSearchSuggestionClick}
+               onDirections={handleDirections}
+               onLocate={handleLocate}
+               onTutorial={handleTutorial}
+               onToggleTiles={handleToggleTiles}
+               inputRef={searchInputRef}
+               onClear={() => { setSearchTerm(''); setSearchSuggestions([]); setShowSearchSuggestions(false); }}
+             />
 
-            {/* Filter Categories */}
-            <div className="filter-categories-wrapper relative flex items-center">
-              <button className="hidden md:hidden absolute left-0 z-10 h-full items-center justify-center px-2 bg-white/80 hover:bg-white rounded-l-lg shadow transition-all">
-                <span className="text-gray-600">‹</span>
-              </button>
-              <div className="filter-categories flex gap-1.5 sm:gap-2 overflow-x-auto md:overflow-visible md:flex-wrap md:justify-center pb-1 w-full scrollbar-hide">
-                <button 
-                  onClick={() => setActiveCategory(null)}
-                  className={cn(
-                    "flex items-center px-2.5 py-1.5 text-xs sm:text-sm rounded-full transition-colors duration-200 whitespace-nowrap",
-                    !activeCategory 
-                      ? "bg-primary-500 text-white" 
-                      : "bg-gray-200 hover:bg-gray-300"
-                  )}
-                >
-                  <FontAwesomeIcon icon={faClipboardList} className="mr-1.5" />
-                  Tất cả
-                </button>
-                {categories.map((category) => (
-                  <button
-                    key={category.key}
-                    onClick={() => setActiveCategory(category.key)}
-                    className={cn(
-                      "flex items-center px-2.5 py-1.5 text-xs sm:text-sm rounded-full transition-colors duration-200 whitespace-nowrap",
-                      activeCategory === category.key 
-                        ? "bg-primary-500 text-white" 
-                        : "bg-gray-200 hover:bg-gray-300"
-                    )}
-                  >
-                    <FontAwesomeIcon icon={category.icon} className="mr-1.5" />
-                    {category.name}
-                  </button>
-                ))}
-              </div>
-              <button className="hidden md:hidden absolute right-0 z-10 h-full items-center justify-center px-2 bg-white/80 hover:bg-white rounded-r-lg shadow transition-all">
-                <span className="text-gray-600">›</span>
-              </button>
-            </div>
+            <CategoryChips
+              categories={categories.map(c => ({ key: c.key, name: c.name, icon: <FontAwesomeIcon icon={c.icon} /> }))}
+              activeKey={activeCategory}
+              onChange={(k) => setActiveCategory(k)}
+              className="mt-2 pb-1"
+            />
           </div>
         </div>
         {loading ? (
@@ -1454,6 +1448,13 @@ const MapPage = () => {
             zoomControl={false}
             style={{ height: '100%', width: '100%' }}
           >
+          {/* Map Zoom Controller */}
+          <MapZoomController 
+            currentRoute={currentRoute} 
+            poiData={poiData} 
+            onMapReady={(map) => { mapRef.current = map }}
+          />
+          
           {/* Reserve space top for overlay so map controls are not hidden */}
           <div className="absolute top-0 left-0 right-0 h-0 pointer-events-none" />
           {tileProvider === 'google' ? (
@@ -1537,22 +1538,36 @@ const MapPage = () => {
         >
           <div className="mx-2 md:mx-auto md:max-w-3xl bg-white/95 backdrop-blur-lg border border-gray-200 rounded-2xl shadow-xl p-4 ring-1 ring-gray-200">
             <div className="space-y-3">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Điểm bắt đầu"
-                  value={startPointText}
-                  onChange={handleStartPointChange}
-                  onFocus={() => {
-                    if (startSuggestions.length > 0) {
-                      setShowStartSuggestions(true)
-                    }
-                  }}
-                  onBlur={() => {
-                    setTimeout(() => setShowStartSuggestions(false), 200)
-                  }}
-                  className="w-full p-3.5 sm:p-4 border border-gray-300 rounded-xl sm:rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation shadow-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-400"
-                />
+                             <div className="relative">
+                 <input
+                   type="text"
+                   placeholder="Điểm bắt đầu"
+                   value={startPointText}
+                   onChange={handleStartPointChange}
+                   onFocus={() => {
+                     if (startSuggestions.length > 0) {
+                       setShowStartSuggestions(true)
+                     }
+                   }}
+                   onBlur={() => {
+                     setTimeout(() => setShowStartSuggestions(false), 200)
+                   }}
+                   className="w-full p-3.5 sm:p-4 pr-12 border border-gray-300 rounded-xl sm:rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation shadow-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-400"
+                 />
+                 {startPointText && (
+                   <button
+                     onClick={() => {
+                       setStartPointText('')
+                       setStartPoint(null)
+                       setStartSuggestions([])
+                       setShowStartSuggestions(false)
+                     }}
+                     className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center transition-colors"
+                     aria-label="Xóa điểm bắt đầu"
+                   >
+                     <X className="w-3 h-3 text-gray-600" />
+                   </button>
+                 )}
                 {showStartSuggestions && startSuggestions.length > 0 && (
                   <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto mt-2">
                     {startSuggestions.map((poi) => (
@@ -1588,22 +1603,36 @@ const MapPage = () => {
                   </div>
                 )}
               </div>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Điểm kết thúc"
-                  value={endPointText}
-                  onChange={handleEndPointChange}
-                  onFocus={() => {
-                    if (endSuggestions.length > 0) {
-                      setShowEndSuggestions(true)
-                    }
-                  }}
-                  onBlur={() => {
-                    setTimeout(() => setShowEndSuggestions(false), 200)
-                  }}
-                  className="w-full p-3.5 sm:p-4 border border-gray-300 rounded-xl sm:rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation shadow-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-400"
-                />
+                             <div className="relative">
+                 <input
+                   type="text"
+                   placeholder="Điểm kết thúc"
+                   value={endPointText}
+                   onChange={handleEndPointChange}
+                   onFocus={() => {
+                     if (endSuggestions.length > 0) {
+                       setShowEndSuggestions(true)
+                     }
+                   }}
+                   onBlur={() => {
+                     setTimeout(() => setShowEndSuggestions(false), 200)
+                   }}
+                   className="w-full p-3.5 sm:p-4 pr-12 border border-gray-300 rounded-xl sm:rounded-2xl text-base bg-white text-gray-700 placeholder-gray-400 min-h-[48px] touch-manipulation shadow-sm focus:ring-2 focus:ring-primary-300 focus:border-primary-400"
+                 />
+                 {endPointText && (
+                   <button
+                     onClick={() => {
+                       setEndPointText('')
+                       setEndPoint(null)
+                       setEndSuggestions([])
+                       setShowEndSuggestions(false)
+                     }}
+                     className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 bg-gray-200 hover:bg-gray-300 rounded-full flex items-center justify-center transition-colors"
+                     aria-label="Xóa điểm kết thúc"
+                   >
+                     <X className="w-3 h-3 text-gray-600" />
+                   </button>
+                 )}
                 {showEndSuggestions && endSuggestions.length > 0 && (
                   <div className="absolute z-10 w-full bg-white border border-gray-300 rounded-2xl shadow-lg max-h-60 overflow-y-auto mt-2">
                     {endSuggestions.map((poi) => (
@@ -1689,16 +1718,36 @@ const MapPage = () => {
           currentLang={currentLang}
         />
 
-        {/* Route Instructions Sheet (map overlay) */}
-        <RouteInstructionsSheet
-          visible={isRoutePanelVisible}
-          onClose={handleCloseRoutePanel}
-          route={currentRoute}
-          instructions={currentRoute?.path ? generateRouteInstructionsForPath(currentRoute.path).instructions : []}
-          currentLang={currentLang}
-          expanded={isRouteExpanded}
-          setExpanded={setIsRouteExpanded}
-        />
+                 {/* Route Instructions Sheet (map overlay) */}
+         <RouteInstructionsSheet
+           visible={isRoutePanelVisible}
+           onClose={handleCloseRoutePanel}
+           route={currentRoute}
+           instructions={currentRoute?.path ? generateRouteInstructionsForPath(currentRoute.path).instructions : []}
+           currentLang={currentLang}
+           expanded={isRouteExpanded}
+           setExpanded={setIsRouteExpanded}
+           onZoomToRoute={() => {
+             if (mapRef.current && currentRoute?.path && currentRoute.path.length > 1) {
+               const routeCoordinates = currentRoute.path
+                 .map((nodeId: string) => {
+                   const poi = poiData.find((p: any) => String(p.id) === String(nodeId))
+                   return poi ? [poi.latitude, poi.longitude] : null
+                 })
+                 .filter(Boolean)
+
+               if (routeCoordinates.length > 0) {
+                 const bounds = L.latLngBounds(routeCoordinates)
+                 mapRef.current.fitBounds(bounds, {
+                   padding: [20, 20],
+                   maxZoom: 18,
+                   animate: true,
+                   duration: 1
+                 })
+               }
+             }
+           }}
+         />
       </div>
 
       {/* Mobile bottom actions bar */}
@@ -1732,7 +1781,8 @@ const MapPage = () => {
         onAlpineCoaster={handleAlpineCoaster}
         descentOptions={startPoint?.area === 'Chùa Bà' && endPoint?.area === 'Chân núi' ? checkDescentOptionsFromChuaBa(operatingHours) : undefined}
       />
-    </div>
+      </div>
+    </ResponsiveContainer>
   )
 }
 

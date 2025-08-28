@@ -5,12 +5,26 @@ import { NotificationSystem } from '../climb/NotificationSystem';
 import { MessageBox, MessageType } from '../climb/MessageBox';
 import { ClimbMap } from '../climb/ClimbMap';
 import RegistrationForm from '../climb/RegistrationForm';
-import CertificationSection from '../climb/CertificationSection';
+import CompleteCertificationSection from '../climb/CompleteCertificationSection';
 import RepresentativeModal from '../climb/RepresentativeModal';
 import CommitmentModal from '../climb/CommitmentModal';
 import CropModal from '../climb/CropModal';
-import { GpsSettings, RegistrationData, MemberData, RepresentativeType, CertificateResult } from '../../types/climb';
+import MobileLoadingSpinner from '../common/MobileLoadingSpinner';
+import Button from '../common/Button';
+import { ResponsiveContainer } from '../layout';
+import { RegistrationData, MemberData, RepresentativeType } from '../../types/climb';
 import { getCurrentDateTime, getRegistrationTimeStatus, isWithinRegistrationTime } from '../../utils/climbUtils';
+import {
+  Mountain,
+  Phone,
+  Route,
+  Clock,
+  AlertTriangle,
+  Play,
+  ClipboardList,
+  RefreshCw
+} from 'lucide-react';
+ 
 
 const ClimbPage: React.FC = () => {
   const [currentMessage, setCurrentMessage] = useState<{ message: string; type: MessageType; duration?: number } | null>(null);
@@ -24,7 +38,7 @@ const ClimbPage: React.FC = () => {
   const [currentDateTime, setCurrentDateTime] = useState(getCurrentDateTime());
 
   const { gpsSettings, notifications, loading, error, fetchMembersList, generateCertificates, registerClimbingGroup } = useClimbData();
-  const { getCurrentPosition, checkRegistrationLocation, checkSummitLocation } = useGeolocation();
+  const { checkRegistrationLocation, checkSummitLocation } = useGeolocation();
 
   // Update current date time every minute
   useEffect(() => {
@@ -144,16 +158,10 @@ const ClimbPage: React.FC = () => {
     }
   };
 
-  // Handler for showing crop modal
-  const handleShowCropModal = (show: boolean, memberName?: string) => {
-    setShowCropModal(show);
-    if (memberName) {
-      setCurrentCropMember(memberName);
-    }
-  };
 
-  // Handler for crop confirmation
-  const handleCropConfirm = (croppedImageData: string, memberName: string) => {
+
+  // Handler for crop confirmation (forwarded from certification section)
+  const handleCropConfirm = () => {
     // This will be handled by CertificationSection component
     // The cropped image data will be stored in the component's state
     setShowCropModal(false);
@@ -162,10 +170,10 @@ const ClimbPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-emerald-50 to-teal-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="spinner mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải dữ liệu...</p>
+          <MobileLoadingSpinner type="spinner" size="lg" className="mb-4" />
+          <p className="text-gray-600 font-medium">Đang tải dữ liệu...</p>
         </div>
       </div>
     );
@@ -173,27 +181,28 @@ const ClimbPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-emerald-50 to-teal-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
-          <div className="text-red-500 text-6xl mb-4">
-            <i className="fas fa-exclamation-triangle"></i>
+          <div className="bg-red-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertTriangle className="w-10 h-10 text-red-600" />
           </div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Lỗi tải dữ liệu</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
+          <p className="text-gray-600 mb-6">{error}</p>
+          <Button
             onClick={() => window.location.reload()}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-150 ease-in-out tap-target"
+            leftIcon={<RefreshCw className="w-4 h-4" />}
+            className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800"
           >
-            <i className="fas fa-redo mr-2"></i>
             Thử lại
-          </button>
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50">
+    <ResponsiveContainer maxWidth="6xl" padding="md">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-emerald-50 to-teal-50">
       <NotificationSystem notifications={notifications} />
       
       {currentMessage && (
@@ -206,13 +215,13 @@ const ClimbPage: React.FC = () => {
       )}
 
       {getRegistrationTimeStatus(gpsSettings) && (
-        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <i className="fas fa-clock text-yellow-500"></i>
+        <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-4 mb-6 mx-4 md:mx-0">
+          <div className="flex items-center gap-3">
+            <div className="bg-yellow-100 p-2 rounded-lg">
+              <Clock className="w-5 h-5 text-yellow-600" />
             </div>
-            <div className="ml-3">
-              <p className="text-sm">
+            <div>
+              <p className="text-sm font-medium text-yellow-800">
                 <strong>Thời gian đăng ký:</strong> {gpsSettings.registrationStartTime} - {gpsSettings.registrationEndTime}
               </p>
             </div>
@@ -220,91 +229,108 @@ const ClimbPage: React.FC = () => {
         </div>
       )}
 
-      <div className="container mx-auto px-4 py-8 md:px-6 md:py-12 max-w-5xl">
+      <div className="container mx-auto px-4 py-8 md:px-6 md:py-12 max-w-7xl">
+        {/* Single column layout */}
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">
-            <i className="fa-solid fa-mountain text-green-600 mr-3"></i>
-            Đăng ký Leo núi Núi Bà Đen
-          </h1>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-8 text-white mb-8">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="bg-white/20 p-3 rounded-xl">
+              <Mountain className="w-8 h-8" />
+            </div>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center">
+              Đăng ký Leo núi Núi Bà Đen
+            </h1>
+          </div>
+          <p className="text-lg md:text-xl text-primary-100 max-w-3xl mx-auto text-center">
             Hệ thống đăng ký và nhận chứng nhận leo núi tự động với xác thực GPS
           </p>
         </div>
 
         {/* Emergency Contact */}
-        <section className="bg-red-50 border border-red-200 p-4 md:p-6 rounded-lg mb-8">
-          <div className="flex items-start">
-            <div className="flex-shrink-0">
-              <i className="fas fa-phone-alt text-red-600 text-xl"></i>
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="bg-red-100 p-2 rounded-lg">
+              <Phone className="w-5 h-5 text-red-600" />
             </div>
-            <div className="ml-3">
-              <h3 className="text-lg font-semibold text-red-800 mb-2">Liên hệ khẩn cấp</h3>
-              <p className="text-red-700 text-sm">
-                <strong>Ban Quản lý Khu du lịch:</strong> 0276.3.xxx.xxx<br />
-                <strong>Cứu hộ:</strong> 0276.3.xxx.xxx<br />
-                <strong>Y tế:</strong> 115
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Trekking Routes */}
-        <section className="bg-white p-6 md:p-8 rounded-lg shadow-lg mb-8">
-          <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-orange-700 border-b border-orange-200 pb-4 flex items-center">
-            <i className="fa-solid fa-route text-3xl text-orange-600 mr-4"></i>
-            Tuyến đường Leo núi
-          </h2>
-          <div className="mb-4">
-            <p className="text-gray-700 mb-4">
-              <strong>Tuyến đường chính thức:</strong> Đường Cột Điện (Tuyến đường được khuyến nghị)
-            </p>
-            <div className="bg-orange-50 border border-orange-200 p-3 rounded">
-              <p className="text-sm text-orange-800">
-                <i className="fas fa-info-circle mr-2"></i>
-                <strong>Lưu ý:</strong> Chỉ sử dụng tuyến đường được chỉ định để đảm bảo an toàn và được ghi nhận chính thức.
-              </p>
-            </div>
-          </div>
-          <ClimbMap />
-        </section>
-
-        {/* Registration Section */}
-        {!showRegistrationForm ? (
-          <section className="bg-white p-6 md:p-8 rounded-lg shadow-lg mb-8 text-center">
-            <div className="max-w-md mx-auto">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="fa-solid fa-clipboard-list text-2xl text-green-600"></i>
+            <div className="flex-1">
+              <h3 className="text-base font-semibold text-red-800 mb-2">Liên hệ khẩn cấp</h3>
+              <div className="space-y-1 text-red-700 text-sm">
+                <p><strong>Ban Quản lý:</strong> 0276.3.xxx.xxx</p>
+                <p><strong>Cứu hộ:</strong> 0276.3.xxx.xxx</p>
+                <p><strong>Y tế:</strong> 115</p>
               </div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">Bắt đầu đăng ký leo núi</h2>
-              <p className="text-gray-600 mb-6">
-                Đăng ký thông tin để được ghi nhận và nhận chứng nhận chính thức
-              </p>
-              <button
-                onClick={handleStartRegistration}
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out flex items-center justify-center text-lg shadow hover:shadow-md tap-target"
-              >
-                <i className="fa-solid fa-play mr-2"></i>
-                <span>Bắt đầu đăng ký</span>
-              </button>
             </div>
-          </section>
-        ) : (
-          <RegistrationForm
-            onSubmit={handleRegistrationSubmit}
-            gpsSettings={gpsSettings}
-            currentDateTime={currentDateTime}
-            representativeType={selectedRepresentativeType}
-          />
-        )}
+          </div>
+        </div>
 
-        {/* Certification Section */}
-        <CertificationSection
-          onVerifyPhone={handleCertificateVerification}
-          onGenerateCertificates={handleGenerateCertificates}
-          gpsSettings={gpsSettings}
-          onShowCropModal={handleShowCropModal}
-        />
+        {/* Map */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-orange-600 to-orange-700 p-4 text-white">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 p-2 rounded-lg">
+                <Route className="w-5 h-5" />
+              </div>
+              <h2 className="text-xl font-bold">Tuyến đường Leo núi</h2>
+            </div>
+          </div>
+          <div className="p-4">
+            <ClimbMap />
+          </div>
+        </div>
+
+
+
+        {/* Registration + Certification (Single column) */}
+        <div className="mt-8 md:mt-12 grid gap-6 grid-cols-1">
+          {/* Registration Section */}
+          <div>
+            {!showRegistrationForm ? (
+              <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-full">
+                {/* Header to match Guide sections */}
+                <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-white">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 p-2 rounded-lg">
+                      <ClipboardList className="w-5 h-5" />
+                    </div>
+                    <h2 className="text-2xl font-bold">Bắt đầu đăng ký leo núi</h2>
+                  </div>
+                </div>
+                {/* Body */}
+                <div className="p-8 text-center">
+                  <p className="text-gray-700 mb-8 text-lg max-w-xl mx-auto">
+                    Đăng ký thông tin để được ghi nhận và nhận chứng nhận chính thức
+                  </p>
+                  <Button
+                    onClick={handleStartRegistration}
+                    leftIcon={<Play className="w-5 h-5" />}
+                    size="lg"
+                    fullWidth
+                    className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-lg"
+                  >
+                    Bắt đầu đăng ký
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <RegistrationForm
+                onSubmit={handleRegistrationSubmit}
+                gpsSettings={gpsSettings}
+                currentDateTime={currentDateTime}
+                representativeType={selectedRepresentativeType}
+              />
+            )}
+          </div>
+
+          {/* Certification Section */}
+          <div>
+            <CompleteCertificationSection
+              onVerifyPhone={handleCertificateVerification}
+              onGenerateCertificates={handleGenerateCertificates}
+              gpsSettings={gpsSettings}
+              isLoading={false}
+            />
+          </div>
+        </div>
 
       </div>
 
@@ -328,7 +354,8 @@ const ClimbPage: React.FC = () => {
         onConfirm={handleCropConfirm}
         memberName={currentCropMember}
       />
-    </div>
+      </div>
+    </ResponsiveContainer>
   );
 };
 

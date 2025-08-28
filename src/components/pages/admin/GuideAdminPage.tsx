@@ -1,8 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import './GuideAdminPage.css';
+import { Link } from 'react-router-dom';
+import './AdminStyles.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faRoute, faBed, faUtensils, faGift, faPlus, faSave, faTimes, faPencilAlt, faTrashAlt, faCircleNotch } from '@fortawesome/free-solid-svg-icons';
+import { faRoute, faBed, faUtensils, faGift, faPlus, faSave, faTimes, faPencilAlt, faTrashAlt, faCircleNotch, faArrowLeft, faBook } from '@fortawesome/free-solid-svg-icons';
+import { ResponsiveContainer, useDevice } from '../../layout';
 
 const SHEET_MAP = {
     tours: 'Tours',
@@ -187,27 +189,47 @@ const GuideAdminPage: React.FC = () => {
         });
     };
 
+    const { isMobile } = useDevice();
+
     return (
-        <main className="guide-content">
-            <header className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900">Quản lý Cẩm Nang Du Lịch</h1>
-                <p className="text-slate-600">Quản lý và cập nhật thông tin cẩm nang du lịch Núi Bà Đen</p>
-            </header>
+        <ResponsiveContainer maxWidth="7xl" padding="lg">
+            <div className="admin-layout">
+                {/* Header Section */}
+                <div className="admin-card mb-8">
+                    <div className="admin-card-header">
+                        <div className="flex items-center justify-between flex-col lg:flex-row gap-4">
+                            <div className="flex items-center gap-4 w-full lg:w-auto">
+                                <Link to="/admin" className="p-3 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all duration-200 flex-shrink-0">
+                                    <FontAwesomeIcon icon={faArrowLeft} className="text-slate-600 text-xl" />
+                                </Link>
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="p-3 bg-emerald-100 rounded-xl flex-shrink-0">
+                                        <FontAwesomeIcon icon={faBook} className="text-emerald-600 text-2xl" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h1 className="text-xl lg:text-2xl font-bold text-slate-800 truncate">Quản lý Cẩm Nang Du Lịch</h1>
+                                        <p className="text-slate-600 text-sm lg:text-base truncate">Quản lý và cập nhật thông tin cẩm nang du lịch Núi Bà Đen</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             <div className="mb-6">
-                <nav className="flex space-x-1 bg-slate-100 p-1 rounded-lg">
+                <nav className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-lg">
                     {(Object.keys(SHEET_MAP) as Array<keyof typeof SHEET_MAP>).map(tab => (
                         <button
                             key={tab}
                             onClick={() => setCurrentTab(tab)}
-                            className={`tab-link px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${currentTab === tab ? 'bg-white text-slate-700 shadow-sm' : 'bg-transparent text-slate-600 hover:bg-white hover:text-slate-700'}`}
+                            className={`tab-link px-3 lg:px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${currentTab === tab ? 'bg-white text-slate-700 shadow-sm' : 'bg-transparent text-slate-600 hover:bg-white hover:text-slate-700'}`}
                         >
                             <FontAwesomeIcon icon={
                                 tab === 'tours' ? faRoute :
                                 tab === 'accommodations' ? faBed :
                                 tab === 'restaurants' ? faUtensils : faGift
-                            } className="mr-2" />
-                            {SHEET_MAP[tab]}
+                            } className="mr-1 lg:mr-2" />
+                            <span className="hidden sm:inline">{SHEET_MAP[tab]}</span>
                         </button>
                     ))}
                 </nav>
@@ -223,10 +245,12 @@ const GuideAdminPage: React.FC = () => {
                     </div>
                 ) : (
                     <div>
-                        <div className="flex justify-between items-center mb-5">
-                            <h2 className="text-xl font-semibold text-gray-700">Danh sách {SHEET_MAP[currentTab]} ({data.length} mục)</h2>
-                            <button onClick={() => openModal()} className="bg-indigo-600 text-white font-medium py-2.5 px-5 rounded-lg shadow-md hover:bg-indigo-700 transition">
-                                <FontAwesomeIcon icon={faPlus} className="mr-2" />Thêm mới
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+                            <h2 className="text-lg lg:text-xl font-semibold text-gray-700">Danh sách {SHEET_MAP[currentTab]} ({data.length} mục)</h2>
+                            <button onClick={() => openModal()} className="bg-indigo-600 text-white font-medium py-2.5 px-4 lg:px-5 rounded-lg shadow-md hover:bg-indigo-700 transition text-sm lg:text-base">
+                                <FontAwesomeIcon icon={faPlus} className="mr-1 lg:mr-2" />
+                                <span className="hidden sm:inline">Thêm mới</span>
+                                <span className="sm:hidden">Thêm</span>
                             </button>
                         </div>
                         <div className="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
@@ -293,7 +317,8 @@ const GuideAdminPage: React.FC = () => {
                     </div>
                 </div>
             )}
-        </main>
+            </div>
+        </ResponsiveContainer>
     );
 };
 

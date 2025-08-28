@@ -1,5 +1,15 @@
 import React from 'react';
 import { RepresentativeType } from '../../types/climb';
+import Button from '../common/Button';
+import { 
+  UserCheck, 
+  Users, 
+  User, 
+  AlertTriangle, 
+  CheckCircle,
+  X
+} from 'lucide-react';
+import { cn } from '@/utils/cn';
 
 interface RepresentativeModalProps {
   isOpen: boolean;
@@ -18,89 +28,123 @@ export const RepresentativeModal: React.FC<RepresentativeModalProps> = ({
     onConfirm(type);
   };
 
+  const representativeOptions = [
+    {
+      type: 'leader' as RepresentativeType,
+      title: 'Trưởng đoàn/Đại diện nhóm',
+      description: 'Tôi sẽ đăng ký cho cả nhóm và chịu trách nhiệm về thông tin',
+      icon: <Users className="w-6 h-6" />,
+      color: 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100',
+      iconColor: 'text-blue-600'
+    },
+    {
+      type: 'individual' as RepresentativeType,
+      title: 'Cá nhân leo núi',
+      description: 'Tôi sẽ đăng ký cho bản thân mình',
+      icon: <User className="w-6 h-6" />,
+      color: 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100',
+      iconColor: 'text-green-600'
+    },
+    {
+      type: 'member' as RepresentativeType,
+      title: 'Thành viên nhóm',
+      description: 'Tôi không phải đại diện, vui lòng liên hệ trưởng đoàn',
+      icon: <UserCheck className="w-6 h-6" />,
+      color: 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100',
+      iconColor: 'text-gray-600'
+    }
+  ];
+
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[200] p-2 md:p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl p-3 md:p-6 w-full max-w-lg mx-auto max-h-[95vh] overflow-y-auto">
-        <div className="text-center mb-4 md:mb-6">
-          <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4">
-            <i className="fas fa-user-check text-xl md:text-2xl text-blue-600"></i>
-          </div>
-          <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-800 mb-2">Xác nhận Đại diện</h3>
-          <p className="text-gray-600 text-xs md:text-sm lg:text-base">
-            Vui lòng xác nhận vai trò của bạn trước khi đăng ký leo núi
-          </p>
-        </div>
-
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 md:p-4 mb-4 md:mb-6">
-          <div className="flex items-start">
-            <i className="fas fa-exclamation-triangle text-yellow-600 mt-1 mr-2 md:mr-3 text-sm md:text-base"></i>
-            <div className="text-xs md:text-sm text-yellow-800">
-              <p className="font-semibold mb-2">Lưu ý quan trọng:</p>
-              <ul className="list-disc list-inside space-y-1 text-xs">
-                <li>Chỉ <strong>đại diện nhóm</strong> hoặc <strong>cá nhân</strong> mới được phép đăng ký</li>
-                <li>Mỗi nhóm chỉ đăng ký <strong>một lần duy nhất</strong></li>
-                <li>Tránh đăng ký trùng lặp để không tạo nhiều chứng nhận</li>
-                <li>Nếu bạn là thành viên nhóm, vui lòng liên hệ trưởng đoàn</li>
-              </ul>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[200] p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-auto animate-slide-up">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-t-2xl p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 p-2 rounded-xl">
+                <UserCheck className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">Xác nhận Đại diện</h3>
+                <p className="text-primary-100 text-sm">Chọn vai trò của bạn</p>
+              </div>
             </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
-        <div className="space-y-3 md:space-y-4 mb-4 md:mb-6">
-          <div 
-            className="flex items-start p-2 md:p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-            onClick={() => handleConfirm('leader')}
-          >
-            <input type="radio" name="representativeType" value="leader" className="mr-2 md:mr-3 mt-1" />
-            <div className="flex-1">
-              <label className="font-semibold text-gray-800 cursor-pointer text-sm md:text-base">
-                Tôi là Trưởng đoàn/Đại diện nhóm
-              </label>
-              <p className="text-xs md:text-sm text-gray-600 mt-1">
-                Tôi sẽ đăng ký cho cả nhóm và chịu trách nhiệm về thông tin
-              </p>
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Warning Section */}
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+              <div className="space-y-2">
+                <p className="font-semibold text-yellow-800 text-sm">Lưu ý quan trọng:</p>
+                <ul className="text-xs text-yellow-700 space-y-1">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    <span>Chỉ <strong>đại diện nhóm</strong> hoặc <strong>cá nhân</strong> mới được phép đăng ký</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    <span>Mỗi nhóm chỉ đăng ký <strong>một lần duy nhất</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    <span>Tránh đăng ký trùng lặp để không tạo nhiều chứng nhận</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    <span>Nếu bạn là thành viên nhóm, vui lòng liên hệ trưởng đoàn</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
-          
-          <div 
-            className="flex items-start p-2 md:p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-            onClick={() => handleConfirm('individual')}
-          >
-            <input type="radio" name="representativeType" value="individual" className="mr-2 md:mr-3 mt-1" />
-            <div className="flex-1">
-              <label className="font-semibold text-gray-800 cursor-pointer text-sm md:text-base">
-                Tôi là Cá nhân leo núi
-              </label>
-              <p className="text-xs md:text-sm text-gray-600 mt-1">
-                Tôi sẽ đăng ký cho bản thân mình
-              </p>
-            </div>
-          </div>
-          
-          <div 
-            className="flex items-start p-2 md:p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-            onClick={() => handleConfirm('member')}
-          >
-            <input type="radio" name="representativeType" value="member" className="mr-2 md:mr-3 mt-1" />
-            <div className="flex-1">
-              <label className="font-semibold text-gray-800 cursor-pointer text-sm md:text-base">
-                Tôi là Thành viên nhóm
-              </label>
-              <p className="text-xs md:text-sm text-gray-600 mt-1">
-                Tôi không phải đại diện, vui lòng liên hệ trưởng đoàn
-              </p>
-            </div>
-          </div>
-        </div>
 
-        <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full sm:w-auto py-2 px-4 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md font-medium text-sm"
-          >
-            Hủy bỏ
-          </button>
+          {/* Options */}
+          <div className="space-y-3">
+            {representativeOptions.map((option) => (
+              <button
+                key={option.type}
+                onClick={() => handleConfirm(option.type)}
+                className={cn(
+                  "w-full p-4 border-2 rounded-xl transition-all duration-200 text-left",
+                  "hover:scale-[1.02] hover:shadow-md active:scale-[0.98]",
+                  option.color
+                )}
+              >
+                <div className="flex items-start gap-4">
+                  <div className={cn("p-2 rounded-lg bg-white/50", option.iconColor)}>
+                    {option.icon}
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-sm mb-1">{option.title}</h4>
+                    <p className="text-xs opacity-80">{option.description}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {/* Footer */}
+          <div className="pt-4 border-t border-gray-200">
+            <Button
+              variant="outline"
+              fullWidth
+              onClick={onClose}
+              className="text-gray-600"
+            >
+              Hủy bỏ
+            </Button>
+          </div>
         </div>
       </div>
     </div>

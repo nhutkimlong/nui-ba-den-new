@@ -108,7 +108,12 @@ export const useClimbData = () => {
 
     const result = await response.json();
     if (result.success && Array.isArray(result.members)) {
-      return result.members;
+      // Convert string array to MemberData array with id
+      return result.members.map((name: string, index: number) => ({
+        id: `member_${index}`,
+        name: name,
+        photoData: null
+      }));
     } else {
       throw new Error(result.message || 'Không thể lấy danh sách thành viên.');
     }
@@ -119,10 +124,16 @@ export const useClimbData = () => {
     phoneNumber: string,
     selectedMembers: MemberData[]
   ): Promise<CertificateResult> => {
+    // Convert MemberData to format expected by Google Script
+    const membersForScript = selectedMembers.map(member => ({
+      name: member.name,
+      photoData: member.photoData || null
+    }));
+    
     const postData = {
       action: 'generateCertificatesWithPhotos',
       phone: phoneNumber,
-      members: selectedMembers,
+      members: membersForScript,
       verificationMethod: 'gps'
     };
 

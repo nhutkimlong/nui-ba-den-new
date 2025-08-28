@@ -1,13 +1,115 @@
 import { Link } from 'react-router-dom'
-import { MapPin, Phone, Mail, Globe, Facebook, ExternalLink } from 'lucide-react'
+import { Phone, Mail, Globe, Facebook, ExternalLink, ChevronDown } from 'lucide-react'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer id="footer" className="bg-white pt-16 pb-8 px-4 border-t border-gray-100 pb-safe">
+    <footer id="footer" className="bg-white pt-8 md:pt-16 md:pb-8 px-4 border-t border-gray-100 pb-safe pb-mobile-nav md:pb-8">
       <div className="container mx-auto max-w-5xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+        {/* Mobile compact layout */}
+        <div className="md:hidden">
+          <div className="flex items-center space-x-3 mb-3">
+            <img
+              src="/assets/images/android-chrome-512x512.png"
+              alt="Logo Núi Bà Đen"
+              className="w-9 h-9 rounded-full"
+            />
+            <h3 className="font-bold text-base text-gray-800">KDL quốc gia Núi Bà Đen</h3>
+          </div>
+          <p className="text-gray-600 mb-3 text-sm line-clamp-2">
+            "Nóc nhà Nam Bộ" - điểm đến tâm linh và du lịch sinh thái hấp dẫn hàng đầu Việt Nam.
+          </p>
+
+          <div className="divide-y divide-gray-100 rounded-md border border-gray-100 overflow-hidden">
+            <details className="group open:pb-1">
+              <summary className="flex items-center justify-between px-3 py-3 cursor-pointer select-none">
+                <span className="text-sm font-semibold text-gray-800">Liên kết nhanh</span>
+                <ChevronDown className="w-4 h-4 text-gray-500 transition-transform group-open:rotate-180" />
+              </summary>
+              <ul className="px-3 pb-3 space-y-2">
+                <li>
+                  <Link to="/" className="text-gray-600 hover:text-primary-500 text-sm">
+                    Trang chủ
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/map" className="text-gray-600 hover:text-primary-500 text-sm">
+                    Bản đồ số
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/guide" className="text-gray-600 hover:text-primary-500 text-sm">
+                    Cẩm nang du lịch
+                  </Link>
+                </li>
+                <li>
+                  <Link to="/climb" className="text-gray-600 hover:text-primary-500 text-sm">
+                    Đăng ký leo núi
+                  </Link>
+                </li>
+              </ul>
+            </details>
+
+            <details className="group open:pb-1">
+              <summary className="flex items-center justify-between px-3 py-3 cursor-pointer select-none">
+                <span className="text-sm font-semibold text-gray-800">Thông tin liên hệ</span>
+                <ChevronDown className="w-4 h-4 text-gray-500 transition-transform group-open:rotate-180" />
+              </summary>
+              <ul className="px-3 pb-3 space-y-2">
+                <li className="flex items-start">
+                  <Mail className="text-gray-400 mt-1 w-4 flex-shrink-0" />
+                  <a href="mailto:bqlnuiba@gmail.com" className="ml-2 text-gray-600 hover:text-primary-500 text-sm">bqlnuiba@gmail.com</a>
+                </li>
+                <li className="flex items-start">
+                  <Facebook className="text-gray-400 mt-1 w-4 flex-shrink-0" />
+                  <a
+                    href="https://www.facebook.com/bqlkdlquocgianuibaden"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 text-gray-600 hover:text-primary-500 text-sm flex items-center"
+                  >
+                    Fanpage Facebook
+                    <ExternalLink className="w-3 h-3 ml-1" />
+                  </a>
+                </li>
+                <li className="flex items-start">
+                  <Globe className="text-gray-400 mt-1 w-4 flex-shrink-0" />
+                  <a
+                    href="https://www.tiktok.com/@nuibadenbql"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 text-gray-600 hover:text-primary-500 text-sm flex items-center"
+                  >
+                    nuibadenbql (TikTok)
+                    <ExternalLink className="w-3 h-3 ml-1" />
+                  </a>
+                </li>
+                <li className="flex items-start">
+                  <Globe className="text-gray-400 mt-1 w-4 flex-shrink-0" />
+                  <a
+                    href="http://khudulichnuibaden.tayninh.gov.vn"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 text-gray-600 hover:text-primary-500 text-sm flex items-center"
+                  >
+                    khudulichnuibaden.tayninh.gov.vn
+                    <ExternalLink className="w-3 h-3 ml-1" />
+                  </a>
+                </li>
+                <li className="flex items-start">
+                  <Phone className="text-gray-400 mt-1 w-4 flex-shrink-0" />
+                  <a href="tel:02763823378" className="ml-2 text-gray-600 hover:text-primary-500 text-sm">0276 3823378</a>
+                </li>
+              </ul>
+            </details>
+          </div>
+          {/* Spacer to avoid overlap with mobile bottom nav */}
+          <div className="h-mobile-nav" />
+        </div>
+
+        {/* Desktop / tablet layout */}
+        <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
           {/* About Section */}
           <div>
             <div className="flex items-center space-x-3 mb-4">
@@ -24,7 +126,7 @@ const Footer = () => {
               "Nóc nhà Nam Bộ" - điểm đến tâm linh và du lịch sinh thái hấp dẫn hàng đầu Việt Nam.
             </p>
           </div>
-          
+
           {/* Quick Links */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Liên kết nhanh</h3>
@@ -51,7 +153,7 @@ const Footer = () => {
               </li>
             </ul>
           </div>
-          
+
           {/* Contact Info */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Thông tin liên hệ</h3>
@@ -113,10 +215,10 @@ const Footer = () => {
             </ul>
           </div>
         </div>
-        
+
         {/* Bottom Bar */}
-        <div className="border-t border-gray-100 pt-6 text-center">
-          <p className="text-gray-500 text-sm">
+        <div className="border-t border-gray-100 pt-4 md:pt-6 text-center">
+          <p className="text-gray-500 text-xs md:text-sm">
             © {currentYear} Ban Quản lý Khu du lịch quốc gia Núi Bà Đen
           </p>
         </div>

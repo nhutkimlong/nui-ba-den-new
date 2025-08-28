@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react"
+import React, { useRef, useState, useEffect, useCallback } from "react"
 import { X, Route, Map as MapIcon, Info, Mail, Facebook, ExternalLink, Phone } from "lucide-react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faStickyNote, faCableCar, faPersonWalking, faPlay, faPause } from "@fortawesome/free-solid-svg-icons"
@@ -35,28 +35,39 @@ const POIInfoSheet: React.FC<Props> = ({
   isDescentRoute,
   currentLang
 }) => {
-  if (!poi) return null
-  const isMobile = typeof window !== "undefined" && window.matchMedia?.("(max-width: 768px)").matches
   const touchDataRef = useRef<{ startY: number; wasExpanded: boolean } | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
-  const name = getPoiName(poi)
-  const description = getPoiDesc(poi)
-  const area = poi.area || "N/A"
-  const audioUrl = (currentLang === 'en' ? (poi.audio_url_en || poi.audio_url) : (poi.audio_url || poi.audio_url_en)) as string | null
+  // Use useEffect to check mobile status to avoid SSR issues
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.matchMedia("(max-width: 768px)").matches)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
-  const onTouchStart = (e: React.TouchEvent) => {
+  // Get POI data safely
+  const name = poi ? getPoiName(poi) : ""
+  const description = poi ? getPoiDesc(poi) : ""
+  const area = poi?.area || "N/A"
+  const audioUrl = poi ? (currentLang === 'en' ? (poi.audio_url_en || poi.audio_url) : (poi.audio_url || poi.audio_url_en)) as string | null : null
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
     touchDataRef.current = { startY: e.touches[0].clientY, wasExpanded: expanded }
-  }
-  const onTouchEnd = (e: React.TouchEvent) => {
+  }, [expanded])
+  
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
     if (!touchDataRef.current) return
     const deltaY = e.changedTouches[0].clientY - touchDataRef.current.startY
     if (Math.abs(deltaY) < 20) setExpanded(!expanded)
     else if (deltaY > 30) setExpanded(false)
     else if (deltaY < -30) setExpanded(true)
     touchDataRef.current = null
-  }
+  }, [expanded, setExpanded])
 
   useEffect(() => {
     if (!audioRef.current) return
@@ -65,7 +76,7 @@ const POIInfoSheet: React.FC<Props> = ({
     return () => audioRef.current?.removeEventListener('ended', onEnded)
   }, [])
 
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     if (!audioRef.current) return
     if (isPlaying) {
       audioRef.current.pause()
@@ -73,22 +84,48 @@ const POIInfoSheet: React.FC<Props> = ({
     } else {
       audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false))
     }
-  }
+  }, [isPlaying])
+
+  const handleCableCar = useCallback(() => {
+    if (poi) {
+      onGetDirections({ ...poi, descentChoice: "cable_car" }, "to")
+    }
+  }, [poi, onGetDirections])
+
+  const handleAlpineCoaster = useCallback(() => {
+    if (poi) {
+      onGetDirections({ ...poi, descentChoice: "alpine_coaster" }, "to")
+    }
+  }, [poi, onGetDirections])
+
+  const handleRouteFrom = useCallback(() => {
+    if (poi) {
+      onGetDirections(poi, "from")
+    }
+  }, [poi, onGetDirections])
+
+  const handleRouteTo = useCallback(() => {
+    if (poi) {
+      onGetDirections(poi, "to")
+    }
+  }, [poi, onGetDirections])
 
   return (
-    <div
-      className={cn("poi-panel", visible && "visible")}
-      style={
-        isMobile
-          ? { transform: visible ? "translateY(0)" : "translateY(100%)", bottom: "calc(env(safe-area-inset-bottom, 0px) + 72px)" }
-          : undefined
-      }
-      onTouchStart={isMobile ? onTouchStart : undefined}
-      onTouchEnd={isMobile ? onTouchEnd : undefined}
-      aria-live="polite"
-      role="dialog"
-      aria-label="Thông tin địa điểm"
-    >
+    <>
+      {poi && visible && (
+        <div
+          className={cn("poi-panel", "visible")}
+          style={
+            isMobile
+              ? { transform: "translateY(0)", bottom: "calc(env(safe-area-inset-bottom, 0px) + 72px)" }
+              : undefined
+          }
+          onTouchStart={isMobile ? onTouchStart : undefined}
+          onTouchEnd={isMobile ? onTouchEnd : undefined}
+          aria-live="polite"
+          role="dialog"
+          aria-label="Thông tin địa điểm"
+        >
       {/* Close */}
       <button
         onClick={onClose}
@@ -204,14 +241,14 @@ const POIInfoSheet: React.FC<Props> = ({
             </div>
             <div className="grid grid-cols-2 gap-2">
               <button
-                onClick={() => onGetDirections({ ...poi, descentChoice: "cable_car" }, "to")}
+                onClick={handleCableCar}
                 className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-xs shadow-sm"
               >
                 <FontAwesomeIcon icon={faCableCar} className="text-lg" />
                 <span>Cáp treo</span>
               </button>
               <button
-                onClick={() => onGetDirections({ ...poi, descentChoice: "alpine_coaster" }, "to")}
+                onClick={handleAlpineCoaster}
                 className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-xs shadow-sm"
               >
                 <FontAwesomeIcon icon={faPersonWalking} className="text-lg" />
@@ -222,14 +259,14 @@ const POIInfoSheet: React.FC<Props> = ({
         ) : (
           <div className="flex gap-2 text-xs sm:text-sm">
             <button
-              onClick={() => onGetDirections(poi, "from")}
+              onClick={handleRouteFrom}
               className="flex-1 bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-sm"
             >
               <MapIcon className="w-4 h-4" />
               {t("routeFromHere")}
             </button>
             <button
-              onClick={() => onGetDirections(poi, "to")}
+              onClick={handleRouteTo}
               className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-3 rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-sm"
             >
               <Route className="w-4 h-4" />
@@ -239,6 +276,8 @@ const POIInfoSheet: React.FC<Props> = ({
         )}
       </div>
     </div>
+      )}
+    </>
   )
 }
 

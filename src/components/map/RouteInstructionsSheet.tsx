@@ -24,6 +24,7 @@ interface Props {
   currentLang: string
   expanded: boolean
   setExpanded: (v: boolean) => void
+  onZoomToRoute?: () => void
 }
 
 const RouteInstructionsSheet: React.FC<Props> = ({
@@ -32,7 +33,8 @@ const RouteInstructionsSheet: React.FC<Props> = ({
   route,
   instructions,
   expanded,
-  setExpanded
+  setExpanded,
+  onZoomToRoute
 }) => {
   if (!route || !visible) return null
 
@@ -90,13 +92,27 @@ const RouteInstructionsSheet: React.FC<Props> = ({
               </div>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 bg-red-500 hover:bg-red-600 rounded-lg grid place-items-center transition-all shadow text-white"
-            aria-label="Đóng bảng chỉ dẫn"
-          >
-            <X className="w-4 h-4 text-white" />
-          </button>
+          <div className="flex items-center gap-2">
+            {onZoomToRoute && (
+              <button
+                onClick={onZoomToRoute}
+                className="w-8 h-8 bg-green-500 hover:bg-green-600 rounded-lg grid place-items-center transition-all shadow text-white"
+                aria-label="Zoom về đường đi"
+                title="Zoom về đường đi"
+              >
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                </svg>
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="w-8 h-8 bg-red-500 hover:bg-red-600 rounded-lg grid place-items-center transition-all shadow text-white"
+              aria-label="Đóng bảng chỉ dẫn"
+            >
+              <X className="w-4 h-4 text-white" />
+            </button>
+          </div>
         </div>
       </div>
 

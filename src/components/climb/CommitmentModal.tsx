@@ -1,6 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { RegistrationData } from '../../types/climb';
 import { formatDateToDDMMYYYY } from '../../utils/climbUtils';
+import Button from '../common/Button';
+import { 
+  FileText, 
+  User, 
+  Calendar, 
+  CreditCard, 
+  MapPin, 
+  Phone, 
+  Mail, 
+  Users, 
+  Clock, 
+  PenTool, 
+  X,
+  AlertCircle,
+  CheckCircle
+} from 'lucide-react';
+import { cn } from '@/utils/cn';
 
 interface CommitmentModalProps {
   isOpen: boolean;
@@ -16,6 +33,8 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
   registrationData
 }) => {
   const [isDrawing, setIsDrawing] = useState(false);
+  const [hasSignature, setHasSignature] = useState(false);
+  const [signatureSize, setSignatureSize] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -31,8 +50,8 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
         canvas.height = rect.height * ratio;
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#1f2937';
+        ctx.lineWidth = 3; // Tăng độ dày của nét ký
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         
@@ -43,6 +62,7 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
 
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
     setIsDrawing(true);
+    setHasSignature(true);
     draw(e);
   };
 
@@ -69,6 +89,9 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
     contextRef.current.stroke();
     contextRef.current.beginPath();
     contextRef.current.moveTo(x, y);
+    
+    // Cập nhật kích thước chữ ký
+    updateSignatureSize();
   };
 
   const stopDrawing = () => {
@@ -76,29 +99,38 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
     if (contextRef.current) {
       contextRef.current.beginPath();
     }
+    updateSignatureSize();
+  };
+
+  const updateSignatureSize = () => {
+    if (!contextRef.current || !canvasRef.current) return;
+    
+    const imageData = contextRef.current.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height);
+    const data = imageData.data;
+    let pixelCount = 0;
+    
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] > 0) pixelCount++;
+    }
+    
+    setSignatureSize(pixelCount);
   };
 
   const clearSignature = () => {
     if (contextRef.current && canvasRef.current) {
       contextRef.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      setHasSignature(false);
+      setSignatureSize(0);
     }
   };
 
   const isSignatureValid = () => {
-    if (!contextRef.current || !canvasRef.current) return false;
-    
-    const imageData = contextRef.current.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height);
-    const data = imageData.data;
-    
-    for (let i = 3; i < data.length; i += 4) {
-      if (data[i] > 0) return true;
-    }
-    return false;
+    return hasSignature && signatureSize > 100; // Tối thiểu 100 pixel
   };
 
   const handleConfirm = () => {
     if (!isSignatureValid()) {
-      alert('Vui lòng ký tay để xác nhận cam kết.');
+      alert('Vui lòng ký tay đủ để xác nhận cam kết.');
       return;
     }
 
@@ -110,104 +142,228 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
 
   if (!isOpen || !registrationData) return null;
 
+  const infoItems = [
+    { icon: <User className="w-4 h-4" />, label: 'Họ tên', value: registrationData.leaderName },
+    { icon: <Calendar className="w-4 h-4" />, label: 'Ngày sinh', value: formatDateToDDMMYYYY(registrationData.birthday) },
+    { icon: <CreditCard className="w-4 h-4" />, label: 'CMND/CCCD', value: registrationData.cccd },
+    { icon: <MapPin className="w-4 h-4" />, label: 'Địa chỉ', value: registrationData.address },
+    { icon: <Phone className="w-4 h-4" />, label: 'Số điện thoại', value: registrationData.phoneNumber },
+    { icon: <Mail className="w-4 h-4" />, label: 'Email', value: registrationData.email },
+    { icon: <Users className="w-4 h-4" />, label: 'Số lượng thành viên', value: registrationData.groupSize },
+    { icon: <Calendar className="w-4 h-4" />, label: 'Ngày leo', value: formatDateToDDMMYYYY(registrationData.climbDate) || 'Chưa chọn' },
+    { icon: <Clock className="w-4 h-4" />, label: 'Giờ leo', value: registrationData.climbTime || 'Chưa chọn' }
+  ];
+
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[200] p-2 md:p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl p-2 md:p-6 w-full max-w-2xl mx-auto max-h-[95vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg md:text-2xl font-bold text-gray-800">Cam kết đăng ký leo núi</h3>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">
-            <i className="fas fa-times"></i>
-          </button>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[200] p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl mx-auto max-h-[95vh] overflow-y-auto animate-slide-up">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-t-2xl p-6 text-white sticky top-0 z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 p-2 rounded-xl">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">Cam kết đăng ký leo núi</h3>
+                <p className="text-primary-100 text-sm">Xác nhận thông tin và ký cam kết</p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white/80 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        <div className="bg-blue-50 p-2 md:p-4 rounded-lg mb-4">
-          <div className="text-center mb-4">
-            <div className="font-bold text-base md:text-lg uppercase mb-1">BẢN CAM KẾT TỰ NGUYỆN THAM GIA LEO NÚI</div>
-            <div className="italic text-sm md:text-base">(Tại Khu du lịch Quốc gia Núi Bà Đen)</div>
-            <div className="font-semibold mt-2">
-              <span className="font-bold">Kính gửi:</span> Ban quản lý Khu du lịch Quốc gia Núi Bà Đen
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Registration Info */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-blue-100 p-2 rounded-lg">
+                <User className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-blue-800">Thông tin đăng ký</h4>
+                <p className="text-blue-600 text-sm">Chi tiết người đăng ký</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {infoItems.map((item, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 bg-white/50 rounded-lg">
+                  <div className="text-blue-500">{item.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-blue-600 font-medium">{item.label}</p>
+                    <p className="text-sm text-blue-800 font-semibold truncate">{item.value}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          
-          <div className="mb-2 text-sm md:text-base">
-            <div><strong>Họ tên:</strong> {registrationData.leaderName}</div>
-            <div><strong>Ngày sinh:</strong> {formatDateToDDMMYYYY(registrationData.birthday)}</div>
-            <div><strong>CMND/CCCD số:</strong> {registrationData.cccd}</div>
-            <div><strong>Địa chỉ thường trú:</strong> {registrationData.address}</div>
-            <div><strong>Số điện thoại liên hệ:</strong> {registrationData.phoneNumber}</div>
-            <div><strong>Email:</strong> {registrationData.email}</div>
-            <div><strong>Số lượng thành viên:</strong> {registrationData.groupSize}</div>
-            <div><strong>Ngày leo:</strong> {formatDateToDDMMYYYY(registrationData.climbDate) || 'Chưa chọn'}</div>
-            <div><strong>Giờ leo:</strong> {registrationData.climbTime || 'Chưa chọn'}</div>
+
+          {/* Commitment Text */}
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="bg-yellow-100 p-2 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-yellow-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-yellow-800">BẢN CAM KẾT TỰ NGUYỆN THAM GIA LEO NÚI</h4>
+                <p className="text-yellow-600 text-sm">Khu du lịch Quốc gia Núi Bà Đen</p>
+              </div>
+            </div>
+            
+            <div className="text-sm text-yellow-800 space-y-3 leading-relaxed">
+              <p className="text-center font-semibold">
+                <span className="font-bold">Kính gửi:</span> Ban quản lý Khu du lịch Quốc gia Núi Bà Đen
+              </p>
+              
+              <p>
+                Vào ngày {new Date().getDate().toString().padStart(2, '0')} tháng {(new Date().getMonth() + 1).toString().padStart(2, '0')} năm {new Date().getFullYear()}, 
+                nay tôi làm bản cam kết này để xác nhận việc tham gia hoạt động leo núi tại Núi Bà Đen, với các nội dung sau:
+              </p>
+              
+              <div className="space-y-2">
+                <p><strong>1. Tự nguyện tham gia:</strong> Tôi tự nguyện tham gia hoạt động leo núi, đã được lực lượng của Ban Quản lý phổ biến đầy đủ thông tin, hướng dẫn và nhận thức rõ về các nguy cơ, rủi ro có thể xảy ra trong quá trình tham gia hoạt động.</p>
+                <p><strong>2. Đảm bảo sức khỏe cá nhân:</strong> Tôi cam kết có đủ điều kiện sức khỏe để tham gia hoạt động leo núi, không mắc các bệnh lý nguy hiểm hoặc ảnh hưởng đến việc vận động.</p>
+                <p><strong>3. Tuân thủ quy định và hướng dẫn:</strong> Cam kết chấp hành nghiêm túc mọi nội quy, quy định, hướng dẫn của Ban Quản lý Khu du lịch quốc gia Núi Bà Đen.</p>
+                <p><strong>4. Cam kết bảo vệ môi trường:</strong> Không xả rác, không hủy hoại tài nguyên rừng, không sử dụng lửa trong rừng, không săn bắt động vật rừng.</p>
+                <p><strong>5. Cam kết giữ gìn an ninh trật tự:</strong> Không tổ chức đánh bạc, không tự ý tách đoàn, không đi vào các khu vực cấm hoặc địa hình nguy hiểm.</p>
+                <p><strong>6. Chấp nhận rủi ro:</strong> Trong trường hợp xảy ra tai nạn, thương tích hoặc sự cố ngoài ý muốn, tôi cam kết tự chịu trách nhiệm và không khiếu nại, khiếu kiện Ban Tổ chức.</p>
+              </div>
+              
+              <p className="font-semibold text-center mt-4">
+                Tôi làm cam kết này với tinh thần tự nguyện, trung thực và hoàn toàn chịu trách nhiệm trước pháp luật về các thông tin đã khai và nội dung cam kết trên./.
+              </p>
+            </div>
           </div>
 
-          <div className="text-justify text-xs md:text-sm text-blue-700 space-y-2 leading-relaxed mt-2">
-            <p>
-              Vào ngày {new Date().getDate().toString().padStart(2, '0')} tháng {(new Date().getMonth() + 1).toString().padStart(2, '0')} năm {new Date().getFullYear()}, 
-              nay tôi làm bản cam kết này để xác nhận việc tham gia hoạt động leo núi tại Núi Bà Đen, với các nội dung sau:
-            </p>
-            <p><strong>1. Tự nguyện tham gia:</strong> Tôi tự nguyện tham gia hoạt động leo núi, đã được lực lượng của Ban Quản lý phổ biến đầy đủ thông tin, hướng dẫn và nhận thức rõ về các nguy cơ, rủi ro có thể xảy ra trong quá trình tham gia hoạt động.</p>
-            <p><strong>2. Đảm bảo sức khỏe cá nhân:</strong> Tôi cam kết có đủ điều kiện sức khỏe để tham gia hoạt động leo núi, không mắc các bệnh lý nguy hiểm hoặc ảnh hưởng đến việc vận động. Tôi hoàn toàn chịu trách nhiệm về tình trạng sức khỏe của bản thân.</p>
-            <p><strong>3. Tuân thủ quy định và hướng dẫn:</strong> Cam kết chấp hành nghiêm túc mọi nội quy, quy định, hướng dẫn của Ban Quản lý Khu du lịch quốc gia Núi Bà Đen, lực lượng chức năng và người hướng dẫn trong suốt quá trình tham gia hoạt động.</p>
-            <p><strong>4. Cam kết bảo vệ môi trường và phòng cháy chữa cháy rừng:</strong></p>
-            <ul className="list-disc ml-6 space-y-1">
-              <li>Không xả rác, không hủy hoại tài nguyên rừng, hệ sinh thái rừng, công trình bảo vệ và phát triển rừng;</li>
-              <li>Không sử dụng lửa trong rừng, không mang theo hóa chất độc, chất nổ, chất cháy, chất dễ cháy vào rừng;</li>
-              <li>Không săn, bắt, nhốt, giết, tàng trữ, vận chuyển, buôn bán động vật rừng, thu thập mẫu vật các loài thực vật rừng, động vật rừng trái quy định của pháp luật.</li>
-            </ul>
-            <p><strong>5. Cam kết giữ gìn an ninh trật tự và an toàn cá nhân:</strong></p>
-            <ul className="list-disc ml-6 space-y-1">
-              <li>Không tổ chức, sử dụng, mua bán trái phép chất ma túy; Không tổ chức đánh bạc, cá độ dưới mọi hình thức trong quá trình leo núi trên lâm phần của Ban Quản lý;</li>
-              <li>Không tự ý tách đoàn, không đi vào các khu vực cấm hoặc địa hình nguy hiểm. Nếu vi phạm, tôi hoàn toàn chịu trách nhiệm trước pháp luật và các cơ quan có thẩm quyền.</li>
-            </ul>
-            <p><strong>6. Chấp nhận rủi ro và miễn trừ trách nhiệm:</strong> Trong trường hợp xảy ra tai nạn, thương tích hoặc sự cố ngoài ý muốn trong quá trình tham gia hoạt động, tôi cam kết tự chịu trách nhiệm và không khiếu nại, khiếu kiện Ban Tổ chức hoặc Ban Quản lý Khu du lịch dưới bất kỳ hình thức nào.</p>
-            <p className="mt-4 font-semibold">
-              Tôi làm cam kết này với tinh thần tự nguyện, trung thực và hoàn toàn chịu trách nhiệm trước pháp luật về các thông tin đã khai và nội dung cam kết trên./.
-            </p>
+          {/* Signature Section */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-white">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-lg">
+                  <PenTool className="w-6 h-6" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold">Chữ ký xác nhận</h4>
+                  <p className="text-primary-100 text-sm">Vui lòng ký tay để xác nhận cam kết</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {/* Signature Instructions */}
+              <div className="text-center mb-6">
+                <div className="w-20 h-20 bg-gradient-to-r from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <PenTool className="w-10 h-10 text-blue-600" />
+                </div>
+                <h5 className="text-lg font-semibold text-gray-800 mb-2">
+                  Ký bằng tay hoặc bút cảm ứng
+                </h5>
+                <p className="text-gray-600">
+                  Vẽ chữ ký của bạn vào ô bên dưới để xác nhận cam kết
+                </p>
+              </div>
+              
+              {/* Signature Canvas */}
+              <div className="relative mb-6">
+                <canvas
+                  ref={canvasRef}
+                  className="w-full h-72 md:h-80 border-2 border-gray-200 rounded-xl bg-white cursor-crosshair shadow-lg hover:shadow-xl transition-all duration-300"
+                  onMouseDown={startDrawing}
+                  onMouseMove={draw}
+                  onMouseUp={stopDrawing}
+                  onMouseOut={stopDrawing}
+                  onTouchStart={startDrawing}
+                  onTouchMove={draw}
+                  onTouchEnd={stopDrawing}
+                />
+                
+                {/* Signature Guide Lines */}
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center">
+                      <div className="w-40 h-0.5 bg-gradient-to-r from-transparent via-gray-300 to-transparent mb-3"></div>
+                      <p className="text-sm text-gray-400 font-medium">Ký tại đây</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Signature Actions */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearSignature}
+                    className="text-red-600 hover:text-red-800 border-red-200 hover:border-red-300"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Xóa chữ ký
+                  </Button>
+                  <div className={cn(
+                    "px-3 py-1.5 rounded-full text-sm font-medium flex items-center gap-2",
+                    isSignatureValid() 
+                      ? "bg-green-100 text-green-700 border border-green-200" 
+                      : hasSignature 
+                        ? "bg-yellow-100 text-yellow-700 border border-yellow-200"
+                        : "bg-gray-100 text-gray-500 border border-gray-200"
+                  )}>
+                    {isSignatureValid() ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        Chữ ký hợp lệ
+                      </>
+                    ) : hasSignature ? (
+                      <>
+                        <AlertCircle className="w-4 h-4" />
+                        Chữ ký quá nhỏ
+                      </>
+                    ) : (
+                      <>
+                        <PenTool className="w-4 h-4" />
+                        Chưa ký
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-xs text-blue-700 font-medium mb-1">Hướng dẫn ký</p>
+                    <p className="text-xs text-blue-600">• Ký bằng tay hoặc bút cảm ứng</p>
+                    <p className="text-xs text-blue-600">• Kích thước tối thiểu: 100 pixel</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-2 md:p-4 mb-4">
-          <h4 className="text-base md:text-lg font-semibold text-gray-800 mb-2">Chữ ký xác nhận:</h4>
-          <p className="text-xs md:text-sm text-gray-600 mb-2">Vui lòng ký tay vào ô bên dưới để xác nhận cam kết:</p>
-          <canvas
-            ref={canvasRef}
-            className="w-full h-32 md:h-48 border border-gray-300 rounded bg-white cursor-crosshair"
-            onMouseDown={startDrawing}
-            onMouseMove={draw}
-            onMouseUp={stopDrawing}
-            onMouseOut={stopDrawing}
-            onTouchStart={startDrawing}
-            onTouchMove={draw}
-            onTouchEnd={stopDrawing}
-          />
-          <div className="flex justify-between items-center mt-2">
-            <button
-              type="button"
-              onClick={clearSignature}
-              className="text-xs md:text-sm text-red-600 hover:text-red-800"
+          {/* Footer */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="text-gray-600"
             >
-              <i className="fas fa-eraser mr-1"></i> Xóa chữ ký
-            </button>
-            <span className="text-xs text-gray-500">Ký bằng tay hoặc bút cảm ứng</span>
+              Hủy bỏ
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirm}
+              disabled={!isSignatureValid()}
+              leftIcon={<CheckCircle className="w-4 h-4" />}
+              className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800"
+            >
+              Xác nhận cam kết
+            </Button>
           </div>
-        </div>
-
-        <div className="flex justify-end space-x-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="py-2 px-4 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md font-medium text-xs md:text-sm"
-          >
-            Hủy bỏ
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            className="py-2 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md text-xs md:text-sm"
-          >
-            <i className="fas fa-check mr-2"></i> Xác nhận cam kết
-          </button>
         </div>
       </div>
     </div>

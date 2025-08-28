@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
 import { GpsSettings, MemberData } from '../../types/climb';
+import Button from '../common/Button';
+import Input from '../common/Input';
+import { 
+  Award, 
+  Clock, 
+  Phone, 
+  Users, 
+  Camera, 
+  CheckCircle,
+  X,
+  MapPin,
+  Download
+} from 'lucide-react';
 
 interface CertificationSectionProps {
   onVerifyPhone: (phoneNumber: string) => Promise<MemberData[]>;
@@ -11,7 +24,7 @@ interface CertificationSectionProps {
 export const CertificationSection: React.FC<CertificationSectionProps> = ({
   onVerifyPhone,
   onGenerateCertificates,
-  gpsSettings,
+  gpsSettings: _gpsSettings,
   onShowCropModal
 }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -31,7 +44,6 @@ export const CertificationSection: React.FC<CertificationSectionProps> = ({
       const memberList = await onVerifyPhone(phoneNumber);
       setMembers(memberList);
       setShowMemberSelection(true);
-      // Reset uploaded photos when verifying new phone
       setUploadedPhotos({});
     } catch (error) {
       console.error('Verification failed:', error);
@@ -74,12 +86,7 @@ export const CertificationSection: React.FC<CertificationSectionProps> = ({
     onShowCropModal(true, memberName);
   };
 
-  const handleCropConfirm = (croppedImageData: string, memberName: string) => {
-    setUploadedPhotos(prev => ({
-      ...prev,
-      [memberName]: croppedImageData
-    }));
-  };
+  // Crop confirm is handled in parent via modal; no local handler needed
 
   const handleRemovePhoto = (memberName: string) => {
     setUploadedPhotos(prev => {
@@ -90,133 +97,161 @@ export const CertificationSection: React.FC<CertificationSectionProps> = ({
   };
 
   return (
-    <section className="bg-white p-6 md:p-8 rounded-lg shadow-lg">
-      <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-blue-700 border-b border-blue-200 pb-4 flex items-center">
-        <i className="fa-solid fa-award text-3xl text-blue-600 mr-4"></i>
-        Nhận Chứng nhận
-      </h2>
-
-      <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6">
-        <div className="flex items-start">
-          <i className="fas fa-clock text-blue-600 mt-1 mr-3"></i>
-          <div className="text-sm text-blue-800">
-            <p className="font-semibold mb-2">⏱️ Thông tin thời gian leo núi:</p>
-            <ul className="list-disc list-inside space-y-1 text-xs">
-              <li><strong>Thời gian leo:</strong> Được tính từ lúc bắt đầu leo đến lúc xác nhận vị trí trên đỉnh</li>
-              <li><strong>Ghi nhận tự động:</strong> Hệ thống sẽ ghi nhận thời gian thực khi bạn ấn "Xác thực"</li>
-              <li><strong>Hiển thị trên chứng nhận:</strong> Thời gian leo sẽ được in trên chứng nhận</li>
-              <li><strong>Yêu cầu:</strong> Phải xác thực vị trí tại đỉnh núi (986m) để nhận chứng nhận</li>
-            </ul>
+    <div className="max-w-4xl mx-auto">
+      {/* Header Section */}
+      <div className="bg-gradient-to-r from-accent-600 to-accent-700 rounded-t-2xl p-6 text-white">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="bg-white/20 p-3 rounded-xl">
+            <Award className="w-8 h-8" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold">Nhận Chứng nhận</h2>
+            <p className="text-accent-100 text-sm">Xác thực và tạo chứng nhận leo núi</p>
           </div>
         </div>
       </div>
 
-      <div className="mb-4 relative">
-        <label htmlFor="verifyPhoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
-          Nhập Số điện thoại đã đăng ký <span className="text-red-500">*</span>
-        </label>
-        <div className="flex items-center border border-gray-300 rounded-md shadow-sm focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
-          <span className="pl-3 pr-2 text-gray-400"><i className="fa-solid fa-mobile-screen-button"></i></span>
-          <input
-            type="tel"
-            id="verifyPhoneNumber"
-            required
-            pattern="[0-9]{10,11}"
-            className="w-full py-2 border-0 rounded-r-md focus:ring-0 focus:outline-none text-sm"
-            placeholder="Nhập lại SĐT đã đăng ký"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-          />
-        </div>
-      </div>
+      {/* Content Section */}
+      <div className="bg-white rounded-b-2xl shadow-xl">
+        <div className="p-6 space-y-6">
+          {/* Info Section */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <Clock className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="space-y-2">
+                <p className="font-semibold text-blue-800 text-sm">⏱️ Thông tin thời gian leo núi:</p>
+                <ul className="text-xs text-blue-700 space-y-1">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    <span><strong>Thời gian leo:</strong> Được tính từ lúc bắt đầu leo đến lúc xác nhận vị trí trên đỉnh</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    <span><strong>Ghi nhận tự động:</strong> Hệ thống sẽ ghi nhận thời gian thực khi bạn ấn "Xác thực"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    <span><strong>Hiển thị trên chứng nhận:</strong> Thời gian leo sẽ được in trên chứng nhận</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    <span><strong>Yêu cầu:</strong> Phải xác thực vị trí tại đỉnh núi (986m) để nhận chứng nhận</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
 
-      <div className="pt-2 flex flex-col sm:flex-row gap-3">
-        <button
-          type="button"
-          onClick={handleVerifyPhone}
-          disabled={loading}
-          className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out flex items-center justify-center text-lg shadow hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          <i className="fa-solid fa-location-crosshairs mr-2"></i>
-          <span>Xác thực</span>
-          {loading && <div className="spinner ml-2"></div>}
-        </button>
-      </div>
+          {/* Phone Verification */}
+          <div className="space-y-4">
+            {/* Removed heading to keep only the phone input */}
+            
+            <Input
+              label="Số điện thoại đã đăng ký"
+              type="tel"
+              required
+              pattern="[0-9]{10,11}"
+              leftIcon={<Phone className="w-4 h-4" />}
+              placeholder="Nhập lại SĐT đã đăng ký"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              helperText=""
+            />
+            
+            <Button
+              onClick={handleVerifyPhone}
+              disabled={loading || !phoneNumber.trim()}
+              loading={loading}
+              leftIcon={<MapPin className="w-4 h-4" />}
+              className="bg-gradient-to-r from-accent-600 to-accent-700 hover:from-accent-700 hover:to-accent-800"
+            >
+              {loading ? 'Đang xác thực...' : 'Xác thực vị trí'}
+            </Button>
+          </div>
 
-      {showMemberSelection && members.length > 0 && (
-        <div className="mt-8 border border-gray-200 rounded-lg p-4 md:p-6 bg-gray-50/50">
-          <h3 className="text-lg md:text-xl font-semibold text-gray-800 mb-3">
-            Chọn thành viên nhận chứng nhận
-          </h3>
-          <p className="text-sm text-gray-600 mb-5">
-            Đánh dấu chọn thành viên muốn nhận chứng nhận. Bạn có thể tải ảnh cho từng thành viên (tùy chọn).
-          </p>
+          {/* Member Selection */}
+          {showMemberSelection && members.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 pb-2 border-b border-gray-200">
+                <Users className="w-5 h-5 text-accent-600" />
+                <h3 className="text-xl font-semibold text-gray-800">Chọn thành viên nhận chứng nhận</h3>
+              </div>
+              
+              <div className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-xl p-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Đánh dấu chọn thành viên muốn nhận chứng nhận. Bạn có thể tải ảnh cho từng thành viên (tùy chọn).
+                </p>
 
-          <div className="space-y-4 mb-6 max-h-96 overflow-y-auto border-t border-b border-gray-200 py-4">
-            {members.map((member, index) => (
-              <div key={index} className="member-item flex items-start space-x-3 p-3 bg-white rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-3 flex-1">
-                  <input
-                    type="checkbox"
-                    id={`member-${index}`}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    checked={selectedMembers.includes(member.name)}
-                    onChange={(e) => handleMemberSelection(member.name, e.target.checked)}
-                  />
-                  <label htmlFor={`member-${index}`} className="text-sm font-medium text-gray-700 flex-1">
-                    {member.name}
-                  </label>
-                </div>
-                
-                {/* Photo upload section */}
-                <div className="flex items-center space-x-2">
-                  {uploadedPhotos[member.name] ? (
-                    <div className="flex items-center space-x-2">
-                      <img
-                        src={uploadedPhotos[member.name]}
-                        alt={`Ảnh ${member.name}`}
-                        className="w-12 h-12 object-cover rounded border border-gray-300"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemovePhoto(member.name)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                        title="Xóa ảnh"
-                      >
-                        <i className="fas fa-times"></i>
-                      </button>
+                <div className="space-y-3 max-h-96 overflow-y-auto border-t border-b border-gray-200 py-4">
+                  {members.map((member, index) => (
+                    <div key={index} className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4 flex-1">
+                          <input
+                            type="checkbox"
+                            id={`member-${index}`}
+                            className="h-5 w-5 text-accent-600 border-gray-300 rounded focus:ring-accent-500"
+                            checked={selectedMembers.includes(member.name)}
+                            onChange={(e) => handleMemberSelection(member.name, e.target.checked)}
+                          />
+                          <label htmlFor={`member-${index}`} className="text-sm font-medium text-gray-700 flex-1 cursor-pointer">
+                            {member.name}
+                          </label>
+                        </div>
+                        
+                        {/* Photo upload section */}
+                        <div className="flex items-center gap-2">
+                          {uploadedPhotos[member.name] ? (
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={uploadedPhotos[member.name]}
+                                alt={`Ảnh ${member.name}`}
+                                className="w-12 h-12 object-cover rounded-lg border border-gray-300"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRemovePhoto(member.name)}
+                                className="text-red-600 hover:text-red-800"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleShowCropModal(member.name)}
+                              className="text-accent-600 hover:text-accent-800"
+                            >
+                              <Camera className="w-4 h-4 mr-1" />
+                              <span className="hidden sm:inline">Tải ảnh</span>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleShowCropModal(member.name)}
-                      className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
-                      title="Tải ảnh"
-                    >
-                      <i className="fas fa-camera mr-1"></i>
-                      <span className="hidden sm:inline">Tải ảnh</span>
-                    </button>
-                  )}
+                  ))}
+                </div>
+
+                <div className="pt-4 border-t border-gray-200">
+                  <Button
+                    onClick={handleGenerateCertificates}
+                    disabled={loading || selectedMembers.length === 0}
+                    loading={loading}
+                    leftIcon={<Download className="w-4 h-4" />}
+                    fullWidth
+                    className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                  >
+                    {loading ? 'Đang tạo chứng nhận...' : `Tạo Chứng nhận (${selectedMembers.length} người)`}
+                  </Button>
                 </div>
               </div>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handleGenerateCertificates}
-              disabled={loading || selectedMembers.length === 0}
-              className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out flex items-center justify-center text-base shadow hover:shadow-md disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <i className="fa-solid fa-file-pdf mr-2"></i>
-              <span>Tạo Chứng nhận</span>
-              {loading && <div className="spinner ml-2"></div>}
-            </button>
-          </div>
+            </div>
+          )}
         </div>
-      )}
-    </section>
+      </div>
+    </div>
   );
 };
 

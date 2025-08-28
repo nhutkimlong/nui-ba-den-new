@@ -1,10 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Button from '../common/Button';
+import { 
+  Image, 
+  Crop, 
+  X, 
+  RotateCcw,
+  CheckCircle,
+  AlertCircle
+} from 'lucide-react';
+import { cn } from '@/utils/cn';
 
 interface CropModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (croppedImageData: string, memberName: string) => void;
   memberName: string;
+  imageFile?: File | null;
 }
 
 declare global {
@@ -17,14 +28,14 @@ export const CropModal: React.FC<CropModalProps> = ({
   isOpen, 
   onClose, 
   onConfirm, 
-  memberName 
+  memberName,
+  imageFile
 }) => {
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageSrc, setImageSrc] = useState<string>('');
   const [cropperInstance, setCropperInstance] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const CROP_ASPECT_RATIO = 11.89 / 16.73; // Tỷ lệ khung hình cố định
 
@@ -66,6 +77,9 @@ export const CropModal: React.FC<CropModalProps> = ({
     if (!imageRef.current || !imageSrc) return;
 
     try {
+      setLoading(true);
+      setError(null);
+      
       await loadCropperJS();
       
       if (cropperInstance) {
@@ -91,48 +105,50 @@ export const CropModal: React.FC<CropModalProps> = ({
       });
 
       setCropperInstance(newCropper);
+      setLoading(false);
     } catch (error) {
       console.error('Error initializing cropper:', error);
-      alert('Lỗi tải thư viện cắt ảnh. Vui lòng thử lại.');
+      setError('Lỗi tải thư viện cắt ảnh. Vui lòng thử lại.');
+      setLoading(false);
     }
   };
 
-  // Handle file selection
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  // Handle file from props
+  useEffect(() => {
+    if (imageFile && isOpen) {
+      // Validation
+      if (!imageFile.type.startsWith('image/')) {
+        setError('Vui lòng chọn tệp ảnh.');
+        return;
+      }
 
-    // Validation
-    if (!file.type.startsWith('image/')) {
-      alert('Vui lòng chọn tệp ảnh.');
-      return;
+      const maxSizeMB = 8;
+      if (imageFile.size > maxSizeMB * 1024 * 1024) {
+        setError(`Ảnh quá lớn (tối đa ${maxSizeMB}MB).`);
+        return;
+      }
+
+      setError(null);
+      
+      // Read file and set image source
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setImageSrc(result);
+      };
+      reader.readAsDataURL(imageFile);
     }
-
-    const maxSizeMB = 8;
-    if (file.size > maxSizeMB * 1024 * 1024) {
-      alert(`Ảnh quá lớn (tối đa ${maxSizeMB}MB).`);
-      return;
-    }
-
-    setImageFile(file);
-    
-    // Read file and set image source
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      setImageSrc(result);
-    };
-    reader.readAsDataURL(file);
-  };
+  }, [imageFile, isOpen]);
 
   // Handle crop confirmation
   const handleConfirmCrop = () => {
     if (!cropperInstance) {
-      alert('Lỗi: Không tìm thấy dữ liệu cắt.');
+      setError('Lỗi: Không tìm thấy dữ liệu cắt.');
       return;
     }
 
     try {
+      setLoading(true);
       const MAX_PHOTO_WIDTH = 800;
       const croppedCanvas = cropperInstance.getCroppedCanvas({
         width: MAX_PHOTO_WIDTH,
@@ -150,7 +166,8 @@ export const CropModal: React.FC<CropModalProps> = ({
       handleClose();
     } catch (error) {
       console.error('Error cropping image:', error);
-      alert(`Lỗi cắt ảnh: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+      setError(`Lỗi cắt ảnh: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
+      setLoading(false);
     }
   };
 
@@ -160,9 +177,9 @@ export const CropModal: React.FC<CropModalProps> = ({
       cropperInstance.destroy();
       setCropperInstance(null);
     }
-    setImageFile(null);
     setImageSrc('');
     setLoading(false);
+    setError(null);
     onClose();
   };
 
@@ -188,90 +205,98 @@ export const CropModal: React.FC<CropModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[200] p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 max-w-4xl w-full mx-auto max-h-[95vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold text-gray-800">
-            Cắt ảnh cho: {memberName}
-          </h3>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
-          >
-            <i className="fas fa-times"></i>
-          </button>
-        </div>
-
-        {!imageSrc ? (
-          <div className="text-center py-8">
-            <div className="mb-4">
-              <i className="fa-solid fa-image text-6xl text-gray-300"></i>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 p-2 rounded-lg">
+                <Crop className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Cắt ảnh cho {memberName}</h2>
+                <p className="text-primary-100 text-sm">
+                  Cắt ảnh theo tỷ lệ chuẩn cho chứng nhận
+                </p>
+              </div>
             </div>
-            <p className="text-gray-600 mb-4">
-              Chọn ảnh để cắt theo tỷ lệ yêu cầu
-            </p>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
             <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition duration-150 ease-in-out"
+              onClick={handleClose}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
             >
-              <i className="fa-solid fa-upload mr-2"></i>
-              Chọn ảnh
+              <X className="w-5 h-5" />
             </button>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="bg-gray-100 border border-gray-300 rounded-lg p-4">
-              <div className="max-h-96 overflow-hidden">
-                <img
-                  ref={imageRef}
-                  src={imageSrc}
-                  alt="Ảnh để cắt"
-                  className="max-w-full h-auto"
-                />
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          {!imageSrc ? (
+            /* Loading or No Image Section */
+            <div className="text-center py-12">
+              <div className="mb-6">
+                <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Image className="w-12 h-12 text-gray-400" />
+                </div>
+                <h4 className="text-lg font-semibold text-gray-800 mb-2">Đang tải ảnh...</h4>
+                <p className="text-gray-600 text-sm">
+                  Vui lòng chờ trong giây lát
+                </p>
               </div>
             </div>
-            
-            <div className="flex justify-between items-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setImageFile(null);
-                  setImageSrc('');
-                  if (fileInputRef.current) fileInputRef.current.value = '';
-                }}
-                className="text-red-600 hover:text-red-800 text-sm"
-              >
-                <i className="fas fa-eraser mr-1"></i> Chọn ảnh khác
-              </button>
-              <div className="flex space-x-3">
-                <button
-                  type="button"
+          ) : (
+            /* Image Cropping Section */
+            <div className="space-y-6">
+              {/* Error Display */}
+              {error && (
+                <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium text-red-800">Lỗi</p>
+                      <p className="text-sm text-red-700">{error}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Image Container */}
+              <div className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-xl p-4">
+                <div className="max-h-96 overflow-hidden rounded-lg">
+                  <img
+                    ref={imageRef}
+                    src={imageSrc}
+                    alt="Ảnh để cắt"
+                    className="max-w-full h-auto"
+                  />
+                </div>
+              </div>
+              
+              {/* Actions */}
+              <div className="flex justify-between items-center">
+                <Button
+                  variant="outline"
                   onClick={handleClose}
-                  className="py-2 px-4 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md transition duration-150 ease-in-out text-sm font-medium"
+                  leftIcon={<RotateCcw className="w-4 h-4" />}
+                  className="text-gray-600"
                 >
                   Hủy bỏ
-                </button>
-                <button
-                  type="button"
+                </Button>
+                
+                <Button
                   onClick={handleConfirmCrop}
-                  disabled={!cropperInstance}
-                  className="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition duration-150 ease-in-out text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={!cropperInstance || loading}
+                  loading={loading}
+                  leftIcon={<CheckCircle className="w-4 h-4" />}
+                  className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800"
                 >
-                  <i className="fa-solid fa-crop-simple mr-1"></i> Xác nhận cắt
-                </button>
+                  {loading ? 'Đang xử lý...' : 'Xác nhận cắt'}
+                </Button>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

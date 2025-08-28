@@ -1,11 +1,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import './PoiAdminPage.css';
+import './AdminStyles.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faMapMarkerAlt, faBolt, faEdit, faThList, faSearch, faTrashAlt, faSave, faEraser, faList, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faMapMarkerAlt, faBolt, faEdit, faThList, faSearch, faTrashAlt, faSave, faEraser, faList, faPlus, faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { ResponsiveContainer, useDevice } from '../../layout';
 
 // Fix for default marker icon in Leaflet with webpack
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -199,14 +201,32 @@ const PoiAdminPage: React.FC = () => {
         return formCoordinates ? <Marker position={formCoordinates}></Marker> : null;
     };
 
+    const { isMobile } = useDevice();
+
     return (
-        <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
-            <header className="mb-8">
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2 flex items-center">
-                    <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-3 text-indigo-600" /> Quản lý POI Núi Bà Đen
-                </h1>
-                <p className="text-slate-600">Quản lý và cập nhật thông tin các điểm tham quan trên Núi Bà Đen</p>
-            </header>
+        <ResponsiveContainer maxWidth="7xl" padding="lg">
+            <div className="admin-layout py-8">
+                {/* Header Section */}
+                <div className="admin-card mb-8">
+                    <div className="admin-card-header">
+                        <div className="flex items-center justify-between flex-col lg:flex-row gap-4">
+                            <div className="flex items-center gap-4 w-full lg:w-auto">
+                                <Link to="/admin" className="p-3 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all duration-200 flex-shrink-0">
+                                    <FontAwesomeIcon icon={faArrowLeft} className="text-slate-600 text-xl" />
+                                </Link>
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="p-3 bg-amber-100 rounded-xl flex-shrink-0">
+                                        <FontAwesomeIcon icon={faMapMarkerAlt} className="text-amber-600 text-2xl" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h1 className="text-xl lg:text-2xl font-bold text-slate-800 truncate">Quản lý POI Núi Bà Đen</h1>
+                                        <p className="text-slate-600 text-sm lg:text-base truncate">Quản lý và cập nhật thông tin các điểm tham quan trên Núi Bà Đen</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             {statusMessage && (
                 <div className={`mb-6 p-4 rounded-lg text-sm font-medium border ${statusMessage.isError ? 'bg-red-100 text-red-700 border-red-300' : 'bg-green-100 text-green-700 border-green-300'}`}>
@@ -220,7 +240,7 @@ const PoiAdminPage: React.FC = () => {
                 <h2 className="text-xl font-semibold text-slate-700 mb-6 flex items-center">
                     <FontAwesomeIcon icon={faBolt} className="mr-2 text-amber-500" /> Hành động nhanh
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                     <div>
                         <label className="block text-sm font-medium text-transparent mb-2">Ẩn</label>
                         <button onClick={loadAllPoisAndSyncGioHoatDong} className="w-full px-4 py-3 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors duration-200 flex items-center justify-center">
@@ -255,7 +275,7 @@ const PoiAdminPage: React.FC = () => {
                 <form id="poiForm" ref={formRef} className="space-y-6" onSubmit={(e) => e.preventDefault()}>
                     <input type="hidden" id="poiIdHidden" name="id" />
                     {/* Form fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
                         <div className="space-y-6">
                             <div className="space-y-4">
                                 <h3 className="text-lg font-medium text-slate-700 mb-3">Thông tin cơ bản</h3>
@@ -432,7 +452,8 @@ const PoiAdminPage: React.FC = () => {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+        </ResponsiveContainer>
     );
 };
 

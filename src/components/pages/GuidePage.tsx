@@ -1,4 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import SwipeableTabs from '../common/SwipeableTabs';
+import { Route, Hotel, Utensils, Flame, MapPin, Phone, Tags, Store, Star, Clock, Users, ChevronLeft, ChevronRight, Loader2, AlertCircle } from 'lucide-react';
+import { ResponsiveContainer, GridLayout, useDevice } from '../layout';
+import Button from '../common/Button';
+import { cn } from '@/utils/cn';
 
 // --- TYPE DEFINITIONS ---
 interface Tour {
@@ -47,6 +52,7 @@ const useGuideSection = <T extends GuideItem>(file: string) => {
     const [error, setError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(window.innerWidth < 768 ? 3 : 6);
+    const [hasLoaded, setHasLoaded] = useState(false);
 
     useEffect(() => {
         const handleResize = () => {
@@ -61,28 +67,42 @@ const useGuideSection = <T extends GuideItem>(file: string) => {
 
     useEffect(() => {
         const fetchData = async () => {
+            // Only fetch if we haven't loaded this file before or if file changed
+            if (hasLoaded && allItems.length > 0) {
+                return;
+            }
+            
             setLoading(true);
             setError(null);
+            setAllItems([]); // Clear previous data
+            setCurrentPage(1); // Reset to first page
+            
             try {
+                console.log(`Fetching data for file: ${file}`); // Debug log
                 const response = await fetch(`/.netlify/functions/data-blobs?file=${file}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
+                console.log(`Data received for ${file}:`, data); // Debug log
+                
                 if (!Array.isArray(data)) {
                     throw new Error("Invalid data format from API.");
                 }
                 setAllItems(data);
+                setHasLoaded(true);
             } catch (e: any) {
-                setError(e.message);
                 console.error(`Failed to fetch ${file}:`, e);
+                setError(e.message);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchData();
-    }, [file]);
+        if (file) {
+            fetchData();
+        }
+    }, [file, hasLoaded, allItems.length]);
 
     const paginatedItems = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
@@ -100,20 +120,44 @@ const useGuideSection = <T extends GuideItem>(file: string) => {
 // --- CARD COMPONENTS ---
 
 const TourCard: React.FC<{ item: Tour }> = ({ item }) => (
-    <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-        <img loading="lazy" height="192"
-            src={item.image || '../assets/images/gallery/placeholder-1-800.webp'}
-            srcSet={!item.image ? '../assets/images/gallery/placeholder-1-400.webp 400w, ../assets/images/gallery/placeholder-1-800.webp 800w, ../assets/images/gallery/placeholder-1-1200.webp 1200w' : undefined}
-            sizes="(max-width: 600px) 400px, (max-width: 1024px) 800px, 1200px"
-            alt={item.name || 'Hình ảnh tour'} className="w-full h-40 sm:h-48 object-cover" />
-        <div className="p-3 sm:p-4 flex flex-col flex-grow">
-            <h3 className="text-md sm:text-lg font-semibold text-primary-600 mb-1 sm:mb-2">{item.name || 'Tên tour không xác định'}</h3>
-            <p className="text-xs sm:text-sm text-gray-600 mb-2 flex-grow line-clamp-3 sm:line-clamp-none">{item.description || 'Không có mô tả.'}</p>
-            <div className="text-xs text-gray-500 mb-2 mt-auto">
-                {item.duration && <><span className="font-semibold">Thời gian:</span> {item.duration}<br className="sm:hidden" /> </>}
-                {item.activities && <><span className="font-semibold mobile-hideable tour-activities">Hoạt động:</span> <span className="mobile-hideable tour-activities-content">{item.activities}</span></>}
+    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full overflow-hidden border border-gray-100">
+        <div className="relative">
+            <img loading="lazy" height="192"
+                src={item.image || '../assets/images/gallery/placeholder-1-800.webp'}
+                srcSet={!item.image ? '../assets/images/gallery/placeholder-1-400.webp 400w, ../assets/images/gallery/placeholder-1-800.webp 800w, ../assets/images/gallery/placeholder-1-1200.webp 1200w' : undefined}
+                sizes="(max-width: 600px) 400px, (max-width: 1024px) 800px, 1200px"
+                alt={item.name || 'Hình ảnh tour'} 
+                className="w-full h-40 object-cover" />
+            <div className="absolute top-2 left-2 bg-primary-600 text-white px-2 py-1 rounded-md text-xs font-medium">
+                <Route className="w-3 h-3 inline mr-1" />
+                Tour
             </div>
-            <a href={item.detailsLink || item.detailslink || '#'} target="_blank" rel="noopener noreferrer" className="inline-block bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-md transition duration-150 self-start tap-target">
+        </div>
+        <div className="p-3 flex flex-col flex-grow">
+            <h3 className="text-base font-bold text-gray-800 mb-2 line-clamp-2">{item.name || 'Tên tour không xác định'}</h3>
+            <p className="text-xs text-gray-600 mb-2 flex-grow line-clamp-2">{item.description || 'Không có mô tả.'}</p>
+            <div className="space-y-1 mb-3">
+                {item.duration && (
+                    <div className="flex items-center text-xs text-gray-500">
+                        <Clock className="w-3 h-3 mr-1 text-primary-500" />
+                        <span className="font-medium">Thời gian:</span>
+                        <span className="ml-1">{item.duration}</span>
+                    </div>
+                )}
+                {item.activities && (
+                    <div className="flex items-center text-xs text-gray-500">
+                        <Users className="w-3 h-3 mr-1 text-primary-500" />
+                        <span className="font-medium">Hoạt động:</span>
+                        <span className="ml-1 line-clamp-1">{item.activities}</span>
+                    </div>
+                )}
+            </div>
+            <a
+                href={item.detailsLink || item.detailslink || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white px-3 py-1.5 text-xs w-full"
+            >
                 {item.buttonText || 'Xem chi tiết'}
             </a>
         </div>
@@ -123,25 +167,51 @@ const TourCard: React.FC<{ item: Tour }> = ({ item }) => (
 const AccommodationCard: React.FC<{ item: Accommodation }> = ({ item }) => {
     const starCount = item.stars ? parseInt(item.stars) : 0;
     return (
-        <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-            <img loading="lazy" height="192"
-                src={item.image || '../assets/images/gallery/placeholder-2-800.webp'}
-                srcSet={!item.image ? '../assets/images/gallery/placeholder-2-400.webp 400w, ../assets/images/gallery/placeholder-2-800.webp 800w, ../assets/images/gallery/placeholder-2-1200.webp 1200w' : undefined}
-                sizes="(max-width: 600px) 400px, (max-width: 1024px) 800px, 1200px"
-                alt={item.name || 'Hình ảnh lưu trú'} className="w-full h-40 sm:h-48 object-cover" />
-            <div className="p-3 sm:p-4 flex flex-col flex-grow">
-                <h3 className="text-md sm:text-lg font-semibold text-accent-600 mb-1 sm:mb-2">{item.name || 'Tên địa điểm không xác định'}</h3>
+        <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full overflow-hidden border border-gray-100">
+            <div className="relative">
+                <img loading="lazy" height="192"
+                    src={item.image || '../assets/images/gallery/placeholder-2-800.webp'}
+                    srcSet={!item.image ? '../assets/images/gallery/placeholder-2-400.webp 400w, ../assets/images/gallery/placeholder-2-800.webp 800w, ../assets/images/gallery/placeholder-2-1200.webp 1200w' : undefined}
+                    sizes="(max-width: 600px) 400px, (max-width: 1024px) 800px, 1200px"
+                    alt={item.name || 'Hình ảnh lưu trú'} 
+                    className="w-full h-40 object-cover" />
+                <div className="absolute top-2 left-2 bg-accent-600 text-white px-2 py-1 rounded-md text-xs font-medium">
+                    <Hotel className="w-3 h-3 inline mr-1" />
+                    Lưu trú
+                </div>
+            </div>
+            <div className="p-3 flex flex-col flex-grow">
+                <h3 className="text-base font-bold text-gray-800 mb-2 line-clamp-2">{item.name || 'Tên địa điểm không xác định'}</h3>
                 {starCount > 0 && (
-                    <div className="flex items-center text-yellow-400 mb-1 sm:mb-2 text-xs sm:text-sm">
-                        {Array.from({ length: starCount }, (_, i) => <i key={i} className="fa-solid fa-star"></i>)}
-                        <span className="text-xs text-gray-500 ml-1 sm:ml-2">({starCount} sao)</span>
+                    <div className="flex items-center mb-2">
+                        <div className="flex items-center text-yellow-400">
+                            {Array.from({ length: starCount }, (_, i) => (
+                                <Star key={i} className="w-3 h-3 fill-current" />
+                            ))}
+                        </div>
+                        <span className="text-xs text-gray-500 ml-1">({starCount} sao)</span>
                     </div>
                 )}
-                <div className="flex-grow text-xs sm:text-sm">
-                    {item.address && <p className="text-gray-600 mb-1 line-clamp-1 sm:line-clamp-none"><i className="fa-solid fa-map-marker-alt mr-1 sm:mr-2 text-gray-400"></i>{item.address}</p>}
-                    {item.phone && <p className="text-gray-600 mb-2"><i className="fa-solid fa-phone mr-1 sm:mr-2 text-gray-400"></i>{item.phone}</p>}
+                <div className="space-y-1 mb-3 flex-grow">
+                    {item.address && (
+                        <div className="flex items-start text-xs text-gray-600">
+                            <MapPin className="w-3 h-3 mr-1 mt-0.5 text-accent-500 flex-shrink-0" />
+                            <span className="line-clamp-2">{item.address}</span>
+                        </div>
+                    )}
+                    {item.phone && (
+                        <div className="flex items-center text-xs text-gray-600">
+                            <Phone className="w-3 h-3 mr-1 text-accent-500" />
+                            <span>{item.phone}</span>
+                        </div>
+                    )}
                 </div>
-                <a href={item.mapLink || item.maplink || '#'} target="_blank" rel="noopener noreferrer" className="inline-block bg-accent-500 hover:bg-accent-600 text-white text-xs sm:text-sm font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-md transition duration-150 self-start mt-auto tap-target">
+                <a
+                    href={item.mapLink || item.maplink || '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gradient-to-r from-accent-600 to-accent-700 hover:from-accent-700 hover:to-accent-800 text-white px-3 py-1.5 text-xs w-full"
+                >
                     Xem trên bản đồ
                 </a>
             </div>
@@ -150,19 +220,41 @@ const AccommodationCard: React.FC<{ item: Accommodation }> = ({ item }) => {
 };
 
 const RestaurantCard: React.FC<{ item: Restaurant }> = ({ item }) => (
-    <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-        <img loading="lazy" height="192"
-            src={item.image || '../assets/images/gallery/placeholder-3-800.webp'}
-            srcSet={!item.image ? '../assets/images/gallery/placeholder-3-400.webp 400w, ../assets/images/gallery/placeholder-3-800.webp 800w, ../assets/images/gallery/placeholder-3-1200.webp 1200w' : undefined}
-            sizes="(max-width: 600px) 400px, (max-width: 1024px) 800px, 1200px"
-            alt={item.name || 'Hình ảnh nhà hàng'} className="w-full h-40 sm:h-48 object-cover" />
-        <div className="p-3 sm:p-4 flex flex-col flex-grow">
-            <h3 className="text-md sm:text-lg font-semibold text-orange-600 mb-1 sm:mb-2">{item.name || 'Tên nhà hàng không xác định'}</h3>
-            <div className="flex-grow text-xs sm:text-sm">
-                {item.address && <p className="text-gray-600 mb-1 line-clamp-1 sm:line-clamp-none"><i className="fa-solid fa-map-marker-alt mr-1 sm:mr-2 text-gray-400"></i>{item.address}</p>}
-                {item.cuisine && <p className="text-gray-600 mb-2 mobile-hideable"><i className="fa-solid fa-tags mr-1 sm:mr-2 text-gray-400"></i>{item.cuisine}</p>}
+    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full overflow-hidden border border-gray-100">
+        <div className="relative">
+            <img loading="lazy" height="192"
+                src={item.image || '../assets/images/gallery/placeholder-3-800.webp'}
+                srcSet={!item.image ? '../assets/images/gallery/placeholder-3-400.webp 400w, ../assets/images/gallery/placeholder-3-800.webp 800w, ../assets/images/gallery/placeholder-3-1200.webp 1200w' : undefined}
+                sizes="(max-width: 600px) 400px, (max-width: 1024px) 800px, 1200px"
+                alt={item.name || 'Hình ảnh nhà hàng'} 
+                className="w-full h-40 object-cover" />
+            <div className="absolute top-2 left-2 bg-orange-600 text-white px-2 py-1 rounded-md text-xs font-medium">
+                <Utensils className="w-3 h-3 inline mr-1" />
+                Nhà hàng
             </div>
-            <a href={item.mapLink || item.maplink || '#'} target="_blank" rel="noopener noreferrer" className="inline-block bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-medium py-1.5 px-3 sm:py-2 sm:px-4 rounded-md transition duration-150 self-start mt-auto tap-target">
+        </div>
+        <div className="p-3 flex flex-col flex-grow">
+            <h3 className="text-base font-bold text-gray-800 mb-2 line-clamp-2">{item.name || 'Tên nhà hàng không xác định'}</h3>
+            <div className="space-y-1 mb-3 flex-grow">
+                {item.address && (
+                    <div className="flex items-start text-xs text-gray-600">
+                        <MapPin className="w-3 h-3 mr-1 mt-0.5 text-orange-500 flex-shrink-0" />
+                        <span className="line-clamp-2">{item.address}</span>
+                    </div>
+                )}
+                {item.cuisine && (
+                    <div className="flex items-center text-xs text-gray-600">
+                        <Tags className="w-3 h-3 mr-1 text-orange-500" />
+                        <span>{item.cuisine}</span>
+                    </div>
+                )}
+            </div>
+            <a
+                href={item.mapLink || item.maplink || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-3 py-1.5 text-xs w-full"
+            >
                 Xem trên bản đồ
             </a>
         </div>
@@ -170,16 +262,28 @@ const RestaurantCard: React.FC<{ item: Restaurant }> = ({ item }) => (
 );
 
 const SpecialtyCard: React.FC<{ item: Specialty }> = ({ item }) => (
-    <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-        <img loading="lazy" height="192"
-            src={item.image || '../assets/images/gallery/placeholder-4-800.webp'}
-            srcSet={!item.image ? '../assets/images/gallery/placeholder-4-400.webp 400w, ../assets/images/gallery/placeholder-4-800.webp 800w, ../assets/images/gallery/placeholder-4-1200.webp 1200w' : undefined}
-            sizes="(max-width: 600px) 400px, (max-width: 1024px) 800px, 1200px"
-            alt={item.name || 'Hình ảnh đặc sản'} className="w-full h-40 sm:h-48 object-cover" />
-        <div className="p-3 sm:p-4 flex flex-col flex-grow">
-            <h3 className="text-md sm:text-lg font-semibold text-lime-600 mb-1 sm:mb-2">{item.name || 'Tên đặc sản không xác định'}</h3>
-            <p className="text-xs sm:text-sm text-gray-600 mb-2 flex-grow line-clamp-3 sm:line-clamp-none">{item.description || 'Không có mô tả.'}</p>
-            {item.purchaseLocation && <p className="text-xs text-gray-500 mt-auto mobile-hideable"><i className="fa-solid fa-store mr-1 sm:mr-2 text-gray-400"></i>{item.purchaseLocation}</p>}
+    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex flex-col h-full overflow-hidden border border-gray-100">
+        <div className="relative">
+            <img loading="lazy" height="192"
+                src={item.image || '../assets/images/gallery/placeholder-4-800.webp'}
+                srcSet={!item.image ? '../assets/images/gallery/placeholder-4-400.webp 400w, ../assets/images/gallery/placeholder-4-800.webp 800w, ../assets/images/gallery/placeholder-4-1200.webp 1200w' : undefined}
+                sizes="(max-width: 600px) 400px, (max-width: 1024px) 800px, 1200px"
+                alt={item.name || 'Hình ảnh đặc sản'} 
+                className="w-full h-40 object-cover" />
+            <div className="absolute top-2 left-2 bg-lime-600 text-white px-2 py-1 rounded-md text-xs font-medium">
+                <Flame className="w-3 h-3 inline mr-1" />
+                Đặc sản
+            </div>
+        </div>
+        <div className="p-3 flex flex-col flex-grow">
+            <h3 className="text-base font-bold text-gray-800 mb-2 line-clamp-2">{item.name || 'Tên đặc sản không xác định'}</h3>
+            <p className="text-xs text-gray-600 mb-2 flex-grow line-clamp-2">{item.description || 'Không có mô tả.'}</p>
+            {item.purchaseLocation && (
+                <div className="flex items-center text-xs text-gray-500 mb-3">
+                    <Store className="w-3 h-3 mr-1 text-lime-500" />
+                    <span className="line-clamp-1">{item.purchaseLocation}</span>
+                </div>
+            )}
         </div>
     </div>
 );
@@ -231,29 +335,59 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
     }
 
     return (
-        <nav aria-label="Page navigation" className="mt-8 text-center">
-            <ul className="inline-flex items-center -space-x-px">
+        <nav aria-label="Page navigation" className="mt-6 text-center w-full">
+            <ul className="inline-flex items-center -space-x-px flex-wrap justify-center">
                 <li>
-                    <button onClick={() => handlePageClick(currentPage - 1)} disabled={currentPage === 1} className={`py-2 px-3 ml-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-l-lg hover:bg-gray-100 hover:text-gray-700 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                        <span className="sr-only">Previous</span><i className="fas fa-chevron-left"></i>
-                    </button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageClick(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        leftIcon={<ChevronLeft className="w-3 h-3" />}
+                        className={cn(
+                            "rounded-l-lg text-xs px-2 py-1",
+                            currentPage === 1 && "opacity-50 cursor-not-allowed"
+                        )}
+                    >
+                        <span className="sr-only">Previous</span>
+                    </Button>
                 </li>
                 {pageNumbers.map((num, index) => (
                     <li key={index}>
                         {typeof num === 'number' ? (
-                            <button onClick={() => handlePageClick(num)} className={`py-2 px-3 leading-tight ${num === currentPage ? 'text-primary-600 bg-primary-50 border-primary-300 z-10' : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-100 hover:text-gray-700'}`}
-                                {...(num === currentPage && { 'aria-current': 'page' })}>
+                            <Button
+                                variant={num === currentPage ? "primary" : "outline"}
+                                size="sm"
+                                onClick={() => handlePageClick(num)}
+                                className={cn(
+                                    "text-xs px-2 py-1",
+                                    num === currentPage && "bg-primary-600 text-white border-primary-600"
+                                )}
+                                {...(num === currentPage && { 'aria-current': 'page' })}
+                            >
                                 {num}
-                            </button>
+                            </Button>
                         ) : (
-                            <span className="py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300">...</span>
+                            <span className="px-2 py-1 text-xs text-gray-500 bg-white border border-gray-300">
+                                ...
+                            </span>
                         )}
                     </li>
                 ))}
                 <li>
-                    <button onClick={() => handlePageClick(currentPage + 1)} disabled={currentPage === totalPages} className={`py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 rounded-r-lg hover:bg-gray-100 hover:text-gray-700 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                        <span className="sr-only">Next</span><i className="fas fa-chevron-right"></i>
-                    </button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePageClick(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        leftIcon={<ChevronRight className="w-3 h-3" />}
+                        className={cn(
+                            "rounded-r-lg text-xs px-2 py-1",
+                            currentPage === totalPages && "opacity-50 cursor-not-allowed"
+                        )}
+                    >
+                        <span className="sr-only">Next</span>
+                    </Button>
                 </li>
             </ul>
         </nav>
@@ -264,14 +398,15 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
 interface GuideSectionProps<T extends GuideItem> {
     id: string;
     title: string;
-    icon: string;
-    colorClass: string;
+    icon: React.ReactNode;
+    gradientFrom: string;
+    gradientTo: string;
     file: string;
     CardComponent: React.FC<{ item: T }>;
     infoText: string;
 }
 
-const GuideSection = <T extends GuideItem>({ id, title, icon, colorClass, file, CardComponent, infoText }: GuideSectionProps<T>) => {
+const GuideSection = <T extends GuideItem>({ id, title, icon, gradientFrom, gradientTo, file, CardComponent, infoText }: GuideSectionProps<T>) => {
     const { loading, error, paginatedItems, currentPage, totalPages, setCurrentPage } = useGuideSection<T>(file);
     
     const handlePageChange = useCallback((page: number) => {
@@ -280,41 +415,264 @@ const GuideSection = <T extends GuideItem>({ id, title, icon, colorClass, file, 
     }, [id, setCurrentPage]);
 
     return (
-        <section id={id} className="bg-white p-6 md:p-8 rounded-lg shadow-lg">
-            <h2 className={`text-2xl md:text-3xl font-semibold mb-6 ${colorClass} border-b pb-4 flex items-center`}>
-                <i className={`${icon} text-3xl mr-4`}></i>
-                {title}
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {loading && <p className="text-center py-5 text-gray-500 col-span-full"><i className="fas fa-spinner fa-spin mr-2"></i> Đang tải {infoText}...</p>}
-                {error && <p className="text-center py-5 text-red-500 col-span-full"><i className="fas fa-exclamation-circle mr-2"></i> Không thể tải dữ liệu. {error}</p>}
-                {!loading && !error && paginatedItems.length === 0 && <p className="text-gray-500 col-span-full text-center p-4">Hiện chưa có thông tin {infoText} nào.</p>}
-                {!loading && !error && paginatedItems.map((item, index) => (
-                    <CardComponent key={index} item={item as T} />
-                ))}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className={`bg-gradient-to-r ${gradientFrom} ${gradientTo} p-6 text-white`}>
+                <div className="flex items-center gap-3">
+                    <div className="bg-white/20 p-2 rounded-lg">
+                        {icon}
+                    </div>
+                    <h2 className="text-2xl font-bold">{title}</h2>
+                </div>
             </div>
-            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
-        </section>
+            <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {loading && (
+                        <div className="col-span-full flex items-center justify-center py-12">
+                            <div className="text-center">
+                                <Loader2 className="w-8 h-8 text-primary-600 animate-spin mx-auto mb-3" />
+                                <p className="text-gray-500">Đang tải {infoText}...</p>
+                            </div>
+                        </div>
+                    )}
+                    {error && (
+                        <div className="col-span-full flex items-center justify-center py-12">
+                            <div className="text-center">
+                                <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-3" />
+                                <p className="text-red-500">Không thể tải dữ liệu. {error}</p>
+                            </div>
+                        </div>
+                    )}
+                    {!loading && !error && paginatedItems.length === 0 && (
+                        <div className="col-span-full text-center py-12">
+                            <p className="text-gray-500">Hiện chưa có thông tin {infoText} nào.</p>
+                        </div>
+                    )}
+                    {!loading && !error && paginatedItems.map((item, index) => (
+                        <CardComponent key={index} item={item as T} />
+                    ))}
+                </div>
+                <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+            </div>
+        </div>
     );
 };
 
+// --- MOBILE GUIDE SECTION COMPONENT ---
+const MobileGuideSection = <T extends GuideItem>({ id, title, icon, gradientFrom, gradientTo, file, CardComponent, infoText }: GuideSectionProps<T>) => {
+    const { loading, error, paginatedItems, currentPage, totalPages, setCurrentPage } = useGuideSection<T>(file);
+    
+    const handlePageChange = useCallback((page: number) => {
+        setCurrentPage(page);
+    }, [setCurrentPage]);
+
+    // Debug logging
+    console.log(`MobileGuideSection ${id}:`, {
+        loading,
+        error,
+        itemsCount: paginatedItems.length,
+        currentPage,
+        totalPages,
+        file
+    });
+
+    return (
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden w-full">
+            <div className={`bg-gradient-to-r ${gradientFrom} ${gradientTo} p-3 text-white`}>
+                <div className="flex items-center gap-2">
+                    <div className="bg-white/20 p-1.5 rounded-lg flex-shrink-0">
+                        {icon}
+                    </div>
+                    <h3 className="text-base font-bold truncate">{title}</h3>
+                </div>
+            </div>
+            <div className="p-3 w-full">
+                <div className="space-y-3 w-full">
+                    {loading && (
+                        <div className="flex items-center justify-center py-6 w-full">
+                            <div className="text-center">
+                                <Loader2 className="w-5 h-5 text-primary-600 animate-spin mx-auto mb-2" />
+                                <p className="text-xs text-gray-500">Đang tải {infoText}...</p>
+                            </div>
+                        </div>
+                    )}
+                    {error && (
+                        <div className="flex items-center justify-center py-6 w-full">
+                            <div className="text-center">
+                                <AlertCircle className="w-5 h-5 text-red-500 mx-auto mb-2" />
+                                <p className="text-xs text-red-500">Không thể tải dữ liệu. {error}</p>
+                                <p className="text-xs text-gray-400 mt-1">File: {file}</p>
+                            </div>
+                        </div>
+                    )}
+                    {!loading && !error && paginatedItems.length === 0 && (
+                        <div className="text-center py-6 w-full">
+                            <p className="text-xs text-gray-500">Hiện chưa có thông tin {infoText} nào.</p>
+                            <p className="text-xs text-gray-400 mt-1">File: {file}</p>
+                        </div>
+                    )}
+                    {!loading && !error && paginatedItems.map((item, index) => (
+                        <div key={`${id}-${index}`} className="w-full">
+                            <CardComponent item={item as T} />
+                        </div>
+                    ))}
+                </div>
+                {totalPages > 1 && (
+                    <div className="mt-3 flex justify-center w-full">
+                        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
 
 // --- MAIN GUIDE PAGE COMPONENT ---
 const GuidePage = () => {
-    return (
-        <div className="bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 text-gray-800 font-sans antialiased -m-4 sm:-m-6">
-            <div className="container mx-auto px-4 py-8 md:px-6 md:py-12 max-w-6xl">
-                <header className="text-center mb-10 md:mb-16">
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-orange-600 mb-3 tracking-tight">Cẩm nang du lịch Núi Bà Đen</h1>
-                    <p className="text-lg md:text-xl text-gray-600">Khám phá trọn vẹn Núi Bà Đen với các gợi ý tour, ẩm thực, lưu trú và đặc sản nổi bật.</p>
-                </header>
+    const [isMobile, setIsMobile] = useState(false);
 
-                <main className="space-y-10 md:space-y-16">
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+        
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    if (isMobile) {
+        // Mobile version with SwipeableTabs
+        const tabs = [
+            {
+                id: 'tours',
+                label: 'Tour',
+                icon: <Route className="w-4 h-4" />,
+                content: (
+                    <MobileGuideSection
+                        id="tours"
+                        title="Chương trình tour gợi ý"
+                        icon={<Route className="w-5 h-5" />}
+                        gradientFrom="from-primary-600"
+                        gradientTo="to-primary-700"
+                        file="Tours.json"
+                        CardComponent={TourCard as React.FC<{ item: GuideItem }>}
+                        infoText="chương trình tour"
+                    />
+                )
+            },
+            {
+                id: 'accommodations',
+                label: 'Lưu trú',
+                icon: <Hotel className="w-4 h-4" />,
+                content: (
+                    <MobileGuideSection
+                        id="accommodations"
+                        title="Khách sạn và Lưu trú"
+                        icon={<Hotel className="w-5 h-5" />}
+                        gradientFrom="from-accent-600"
+                        gradientTo="to-accent-700"
+                        file="Accommodations.json"
+                        CardComponent={AccommodationCard as React.FC<{ item: GuideItem }>}
+                        infoText="thông tin lưu trú"
+                    />
+                )
+            },
+            {
+                id: 'restaurants',
+                label: 'Ăn uống',
+                icon: <Utensils className="w-4 h-4" />,
+                content: (
+                    <MobileGuideSection
+                        id="restaurants"
+                        title="Địa điểm ăn uống"
+                        icon={<Utensils className="w-5 h-5" />}
+                        gradientFrom="from-orange-600"
+                        gradientTo="to-orange-700"
+                        file="Restaurants.json"
+                        CardComponent={RestaurantCard as React.FC<{ item: GuideItem }>}
+                        infoText="địa điểm ăn uống"
+                    />
+                )
+            },
+            {
+                id: 'specialties',
+                label: 'Đặc sản',
+                icon: <Flame className="w-4 h-4" />,
+                content: (
+                    <MobileGuideSection
+                        id="specialties"
+                        title="Đặc sản địa phương"
+                        icon={<Flame className="w-5 h-5" />}
+                        gradientFrom="from-lime-600"
+                        gradientTo="to-lime-700"
+                        file="Specialties.json"
+                        CardComponent={SpecialtyCard as React.FC<{ item: GuideItem }>}
+                        infoText="thông tin đặc sản"
+                    />
+                )
+            }
+        ];
+
+        console.log('GuidePage mobile tabs:', tabs.map(tab => ({ id: tab.id, label: tab.label })));
+
+        return (
+            <ResponsiveContainer maxWidth="6xl" padding="sm">
+                <div className="min-h-screen bg-gradient-to-br from-primary-50 via-emerald-50 to-teal-50 overflow-x-hidden">
+                    {/* Header Section */}
+                    <div className="text-center mb-6 px-4">
+                        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-4 text-white">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                                <div className="bg-white/20 p-1.5 rounded-lg flex-shrink-0">
+                                    <Route className="w-5 h-5" />
+                                </div>
+                                <h1 className="text-xl font-bold">Cẩm nang du lịch Núi Bà Đen</h1>
+                            </div>
+                            <p className="text-primary-100 text-xs leading-relaxed">
+                                Khám phá trọn vẹn Núi Bà Đen với các gợi ý tour, ẩm thực, lưu trú và đặc sản nổi bật.
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Tabs Section */}
+                    <div className="px-4 pb-6 w-full">
+                        <SwipeableTabs 
+                            tabs={tabs}
+                            defaultTab="tours"
+                            className="bg-white rounded-xl shadow-lg overflow-hidden w-full"
+                        />
+                    </div>
+                </div>
+            </ResponsiveContainer>
+        );
+    }
+
+    // Desktop version
+    return (
+        <ResponsiveContainer maxWidth="6xl" padding="lg">
+            <div className="min-h-screen bg-gradient-to-br from-primary-50 via-emerald-50 to-teal-50">
+                <div className="text-center mb-12">
+                    <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-8 text-white mb-8">
+                        <div className="flex items-center justify-center gap-4 mb-4">
+                            <div className="bg-white/20 p-3 rounded-xl">
+                                <Route className="w-8 h-8" />
+                            </div>
+                            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold">
+                                Cẩm nang du lịch Núi Bà Đen
+                            </h1>
+                        </div>
+                        <p className="text-lg md:text-xl text-primary-100 max-w-3xl mx-auto">
+                            Khám phá trọn vẹn Núi Bà Đen với các gợi ý tour, ẩm thực, lưu trú và đặc sản nổi bật.
+                        </p>
+                    </div>
+                </div>
+
+                <main className="space-y-8">
                     <GuideSection
                         id="tours"
                         title="Chương trình tour gợi ý"
-                        icon="fa-solid fa-route"
-                        colorClass="text-primary-700 border-primary-200"
+                        icon={<Route className="w-6 h-6" />}
+                        gradientFrom="from-primary-600"
+                        gradientTo="to-primary-700"
                         file="Tours.json"
                         CardComponent={TourCard as React.FC<{ item: GuideItem }>}
                         infoText="chương trình tour"
@@ -322,8 +680,9 @@ const GuidePage = () => {
                     <GuideSection
                         id="accommodations"
                         title="Khách sạn và Lưu trú"
-                        icon="fa-solid fa-hotel"
-                        colorClass="text-accent-700 border-accent-200"
+                        icon={<Hotel className="w-6 h-6" />}
+                        gradientFrom="from-accent-600"
+                        gradientTo="to-accent-700"
                         file="Accommodations.json"
                         CardComponent={AccommodationCard as React.FC<{ item: GuideItem }>}
                         infoText="thông tin lưu trú"
@@ -331,8 +690,9 @@ const GuidePage = () => {
                     <GuideSection
                         id="restaurants"
                         title="Địa điểm ăn uống"
-                        icon="fa-solid fa-utensils"
-                        colorClass="text-orange-700 border-orange-200"
+                        icon={<Utensils className="w-6 h-6" />}
+                        gradientFrom="from-orange-600"
+                        gradientTo="to-orange-700"
                         file="Restaurants.json"
                         CardComponent={RestaurantCard as React.FC<{ item: GuideItem }>}
                         infoText="địa điểm ăn uống"
@@ -340,15 +700,16 @@ const GuidePage = () => {
                     <GuideSection
                         id="specialties"
                         title="Đặc sản địa phương"
-                        icon="fa-solid fa-pepper-hot"
-                        colorClass="text-lime-700 border-lime-200"
+                        icon={<Flame className="w-6 h-6" />}
+                        gradientFrom="from-lime-600"
+                        gradientTo="to-lime-700"
                         file="Specialties.json"
                         CardComponent={SpecialtyCard as React.FC<{ item: GuideItem }>}
                         infoText="thông tin đặc sản"
                     />
                 </main>
             </div>
-        </div>
+        </ResponsiveContainer>
     );
 };
 

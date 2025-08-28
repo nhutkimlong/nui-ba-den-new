@@ -25,7 +25,6 @@ interface Props {
 
   inputRef?: React.RefObject<HTMLInputElement>
   onClear?: () => void
-  rightExtra?: React.ReactNode // optional: nhúng thêm gì đó ở mép phải
 }
 
 const SearchBarWithActions: React.FC<Props> = ({
@@ -41,12 +40,11 @@ const SearchBarWithActions: React.FC<Props> = ({
   onTutorial,
   onToggleTiles,
   inputRef,
-  onClear,
-  rightExtra
+  onClear
 }) => {
   return (
     <div className="relative w-full">
-      <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 shadow-sm">
+      <div className="flex items-center bg-gray-100 rounded-full px-4 py-2 shadow-sm focus-within:ring-2 focus-within:ring-primary-300">
         <Search className="w-5 h-5 text-gray-400 mr-2" />
         <input
           ref={inputRef}
@@ -56,17 +54,21 @@ const SearchBarWithActions: React.FC<Props> = ({
           onChange={onChange}
           onFocus={onFocus}
           onBlur={onBlur}
-          className="flex-grow border-none outline-none bg-transparent text-base text-gray-700 placeholder-gray-500"
+          className="flex-grow min-w-0 border-none outline-none bg-transparent text-base text-gray-700 placeholder-gray-500"
         />
+
+        {/* Clear text */}
         {searchTerm && (
           <button
-            aria-label="Xóa ô tìm kiếm"
+            aria-label="Xóa tìm kiếm"
             onClick={onClear}
-            className="p-1 rounded-full hover:bg-gray-200 ml-1"
+            className="ml-1 mr-1 rounded-full w-6 h-6 grid place-items-center text-gray-500 hover:text-gray-700 hover:bg-gray-200"
           >
-            {/* using lucide-react X from parent import context */}
-            {/* Fallback to text if icon not available here */}
-            <span className="w-4 h-4 text-gray-500 leading-none">×</span>
+            <span className="sr-only">Xóa</span>
+            {/* simple times icon using svg to avoid extra import */}
+            <svg viewBox="0 0 20 20" className="w-3.5 h-3.5" fill="currentColor" aria-hidden>
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
           </button>
         )}
 
@@ -100,7 +102,7 @@ const SearchBarWithActions: React.FC<Props> = ({
           >
             <Globe className="w-5 h-5 text-gray-600" />
           </button>
-          {rightExtra}
+
         </div>
       </div>
 

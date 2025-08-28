@@ -33,7 +33,11 @@ export interface RegistrationData {
 }
 
 export interface MemberData {
+  id: string;
   name: string;
+  phone?: string;
+  birthday?: string;
+  address?: string;
   photoData?: string | null;
 }
 
