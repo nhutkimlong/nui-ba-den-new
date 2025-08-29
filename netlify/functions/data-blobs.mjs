@@ -1,6 +1,7 @@
 import { BlobServiceClient } from '@azure/storage-blob';
 import { readFileSync } from 'fs';
-import { join } from 'path';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
 // Azure Blob Storage configuration
 const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -8,6 +9,9 @@ const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || 'data';
 
 let blobServiceClient;
 let containerClient;
+
+// ESM-compatible dirname (avoid re-declaring __dirname)
+const __FN_DIRNAME = dirname(fileURLToPath(import.meta.url));
 
 // Initialize Azure Blob Storage client
 function initializeBlobClient() {
@@ -71,11 +75,15 @@ function readLocalJsonFile(fileName) {
   try {
     // Try different possible paths for data files
     const possiblePaths = [
-      join(process.cwd(), '..', 'data', fileName), // From netlify/functions
-      join(process.cwd(), 'data', fileName), // From project root
-      join(__dirname, '..', '..', 'data', fileName), // From function file
-      join(process.cwd(), '..', '..', 'data', fileName), // Alternative
-      join(process.cwd(), '..', '..', '..', 'data', fileName), // Another alternative
+      // Common locations during netlify dev
+      join(process.cwd(), 'data', fileName),
+      join(process.cwd(), '..', 'data', fileName),
+      // Relative to this function file
+      join(__FN_DIRNAME, '..', '..', 'data', fileName),
+      join(__FN_DIRNAME, '..', '..', '..', 'data', fileName),
+      // Additional fallbacks
+      join(process.cwd(), '..', '..', 'data', fileName),
+      join(process.cwd(), '..', '..', '..', 'data', fileName),
     ];
     
     console.log('Trying to read file:', fileName);
@@ -133,7 +141,7 @@ async function streamToString(readableStream) {
 }
 
 // Main handler function
-export default async function handler(event, context) {
+export default async function handler(request, context) {
   // Enable CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -143,7 +151,7 @@ export default async function handler(event, context) {
   };
 
   // Handle preflight requests
-  const method = event.httpMethod || event.method;
+  const method = request.method;
   if (method === 'OPTIONS') {
     return new Response('', {
       status: 200,
@@ -153,21 +161,11 @@ export default async function handler(event, context) {
 
   try {
     // Handle different ways query parameters might be passed
-    let file;
-    if (event.queryStringParameters) {
-      file = event.queryStringParameters.file;
-    } else if (event.query && event.query.file) {
-      file = event.query.file;
-    } else if (event.url) {
-      // Parse URL manually if needed
-      const url = new URL(event.url, 'http://localhost');
-      file = url.searchParams.get('file');
-    }
-    
+    const url = new URL(request.url);
+    const file = url.searchParams.get('file');
+
     console.log('Requested file:', file);
-    console.log('Event queryStringParameters:', event.queryStringParameters);
-    console.log('Event query:', event.query);
-    
+
     if (!file) {
       return new Response(JSON.stringify({ 
         error: 'File parameter is required',
@@ -233,7 +231,7 @@ export default async function handler(event, context) {
     // Handle POST request - write file
     if (method === 'POST') {
       try {
-        const body = JSON.parse(event.body);
+        const body = await request.json();
         
         // Try Azure Blob Storage first
         if (connectionString) {

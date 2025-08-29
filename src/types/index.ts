@@ -235,3 +235,6 @@ export interface FilterState {
   featured?: boolean;
   search?: string;
 }
+
+// Gesture Types
+export * from './gestures';

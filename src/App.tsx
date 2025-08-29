@@ -1,18 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
 import Layout from './components/layout/Layout';
-import HomePage from './components/pages/HomePage';
-import ClimbPage from './components/pages/ClimbPage';
-import GuidePage from './components/pages/GuidePage';
-import MapPage from './components/pages/MapPage';
-import AdminLoginPage from './components/pages/AdminLoginPage';
-import AdminPage from './components/pages/AdminPage';
-import DataEditorPage from './components/pages/DataEditorPage';
 import ScrollToTop from './components/common/ScrollToTop';
-import ClimbAdminPage from './components/pages/admin/ClimbAdminPage';
-import GuideAdminPage from './components/pages/admin/GuideAdminPage';
-import PoiAdminPage from './components/pages/admin/PoiAdminPage';
-import LayoutDemo from './components/layout/LayoutDemo';
 import { ToastProvider } from './components/common/Toast';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
@@ -22,13 +11,53 @@ import { usePerformance } from './hooks/usePerformance';
 import { useUserPreferences } from './hooks/useUserPreferences';
 import { useAppVoiceCommands } from './hooks/useVoiceNavigation';
 
+// Lazy loaded routes for better performance
+import {
+  HomePage,
+  MapPage,
+  GuidePage,
+  ClimbPage,
+  AdminLoginPage,
+  AdminPage,
+  DataEditorPage,
+  ClimbAdminPage,
+  GuideAdminPage,
+  PoiAdminPage,
+  preloadRoute
+} from './routes/LazyRoutes';
+
+// Performance monitoring
+import { logBundleAnalysis, performanceMonitor } from './utils/bundleAnalyzer';
+
 function App() {
   // Setup voice commands
   const { setupAppCommands } = useAppVoiceCommands();
+  
   useEffect(() => {
     const cleanup = setupAppCommands();
     return cleanup;
   }, [setupAppCommands]);
+
+  // Initialize performance monitoring
+  useEffect(() => {
+    // Log bundle analysis in development
+    if (process.env.NODE_ENV === 'development') {
+      logBundleAnalysis();
+    }
+
+    // Preload critical routes on idle
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(() => {
+        preloadRoute('map');
+        preloadRoute('guide');
+      });
+    }
+
+    // Cleanup performance monitor on unmount
+    return () => {
+      performanceMonitor.disconnect();
+    };
+  }, []);
 
   return (
     <ErrorBoundary>
@@ -64,7 +93,6 @@ function App() {
                 </ProtectedRoute>
               } />
               <Route path="data-editor" element={<DataEditorPage />} />
-              <Route path="layout-demo" element={<LayoutDemo />} />
             </Route>
           </Routes>
         </ToastProvider>

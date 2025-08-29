@@ -2,13 +2,22 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
+import { visualizer } from 'rollup-plugin-visualizer'
+import { createHtmlPlugin } from 'vite-plugin-html'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    
+    // HTML optimization
+    createHtmlPlugin({
+      minify: true
+    }),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg}'],
         runtimeCaching: [
@@ -141,12 +150,21 @@ export default defineConfig({
           }
         ]
       },
-      devOptions: {
-        enabled: true,
-        type: 'module'
-      }
+             devOptions: {
+         enabled: true,
+         type: 'module'
+       }
+    }),
+
+    // Bundle analyzer (only in build mode)
+    process.env.ANALYZE && visualizer({
+      filename: 'dist/bundle-analysis.html',
+      open: true,
+      gzipSize: true,
+      brotliSize: true,
+      template: 'treemap' // 'treemap', 'sunburst', 'network'
     })
-  ],
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": fileURLToPath(new URL('./src', import.meta.url)),
@@ -158,16 +176,93 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: process.env.NODE_ENV === 'development',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
+      }
+    },
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          map: ['leaflet', 'react-leaflet'],
-          icons: ['lucide-react']
+        manualChunks: (id) => {
+          // Vendor chunks
+          if (id.includes('node_modules')) {
+            // React ecosystem
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            // Router
+            if (id.includes('react-router')) {
+              return 'router-vendor';
+            }
+            // Map libraries
+            if (id.includes('leaflet') || id.includes('supercluster')) {
+              return 'map-vendor';
+            }
+            // UI libraries
+            if (id.includes('lucide-react') || id.includes('chart.js')) {
+              return 'ui-vendor';
+            }
+            // Utilities
+            if (id.includes('clsx') || id.includes('tailwind-merge')) {
+              return 'utils-vendor';
+            }
+            // Other vendor libraries
+            return 'vendor';
+          }
+          
+          // App chunks
+          if (id.includes('/pages/')) {
+            return 'pages';
+          }
+          if (id.includes('/components/')) {
+            return 'components';
+          }
+          if (id.includes('/hooks/')) {
+            return 'hooks';
+          }
+          if (id.includes('/services/')) {
+            return 'services';
+          }
+          if (id.includes('/utils/')) {
+            return 'utils';
+          }
+        },
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
+          return `js/[name]-[hash].js`;
+        },
+        entryFileNames: 'js/[name]-[hash].js',
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name.split('.');
+          const ext = info[info.length - 1];
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
+            return `images/[name]-[hash][extname]`;
+          }
+          if (/css/i.test(ext)) {
+            return `css/[name]-[hash][extname]`;
+          }
+          return `assets/[name]-[hash][extname]`;
         }
       }
-    }
+    },
+    chunkSizeWarningLimit: 1000,
+    assetsInlineLimit: 4096
+  },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'leaflet',
+      'react-leaflet',
+      'lucide-react',
+      'clsx',
+      'tailwind-merge'
+    ],
+    exclude: ['@vite/client', '@vite/env']
   }
 })

@@ -1,0 +1,488 @@
+/* Modern UI Utilities - 2025 Design System */
+
+/* === Glassmorphism Component Utilities === */
+
+.glass-button {
+  @apply glass-light rounded-xl px-6 py-3 font-medium transition-all duration-200;
+  @apply hover:-translate-y-0.5 active:scale-98;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
+}
+.glass-button:hover { @apply glass-medium; }
+
+.glass-input {
+  @apply glass-light rounded-lg px-4 py-3 w-full transition-all duration-200;
+  @apply focus:ring-2 focus:ring-primary-500 focus:ring-offset-0;
+  @apply placeholder:text-neutral-500;
+}
+.glass-input:focus { @apply glass-medium; }
+
+.glass-nav {
+  @apply glass-medium rounded-full px-6 py-2 transition-all duration-200;
+}
+.glass-nav:hover { @apply glass-strong; }
+
+.glass-modal {
+  @apply glass-strong rounded-3xl p-8 max-w-md w-full mx-4;
+  @apply animate-scale-in;
+}
+
+.glass-tooltip {
+  @apply glass-medium rounded-lg px-3 py-2 text-sm;
+  @apply animate-fade-in;
+}
+
+/* === Modern Button Variants === */
+
+.btn-modern {
+  @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium;
+  @apply transition-all duration-200 focus-visible:outline-none focus-visible:ring-2;
+  @apply focus-visible:ring-offset-2 active:scale-98 touch-target;
+}
+
+.btn-primary-modern {
+  @apply btn-modern bg-gradient-to-r from-primary-500 to-primary-600 text-white;
+  @apply hover:-translate-y-0.5 hover:shadow-lg hover:from-primary-600 hover:to-primary-700;
+  @apply focus-visible:ring-primary-500;
+}
+
+.btn-secondary-modern {
+  @apply btn-modern bg-gradient-to-r from-accent-500 to-accent-600 text-white;
+  @apply hover:-translate-y-0.5 hover:shadow-lg hover:from-accent-600 hover:to-accent-700;
+  @apply focus-visible:ring-accent-500;
+}
+
+.btn-ghost-modern {
+  @apply btn-modern bg-transparent text-neutral-700 border border-neutral-200;
+  @apply hover:bg-neutral-50 hover:-translate-y-0.5 hover:shadow-md;
+  @apply focus-visible:ring-neutral-500;
+}
+
+.btn-glass-modern {
+  @apply btn-modern glass-light text-neutral-700;
+  @apply hover:-translate-y-0.5 hover:shadow-lg;
+  @apply focus-visible:ring-primary-500;
+}
+.btn-glass-modern:hover { @apply glass-medium; }
+
+/* === Card Variants === */
+
+.card-modern {
+  @apply bg-white rounded-2xl shadow-md transition-all duration-300;
+  @apply hover:-translate-y-1 hover:shadow-xl;
+}
+
+.card-glass {
+  @apply glass-card transition-all duration-300;
+  @apply hover:-translate-y-1 hover:shadow-xl;
+}
+.card-glass:hover { @apply glass-medium; }
+
+.card-floating {
+  @apply floating-card p-6;
+}
+
+.card-bento {
+  @apply bento-item bg-white shadow-lg;
+  @apply hover:-translate-y-2 hover:shadow-2xl;
+}
+
+/* === Input Variants === */
+
+.input-modern {
+  @apply w-full px-4 py-3 rounded-lg border border-neutral-200 bg-white;
+  @apply transition-all duration-200 focus:outline-none focus:ring-2;
+  @apply focus:ring-primary-500 focus:border-transparent;
+  @apply placeholder:text-neutral-400;
+}
+
+.input-floating {
+  @apply input-modern relative;
+}
+
+.input-floating-label {
+  @apply absolute left-4 top-3 text-neutral-400 transition-all duration-200;
+  @apply pointer-events-none;
+}
+
+.input-floating:focus + .input-floating-label,
+.input-floating:not(:placeholder-shown) + .input-floating-label {
+  @apply -translate-y-6 text-xs text-primary-500;
+}
+
+/* === Navigation Utilities === */
+
+.nav-modern {
+  @apply flex items-center gap-1 p-2 rounded-full bg-white/80 backdrop-blur-md;
+  @apply border border-white/20 shadow-lg;
+}
+
+.nav-item-modern {
+  @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-200;
+  @apply hover:bg-white/50 active:scale-95;
+}
+
+.nav-item-active {
+  @apply bg-primary-500 text-white shadow-md;
+  @apply hover:bg-primary-600;
+}
+
+.nav-pill-container {
+  @apply flex items-center gap-2 p-1 rounded-full;
+  @apply bg-neutral-100 border border-neutral-200;
+}
+
+.nav-pill-item {
+  @apply px-4 py-2 rounded-full text-sm font-medium transition-all duration-200;
+  @apply hover:bg-white hover:shadow-sm active:scale-95;
+}
+
+.nav-pill-active {
+  @apply bg-white text-primary-600 shadow-sm;
+  @apply hover:bg-white;
+}
+
+/* === Layout Utilities === */
+
+.container-modern {
+  @apply container mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.section-modern {
+  @apply py-12 sm:py-16 lg:py-20;
+}
+
+.grid-modern {
+  @apply grid gap-6 sm:gap-8;
+}
+
+.grid-auto-fit {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.grid-auto-fill {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* === Bento Grid Utilities === */
+
+.bento-container {
+  @apply bento-grid p-4 sm:p-6 lg:p-8;
+}
+
+.bento-small {
+  @apply bento-item-small bg-gradient-to-br from-white to-neutral-50;
+  @apply border border-neutral-200 shadow-sm;
+}
+
+.bento-medium {
+  @apply bento-item-medium bg-gradient-to-br from-white to-neutral-50;
+  @apply border border-neutral-200 shadow-sm;
+}
+
+.bento-large {
+  @apply bento-item-large bg-gradient-to-br from-white to-neutral-50;
+  @apply border border-neutral-200 shadow-sm;
+}
+
+/* === Animation Utilities === */
+
+.animate-slide-in-bottom {
+  animation: slideInBottom 0.3s ease-out;
+}
+
+.animate-slide-in-top {
+  animation: slideInTop 0.3s ease-out;
+}
+
+.animate-scale-bounce {
+  animation: scaleBounce 0.4s ease-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes slideInBottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInTop {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleBounce {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  }
+  to {
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+  }
+}
+
+/* === Scale Utilities === */
+
+.scale-98 {
+  transform: scale(0.98);
+}
+
+.scale-99 {
+  transform: scale(0.99);
+}
+
+/* === Interaction States === */
+
+.interactive {
+  @apply transition-all duration-200 cursor-pointer;
+  @apply hover:-translate-y-0.5 hover:shadow-lg active:scale-98;
+}
+
+.interactive-subtle {
+  @apply transition-all duration-200 cursor-pointer;
+  @apply hover:bg-neutral-50;
+}
+.interactive-subtle:active { @apply scale-99; }
+
+.interactive-glass {
+  @apply transition-all duration-200 cursor-pointer;
+  @apply hover:-translate-y-0.5 active:scale-98;
+}
+.interactive-glass:hover { @apply glass-medium; }
+
+/* === Loading States === */
+
+.loading-skeleton {
+  @apply bg-gradient-to-r from-neutral-200 via-neutral-300 to-neutral-200;
+  @apply bg-200% animate-pulse rounded;
+}
+
+.loading-shimmer {
+  @apply relative overflow-hidden bg-neutral-200 rounded;
+}
+
+.loading-shimmer::after {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent;
+  @apply -translate-x-full;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* === Status Indicators === */
+
+.status-dot {
+  @apply w-2 h-2 rounded-full;
+}
+
+.status-online {
+  @apply status-dot bg-success-500;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.status-offline {
+  @apply status-dot bg-neutral-400;
+}
+
+.status-busy {
+  @apply status-dot bg-warning-500;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.status-error {
+  @apply status-dot bg-error-500;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+/* === Badge Utilities === */
+
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-primary {
+  @apply badge bg-primary-100 text-primary-800;
+}
+
+.badge-secondary {
+  @apply badge bg-accent-100 text-accent-800;
+}
+
+.badge-success {
+  @apply badge bg-success-100 text-success-800;
+}
+
+.badge-warning {
+  @apply badge bg-warning-100 text-warning-800;
+}
+
+.badge-error {
+  @apply badge bg-error-100 text-error-800;
+}
+
+.badge-glass {
+  @apply badge glass-light text-neutral-700;
+}
+
+/* === Divider Utilities === */
+
+.divider {
+  @apply border-t border-neutral-200;
+}
+
+.divider-vertical {
+  @apply border-l border-neutral-200 h-full;
+}
+
+.divider-glass {
+  @apply border-t border-white/20;
+}
+
+/* === Text Utilities === */
+
+.text-gradient {
+  @apply bg-gradient-to-r from-primary-600 to-accent-600 bg-clip-text text-transparent;
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
+}
+
+/* === Focus Utilities === */
+
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
+}
+
+.focus-ring-inset {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-inset;
+}
+
+/* === Accessibility Utilities === */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.not-sr-only {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* === Mobile Optimizations === */
+
+@media (max-width: 768px) {
+  .mobile-full {
+    @apply w-full;
+  }
+  
+  .mobile-stack {
+    @apply flex-col;
+  }
+  
+  .mobile-center {
+    @apply text-center;
+  }
+  
+  .mobile-p-4 {
+    @apply p-4;
+  }
+  
+  .mobile-text-sm {
+    @apply text-sm;
+  }
+  
+  .mobile-rounded-none {
+    @apply rounded-none;
+  }
+  
+  .mobile-shadow-none {
+    @apply shadow-none;
+  }
+}
+
+/* === Print Utilities === */
+
+@media print {
+  .print-hidden {
+    display: none !important;
+  }
+  
+  .print-visible {
+    display: block !important;
+  }
+  
+  .print-break-before {
+    break-before: page;
+  }
+  
+  .print-break-after {
+    break-after: page;
+  }
+  
+  .print-break-inside-avoid {
+    break-inside: avoid;
+  }
+}

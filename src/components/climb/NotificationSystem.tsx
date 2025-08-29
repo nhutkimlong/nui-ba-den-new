@@ -13,39 +13,39 @@ import { cn } from '@/utils/cn';
 const NOTIFICATION_TYPES: Record<string, NotificationType> = {
   weather: { 
     name: 'Cảnh báo thời tiết', 
-    icon: <CloudRain className="w-5 h-5" />, 
+    icon: "icon", 
     bgColor: 'bg-gradient-to-r from-blue-50 to-indigo-50', 
     borderColor: 'border-blue-200', 
     textColor: 'text-blue-900',
     iconColor: 'text-blue-600',
-    iconBg: 'bg-blue-100'
+
   },
   maintenance: { 
     name: 'Bảo trì', 
-    icon: <Wrench className="w-5 h-5" />, 
+    icon: "icon", 
     bgColor: 'bg-gradient-to-r from-yellow-50 to-amber-50', 
     borderColor: 'border-yellow-200', 
     textColor: 'text-yellow-900',
     iconColor: 'text-yellow-600',
-    iconBg: 'bg-yellow-100'
+
   },
   announcement: { 
     name: 'Thông báo chung', 
-    icon: <Megaphone className="w-5 h-5" />, 
+    icon: "icon", 
     bgColor: 'bg-gradient-to-r from-green-50 to-emerald-50', 
     borderColor: 'border-green-200', 
     textColor: 'text-green-900',
     iconColor: 'text-green-600',
-    iconBg: 'bg-green-100'
+
   },
   emergency: { 
     name: 'Khẩn cấp', 
-    icon: <AlertTriangle className="w-5 h-5" />, 
+    icon: "icon", 
     bgColor: 'bg-gradient-to-r from-red-50 to-rose-50', 
     borderColor: 'border-red-200', 
     textColor: 'text-red-900',
     iconColor: 'text-red-600',
-    iconBg: 'bg-red-100'
+
   }
 };
 
@@ -112,9 +112,9 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({ notifica
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4 flex-1">
             <div className="flex-shrink-0">
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", typeInfo.iconBg)}>
-                <div className={typeInfo.iconColor}>
-                  {typeInfo.icon}
+              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", "bg-blue-100")}>
+                <div className="text-blue-600">
+                  📢
                 </div>
               </div>
             </div>

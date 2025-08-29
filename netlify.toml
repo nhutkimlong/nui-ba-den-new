@@ -9,8 +9,11 @@
   functions = "netlify/functions"
 
 [dev]
-  # Target port for Vite dev server
+  # Run Vite during netlify dev and proxy to its port
+  command = "npm run dev"
   targetPort = 3000
+  framework = "#custom"
+  publish = "dist"
 
 [build.environment]
   # Node.js version
@@ -36,6 +39,8 @@
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+
 
 # Headers for functions
 [[headers]]
@@ -67,16 +72,6 @@
 #   status = 200
 
 # Asset optimization
-[[headers]]
-  for = "*.js"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "*.css"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
 [[headers]]
   for = "*.png"
   [headers.values]

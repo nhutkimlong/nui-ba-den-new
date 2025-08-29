@@ -114,6 +114,134 @@
   }
 }
 
+/* Keyboard awareness */
+.keyboard-aware {
+  padding-bottom: var(--keyboard-height, 0px);
+  transition: padding-bottom 0.3s ease-in-out;
+}
+
+.keyboard-visible {
+  --keyboard-offset: var(--keyboard-height, 0px);
+}
+
+/* Device-specific utilities */
+.has-notch {
+  --notch-height: env(safe-area-inset-top, 0px);
+}
+
+.has-home-indicator {
+  --home-indicator-height: env(safe-area-inset-bottom, 0px);
+}
+
+.is-fullscreen {
+  --status-bar-height: 0px;
+}
+
+/* Enhanced safe area utilities */
+.pt-safe-or-4 {
+  padding-top: max(env(safe-area-inset-top, 0px), 1rem);
+}
+
+.pb-safe-or-4 {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+}
+
+.pl-safe-or-4 {
+  padding-left: max(env(safe-area-inset-left, 0px), 1rem);
+}
+
+.pr-safe-or-4 {
+  padding-right: max(env(safe-area-inset-right, 0px), 1rem);
+}
+
+/* Notch-specific utilities */
+.notch-aware {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.notch-height {
+  height: env(safe-area-inset-top, 0px);
+}
+
+/* Home indicator utilities */
+.home-indicator-aware {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.home-indicator-height {
+  height: env(safe-area-inset-bottom, 0px);
+}
+
+/* Orientation-specific styles */
+@media (orientation: landscape) {
+  .landscape\:pl-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+  
+  .landscape\:pr-safe {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+  
+  .landscape\:px-safe {
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+}
+
+@media (orientation: portrait) {
+  .portrait\:pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  
+  .portrait\:pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  
+  .portrait\:py-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* Fullscreen utilities */
+.fullscreen-safe {
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+
+/* Interactive element safe positioning */
+.safe-interactive {
+  margin-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+}
+
+/* Fixed positioning with safe areas */
+.fixed-top-safe {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  right: 0;
+}
+
+.fixed-bottom-safe {
+  position: fixed;
+  bottom: env(safe-area-inset-bottom, 0px);
+  left: 0;
+  right: 0;
+}
+
+.fixed-left-safe {
+  position: fixed;
+  left: env(safe-area-inset-left, 0px);
+  top: 0;
+  bottom: 0;
+}
+
+.fixed-right-safe {
+  position: fixed;
+  right: env(safe-area-inset-right, 0px);
+  top: 0;
+  bottom: 0;
+}
+
 /* Print styles */
 @media print {
   .pt-safe,
@@ -122,8 +250,18 @@
   .pr-safe,
   .px-safe,
   .py-safe,
-  .p-safe {
+  .p-safe,
+  .pt-safe-or-4,
+  .pb-safe-or-4,
+  .pl-safe-or-4,
+  .pr-safe-or-4,
+  .notch-aware,
+  .home-indicator-aware,
+  .keyboard-aware,
+  .fullscreen-safe,
+  .safe-interactive {
     padding: 0 !important;
+    margin: 0 !important;
   }
   
   .mt-safe,
@@ -140,8 +278,17 @@
   .h-screen-safe,
   .min-h-screen-safe,
   .h-dvh,
-  .min-h-dvh {
+  .min-h-dvh,
+  .notch-height,
+  .home-indicator-height {
     height: auto !important;
     min-height: auto !important;
+  }
+  
+  .fixed-top-safe,
+  .fixed-bottom-safe,
+  .fixed-left-safe,
+  .fixed-right-safe {
+    position: static !important;
   }
 }

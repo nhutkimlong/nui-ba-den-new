@@ -1,0 +1,1238 @@
+{
+  "generated": "2025-08-29T08:19:33.159Z",
+  "images": {
+    "screenshot-mobile-1.png": {
+      "original": {
+        "path": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+        "size": 35,
+        "lastModified": "2025-08-28T03:36:10.784Z"
+      },
+      "optimized": [
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-320w.webp",
+          "format": "webp",
+          "size": 320,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-640w.webp",
+          "format": "webp",
+          "size": 640,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-768w.webp",
+          "format": "webp",
+          "size": 768,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-1024w.webp",
+          "format": "webp",
+          "size": 1024,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-1280w.webp",
+          "format": "webp",
+          "size": 1280,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-1920w.webp",
+          "format": "webp",
+          "size": 1920,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-320w.avif",
+          "format": "avif",
+          "size": 320,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-640w.avif",
+          "format": "avif",
+          "size": 640,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-768w.avif",
+          "format": "avif",
+          "size": 768,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-1024w.avif",
+          "format": "avif",
+          "size": 1024,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-1280w.avif",
+          "format": "avif",
+          "size": 1280,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-1920w.avif",
+          "format": "avif",
+          "size": 1920,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-320w.jpg",
+          "format": "jpg",
+          "size": 320,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-640w.jpg",
+          "format": "jpg",
+          "size": 640,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-768w.jpg",
+          "format": "jpg",
+          "size": 768,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-1024w.jpg",
+          "format": "jpg",
+          "size": 1024,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-1280w.jpg",
+          "format": "jpg",
+          "size": 1280,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-1.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-1-1920w.jpg",
+          "format": "jpg",
+          "size": 1920,
+          "quality": 85
+        }
+      ]
+    },
+    "screenshot-mobile-2.png": {
+      "original": {
+        "path": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+        "size": 35,
+        "lastModified": "2025-08-28T03:36:10.784Z"
+      },
+      "optimized": [
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-320w.webp",
+          "format": "webp",
+          "size": 320,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-640w.webp",
+          "format": "webp",
+          "size": 640,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-768w.webp",
+          "format": "webp",
+          "size": 768,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-1024w.webp",
+          "format": "webp",
+          "size": 1024,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-1280w.webp",
+          "format": "webp",
+          "size": 1280,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-1920w.webp",
+          "format": "webp",
+          "size": 1920,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-320w.avif",
+          "format": "avif",
+          "size": 320,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-640w.avif",
+          "format": "avif",
+          "size": 640,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-768w.avif",
+          "format": "avif",
+          "size": 768,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-1024w.avif",
+          "format": "avif",
+          "size": 1024,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-1280w.avif",
+          "format": "avif",
+          "size": 1280,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-1920w.avif",
+          "format": "avif",
+          "size": 1920,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-320w.jpg",
+          "format": "jpg",
+          "size": 320,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-640w.jpg",
+          "format": "jpg",
+          "size": 640,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-768w.jpg",
+          "format": "jpg",
+          "size": 768,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-1024w.jpg",
+          "format": "jpg",
+          "size": 1024,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-1280w.jpg",
+          "format": "jpg",
+          "size": 1280,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\public\\assets\\images\\screenshot-mobile-2.png",
+          "optimized": "public\\assets\\optimized\\screenshot-mobile-2-1920w.jpg",
+          "format": "jpg",
+          "size": 1920,
+          "quality": 85
+        }
+      ]
+    },
+    "android-chrome-192x192.png": {
+      "original": {
+        "path": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+        "size": 41594,
+        "lastModified": "2025-08-27T09:48:20.605Z"
+      },
+      "optimized": [
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-320w.webp",
+          "format": "webp",
+          "size": 320,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-640w.webp",
+          "format": "webp",
+          "size": 640,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-768w.webp",
+          "format": "webp",
+          "size": 768,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-1024w.webp",
+          "format": "webp",
+          "size": 1024,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-1280w.webp",
+          "format": "webp",
+          "size": 1280,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-1920w.webp",
+          "format": "webp",
+          "size": 1920,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-320w.avif",
+          "format": "avif",
+          "size": 320,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-640w.avif",
+          "format": "avif",
+          "size": 640,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-768w.avif",
+          "format": "avif",
+          "size": 768,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-1024w.avif",
+          "format": "avif",
+          "size": 1024,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-1280w.avif",
+          "format": "avif",
+          "size": 1280,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-1920w.avif",
+          "format": "avif",
+          "size": 1920,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-320w.jpg",
+          "format": "jpg",
+          "size": 320,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-640w.jpg",
+          "format": "jpg",
+          "size": 640,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-768w.jpg",
+          "format": "jpg",
+          "size": 768,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-1024w.jpg",
+          "format": "jpg",
+          "size": 1024,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-1280w.jpg",
+          "format": "jpg",
+          "size": 1280,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-192x192.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-192x192-1920w.jpg",
+          "format": "jpg",
+          "size": 1920,
+          "quality": 85
+        }
+      ]
+    },
+    "android-chrome-512x512.png": {
+      "original": {
+        "path": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+        "size": 173766,
+        "lastModified": "2025-08-27T09:48:20.606Z"
+      },
+      "optimized": [
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-320w.webp",
+          "format": "webp",
+          "size": 320,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-640w.webp",
+          "format": "webp",
+          "size": 640,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-768w.webp",
+          "format": "webp",
+          "size": 768,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-1024w.webp",
+          "format": "webp",
+          "size": 1024,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-1280w.webp",
+          "format": "webp",
+          "size": 1280,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-1920w.webp",
+          "format": "webp",
+          "size": 1920,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-320w.avif",
+          "format": "avif",
+          "size": 320,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-640w.avif",
+          "format": "avif",
+          "size": 640,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-768w.avif",
+          "format": "avif",
+          "size": 768,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-1024w.avif",
+          "format": "avif",
+          "size": 1024,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-1280w.avif",
+          "format": "avif",
+          "size": 1280,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-1920w.avif",
+          "format": "avif",
+          "size": 1920,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-320w.jpg",
+          "format": "jpg",
+          "size": 320,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-640w.jpg",
+          "format": "jpg",
+          "size": 640,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-768w.jpg",
+          "format": "jpg",
+          "size": 768,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-1024w.jpg",
+          "format": "jpg",
+          "size": 1024,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-1280w.jpg",
+          "format": "jpg",
+          "size": 1280,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\android-chrome-512x512.png",
+          "optimized": "public\\assets\\optimized\\android-chrome-512x512-1920w.jpg",
+          "format": "jpg",
+          "size": 1920,
+          "quality": 85
+        }
+      ]
+    },
+    "apple-touch-icon.png": {
+      "original": {
+        "path": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+        "size": 38169,
+        "lastModified": "2025-08-27T09:48:20.607Z"
+      },
+      "optimized": [
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-320w.webp",
+          "format": "webp",
+          "size": 320,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-640w.webp",
+          "format": "webp",
+          "size": 640,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-768w.webp",
+          "format": "webp",
+          "size": 768,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-1024w.webp",
+          "format": "webp",
+          "size": 1024,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-1280w.webp",
+          "format": "webp",
+          "size": 1280,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-1920w.webp",
+          "format": "webp",
+          "size": 1920,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-320w.avif",
+          "format": "avif",
+          "size": 320,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-640w.avif",
+          "format": "avif",
+          "size": 640,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-768w.avif",
+          "format": "avif",
+          "size": 768,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-1024w.avif",
+          "format": "avif",
+          "size": 1024,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-1280w.avif",
+          "format": "avif",
+          "size": 1280,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-1920w.avif",
+          "format": "avif",
+          "size": 1920,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-320w.jpg",
+          "format": "jpg",
+          "size": 320,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-640w.jpg",
+          "format": "jpg",
+          "size": 640,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-768w.jpg",
+          "format": "jpg",
+          "size": 768,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-1024w.jpg",
+          "format": "jpg",
+          "size": 1024,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-1280w.jpg",
+          "format": "jpg",
+          "size": 1280,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\apple-touch-icon.png",
+          "optimized": "public\\assets\\optimized\\apple-touch-icon-1920w.jpg",
+          "format": "jpg",
+          "size": 1920,
+          "quality": 85
+        }
+      ]
+    },
+    "favicon-16x16.png": {
+      "original": {
+        "path": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+        "size": 934,
+        "lastModified": "2025-08-27T09:48:20.608Z"
+      },
+      "optimized": [
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-320w.webp",
+          "format": "webp",
+          "size": 320,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-640w.webp",
+          "format": "webp",
+          "size": 640,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-768w.webp",
+          "format": "webp",
+          "size": 768,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-1024w.webp",
+          "format": "webp",
+          "size": 1024,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-1280w.webp",
+          "format": "webp",
+          "size": 1280,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-1920w.webp",
+          "format": "webp",
+          "size": 1920,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-320w.avif",
+          "format": "avif",
+          "size": 320,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-640w.avif",
+          "format": "avif",
+          "size": 640,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-768w.avif",
+          "format": "avif",
+          "size": 768,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-1024w.avif",
+          "format": "avif",
+          "size": 1024,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-1280w.avif",
+          "format": "avif",
+          "size": 1280,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-1920w.avif",
+          "format": "avif",
+          "size": 1920,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-320w.jpg",
+          "format": "jpg",
+          "size": 320,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-640w.jpg",
+          "format": "jpg",
+          "size": 640,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-768w.jpg",
+          "format": "jpg",
+          "size": 768,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-1024w.jpg",
+          "format": "jpg",
+          "size": 1024,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-1280w.jpg",
+          "format": "jpg",
+          "size": 1280,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-16x16.png",
+          "optimized": "public\\assets\\optimized\\favicon-16x16-1920w.jpg",
+          "format": "jpg",
+          "size": 1920,
+          "quality": 85
+        }
+      ]
+    },
+    "favicon-32x32.png": {
+      "original": {
+        "path": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+        "size": 2788,
+        "lastModified": "2025-08-27T09:48:20.609Z"
+      },
+      "optimized": [
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-320w.webp",
+          "format": "webp",
+          "size": 320,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-640w.webp",
+          "format": "webp",
+          "size": 640,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-768w.webp",
+          "format": "webp",
+          "size": 768,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-1024w.webp",
+          "format": "webp",
+          "size": 1024,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-1280w.webp",
+          "format": "webp",
+          "size": 1280,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-1920w.webp",
+          "format": "webp",
+          "size": 1920,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-320w.avif",
+          "format": "avif",
+          "size": 320,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-640w.avif",
+          "format": "avif",
+          "size": 640,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-768w.avif",
+          "format": "avif",
+          "size": 768,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-1024w.avif",
+          "format": "avif",
+          "size": 1024,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-1280w.avif",
+          "format": "avif",
+          "size": 1280,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-1920w.avif",
+          "format": "avif",
+          "size": 1920,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-320w.jpg",
+          "format": "jpg",
+          "size": 320,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-640w.jpg",
+          "format": "jpg",
+          "size": 640,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-768w.jpg",
+          "format": "jpg",
+          "size": 768,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-1024w.jpg",
+          "format": "jpg",
+          "size": 1024,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-1280w.jpg",
+          "format": "jpg",
+          "size": 1280,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\favicon-32x32.png",
+          "optimized": "public\\assets\\optimized\\favicon-32x32-1920w.jpg",
+          "format": "jpg",
+          "size": 1920,
+          "quality": 85
+        }
+      ]
+    },
+    "location.png": {
+      "original": {
+        "path": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+        "size": 3297,
+        "lastModified": "2025-08-27T09:48:20.619Z"
+      },
+      "optimized": [
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-320w.webp",
+          "format": "webp",
+          "size": 320,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-640w.webp",
+          "format": "webp",
+          "size": 640,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-768w.webp",
+          "format": "webp",
+          "size": 768,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-1024w.webp",
+          "format": "webp",
+          "size": 1024,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-1280w.webp",
+          "format": "webp",
+          "size": 1280,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-1920w.webp",
+          "format": "webp",
+          "size": 1920,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-320w.avif",
+          "format": "avif",
+          "size": 320,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-640w.avif",
+          "format": "avif",
+          "size": 640,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-768w.avif",
+          "format": "avif",
+          "size": 768,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-1024w.avif",
+          "format": "avif",
+          "size": 1024,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-1280w.avif",
+          "format": "avif",
+          "size": 1280,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-1920w.avif",
+          "format": "avif",
+          "size": 1920,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-320w.jpg",
+          "format": "jpg",
+          "size": 320,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-640w.jpg",
+          "format": "jpg",
+          "size": 640,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-768w.jpg",
+          "format": "jpg",
+          "size": 768,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-1024w.jpg",
+          "format": "jpg",
+          "size": 1024,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-1280w.jpg",
+          "format": "jpg",
+          "size": 1280,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\location.png",
+          "optimized": "public\\assets\\optimized\\location-1920w.jpg",
+          "format": "jpg",
+          "size": 1920,
+          "quality": 85
+        }
+      ]
+    },
+    "og-image.jpg": {
+      "original": {
+        "path": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+        "size": 223214,
+        "lastModified": "2025-08-27T09:48:20.620Z"
+      },
+      "optimized": [
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-320w.webp",
+          "format": "webp",
+          "size": 320,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-640w.webp",
+          "format": "webp",
+          "size": 640,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-768w.webp",
+          "format": "webp",
+          "size": 768,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-1024w.webp",
+          "format": "webp",
+          "size": 1024,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-1280w.webp",
+          "format": "webp",
+          "size": 1280,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-1920w.webp",
+          "format": "webp",
+          "size": 1920,
+          "quality": 80
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-320w.avif",
+          "format": "avif",
+          "size": 320,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-640w.avif",
+          "format": "avif",
+          "size": 640,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-768w.avif",
+          "format": "avif",
+          "size": 768,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-1024w.avif",
+          "format": "avif",
+          "size": 1024,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-1280w.avif",
+          "format": "avif",
+          "size": 1280,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-1920w.avif",
+          "format": "avif",
+          "size": 1920,
+          "quality": 70
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-320w.jpg",
+          "format": "jpg",
+          "size": 320,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-640w.jpg",
+          "format": "jpg",
+          "size": 640,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-768w.jpg",
+          "format": "jpg",
+          "size": 768,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-1024w.jpg",
+          "format": "jpg",
+          "size": 1024,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-1280w.jpg",
+          "format": "jpg",
+          "size": 1280,
+          "quality": 85
+        },
+        {
+          "original": "C:\\Users\\Admin\\Desktop\\baden-app-new\\assets\\images\\og-image.jpg",
+          "optimized": "public\\assets\\optimized\\og-image-1920w.jpg",
+          "format": "jpg",
+          "size": 1920,
+          "quality": 85
+        }
+      ]
+    }
+  },
+  "formats": [
+    "webp",
+    "avif",
+    "jpg"
+  ],
+  "sizes": [
+    320,
+    640,
+    768,
+    1024,
+    1280,
+    1920
+  ],
+  "quality": {
+    "webp": 80,
+    "avif": 70,
+    "jpg": 85
+  }
+}

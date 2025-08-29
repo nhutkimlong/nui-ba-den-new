@@ -85,13 +85,13 @@ const CategoryChips: React.FC<Props> = ({ categories, activeKey, onChange, class
 
       <div
         ref={scrollerRef}
-        className="filter-categories flex items-center gap-1.5 sm:gap-2 overflow-x-auto md:overflow-x-auto md:flex-nowrap md:justify-start w-full px-1 scrollbar-hide scroll-smooth snap-x snap-mandatory"
+        className="filter-categories flex items-center gap-2.5 overflow-x-auto md:overflow-x-auto md:flex-nowrap md:justify-start w-full px-2 scrollbar-hide scroll-smooth snap-x snap-mandatory"
       >
         <button
           onClick={() => onChange(null)}
           className={cn(
-            "flex items-center px-2.5 py-1.5 text-xs sm:text-sm rounded-full transition-colors duration-200 whitespace-nowrap snap-start",
-            !activeKey ? "bg-primary-500 text-white" : "bg-gray-200 hover:bg-gray-300"
+            "flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-full transition-colors duration-200 whitespace-nowrap snap-start min-w-max",
+            !activeKey ? "bg-primary-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm"
           )}
         >
           <FontAwesomeIcon icon={faClipboardList} className="mr-1.5" />
@@ -102,8 +102,8 @@ const CategoryChips: React.FC<Props> = ({ categories, activeKey, onChange, class
             key={c.key}
             onClick={() => onChange(c.key)}
             className={cn(
-              "flex items-center px-2.5 py-1.5 text-xs sm:text-sm rounded-full transition-colors duration-200 whitespace-nowrap snap-start",
-              activeKey === c.key ? "bg-primary-500 text-white" : "bg-gray-200 hover:bg-gray-300"
+              "flex items-center px-3 py-1.5 text-xs sm:text-sm rounded-full transition-colors duration-200 whitespace-nowrap snap-start min-w-max",
+              activeKey === c.key ? "bg-primary-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 shadow-sm"
             )}
           >
             <span className="mr-1.5">{c.icon}</span>

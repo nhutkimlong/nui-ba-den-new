@@ -2,16 +2,18 @@
 export { usePerformance, useImageOptimization, useMemoryOptimization } from './usePerformance'
 
 // User Preferences & Personalization
-export { useUserPreferences, useTheme, useAccessibility } from './useUserPreferences'
-
-// Smart Features
-export { useRecommendations } from './useRecommendations'
+export { useUserPreferences } from './useUserPreferences'
 
 // Haptic Feedback
 export { useHapticFeedback, useHapticButton } from './useHapticFeedback'
 
 // Voice Navigation
 export { useVoiceNavigation, useAppVoiceCommands, useVoiceFeedback } from './useVoiceNavigation'
+
+// Gesture Recognition
+export { useGestureNavigation, useSwipeNavigation } from './useGestureNavigation'
+export { usePullToRefresh, useMultiSourceRefresh } from './usePullToRefresh'
+export { useContextMenu, usePOIContextMenu } from './useContextMenu'
 
 // Existing hooks
 export { useClimbData } from './useClimbData'

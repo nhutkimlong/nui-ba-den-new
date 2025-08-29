@@ -66,7 +66,7 @@ export const DeviceProvider = ({ children }: DeviceProviderProps) => {
       
       // Detect PWA
       const isPWA = window.matchMedia('(display-mode: standalone)').matches
-      const isStandalone = window.navigator.standalone || isPWA
+      const isStandalone = (window.navigator as any).standalone || isPWA
 
       setDeviceInfo({
         isMobile,

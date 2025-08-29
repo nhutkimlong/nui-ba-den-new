@@ -1,3 +1,20 @@
+
+declare global {
+  interface Window {
+    any: any;
+    webkitany: any;
+  }
+}
+
+interface anyEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface anyErrorEvent extends Event {
+  error: string;
+  message: string;
+}
 import { useState, useEffect, useCallback, useRef } from 'react'
 
 interface VoiceCommand {
@@ -23,17 +40,17 @@ export const useVoiceNavigation = () => {
     error: null
   })
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<any | null>(null)
   const commandsRef = useRef<VoiceCommand[]>([])
 
   // Check if speech recognition is supported
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition
+    const any = window.any || (window as any).webkitany
     
-    if (SpeechRecognition) {
+    if (any) {
       setState(prev => ({ ...prev, isSupported: true }))
       
-      recognitionRef.current = new SpeechRecognition()
+      recognitionRef.current = new any()
       recognitionRef.current.continuous = true
       recognitionRef.current.interimResults = true
       recognitionRef.current.lang = 'vi-VN'
@@ -42,7 +59,7 @@ export const useVoiceNavigation = () => {
         setState(prev => ({ ...prev, isListening: true, error: null }))
       }
 
-      recognitionRef.current.onresult = (event: SpeechRecognitionEvent) => {
+      recognitionRef.current.onresult = (event: anyEvent) => {
         let finalTranscript = ''
         let interimTranscript = ''
 
@@ -71,7 +88,7 @@ export const useVoiceNavigation = () => {
         }
       }
 
-      recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
+      recognitionRef.current.onerror = (event: anyErrorEvent) => {
         setState(prev => ({ 
           ...prev, 
           isListening: false,

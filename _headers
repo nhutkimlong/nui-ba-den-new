@@ -1,8 +1,0 @@
-/assets/*
-  Cache-Control: public, max-age=3600, immutable
-/css/*
-  Cache-Control: public, max-age=3600, immutable
-/js/*.js
-  Cache-Control: no-cache
-/dist/*
-  Cache-Control: public, max-age=3600, immutable 

@@ -1,0 +1,248 @@
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only:focus,
+.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Skip links */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #000;
+  color: #fff;
+  padding: 8px;
+  z-index: 1000;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --primary-50: #ffffff;
+    --primary-100: #f0f0f0;
+    --primary-500: #0066cc;
+    --primary-600: #0052a3;
+    --primary-900: #003d7a;
+    
+    --neutral-50: #ffffff;
+    --neutral-100: #f0f0f0;
+    --neutral-200: #d0d0d0;
+    --neutral-500: #666666;
+    --neutral-900: #000000;
+  }
+
+  .high-contrast {
+    --tw-bg-opacity: 1;
+    --tw-text-opacity: 1;
+  }
+
+  .high-contrast button,
+  .high-contrast input,
+  .high-contrast select,
+  .high-contrast textarea {
+    border: 2px solid #000000;
+  }
+
+  .high-contrast button:focus,
+  .high-contrast input:focus,
+  .high-contrast select:focus,
+  .high-contrast textarea:focus {
+    outline: 3px solid #0066cc;
+    outline-offset: 2px;
+  }
+
+  .high-contrast .bg-primary-600 {
+    background-color: #0066cc !important;
+    color: #ffffff !important;
+  }
+
+  .high-contrast .text-gray-600 {
+    color: #000000 !important;
+  }
+
+  .high-contrast .border-gray-300 {
+    border-color: #000000 !important;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-spin,
+  .animate-pulse,
+  .animate-bounce {
+    animation: none !important;
+  }
+}
+
+/* Focus indicators */
+.focus-visible:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* Custom focus ring utilities */
+.focus-ring-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #0066cc;
+}
+
+.focus-ring-secondary:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #666666;
+}
+
+.focus-ring-danger:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px #dc2626;
+}
+
+/* Touch target sizing */
+@media (pointer: coarse) {
+  button,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Print styles for accessibility */
+@media print {
+  .sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+
+  /* Ensure links are visible in print */
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+
+  /* Hide decorative elements */
+  .print-hidden {
+    display: none !important;
+  }
+}
+
+/* Color blind friendly colors */
+.colorblind-safe {
+  /* Use patterns or shapes in addition to color */
+}
+
+.colorblind-safe .success {
+  background-color: #2563eb; /* Blue instead of green */
+}
+
+.colorblind-safe .warning {
+  background-color: #f59e0b; /* Amber */
+}
+
+.colorblind-safe .error {
+  background-color: #dc2626; /* Red with high contrast */
+}
+
+/* Large text support */
+.large-text {
+  font-size: 1.125rem;
+  line-height: 1.75;
+}
+
+.large-text h1 { font-size: 2.5rem; }
+.large-text h2 { font-size: 2rem; }
+.large-text h3 { font-size: 1.75rem; }
+.large-text h4 { font-size: 1.5rem; }
+.large-text h5 { font-size: 1.25rem; }
+.large-text h6 { font-size: 1.125rem; }
+
+/* Windows High Contrast Mode */
+@media screen and (-ms-high-contrast: active) {
+  button,
+  input,
+  select,
+  textarea {
+    border: 1px solid ButtonText;
+  }
+
+  button:focus,
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: 2px solid Highlight;
+  }
+
+  .bg-primary-600 {
+    background-color: Highlight;
+    color: HighlightText;
+  }
+}
+
+/* Dark mode accessibility */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --primary-50: #1e293b;
+    --primary-100: #334155;
+    --primary-500: #60a5fa;
+    --primary-600: #3b82f6;
+    --primary-900: #1e40af;
+    
+    --neutral-50: #0f172a;
+    --neutral-100: #1e293b;
+    --neutral-200: #334155;
+    --neutral-500: #94a3b8;
+    --neutral-900: #f1f5f9;
+  }
+
+  body {
+    background-color: #0f172a;
+    color: #f1f5f9;
+  }
+}

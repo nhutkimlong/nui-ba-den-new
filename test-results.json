@@ -1,0 +1,35 @@
+{
+  "timestamp": "2025-08-29T09:31:10.499Z",
+  "summary": {
+    "total": 4,
+    "passed": 0,
+    "failed": 4,
+    "successRate": "0.00"
+  },
+  "categories": [
+    {
+      "category": "Component Tests",
+      "passed": 0,
+      "failed": 1,
+      "status": "ERROR"
+    },
+    {
+      "category": "Performance Tests",
+      "passed": 0,
+      "failed": 1,
+      "status": "ERROR"
+    },
+    {
+      "category": "Accessibility Tests",
+      "passed": 0,
+      "failed": 1,
+      "status": "ERROR"
+    },
+    {
+      "category": "Integration Tests",
+      "passed": 0,
+      "failed": 1,
+      "status": "ERROR"
+    }
+  ]
+}

@@ -195,7 +195,7 @@ export const getUIText = (key: string, lang: string = 'vi', ...args: any[]) => {
   const translationSet = translations[lang as keyof typeof translations] || translations.vi
   const textOrFn = translationSet[key as keyof typeof translationSet]
   if (typeof textOrFn === 'function') {
-    return textOrFn(...args)
+    return (textOrFn as any)(...args)
   }
   return textOrFn || key
 }
@@ -227,8 +227,8 @@ export const areInSameArea = (poi1: POI, poi2: POI): boolean => {
 
   // If one POI is user location and the other has an area, check distance
   const dist = calculateDistance([poi1.latitude, poi1.longitude], [poi2.latitude, poi2.longitude])
-  if (poi1.id === USER_LOCATION_ID && poi2.area && String(poi2.area).trim() !== '' && dist < MAX_DIST_AREAS) return true
-  if (poi2.id === USER_LOCATION_ID && poi1.area && String(poi1.area).trim() !== '' && dist < MAX_DIST_AREAS) return true
+  if (String(poi1.id) === USER_LOCATION_ID && poi2.area && String(poi2.area).trim() !== '' && dist < MAX_DIST_AREAS) return true
+  if (String(poi2.id) === USER_LOCATION_ID && poi1.area && String(poi1.area).trim() !== '' && dist < MAX_DIST_AREAS) return true
 
   // Fallback: if areas are not defined but they are very close, consider them in the same "implicit" area for walking
   if (!poi1.area && !poi2.area && dist < MAX_DIST_AREAS / 2) return true
@@ -256,7 +256,7 @@ export const isStationOnSpecificRoute = (station1: POI, station2: POI, targetRou
 export const getPoiName = (poi: POI, lang: string = 'vi'): string => {
   if (!poi) return ''
 
-  if (poi.id === USER_LOCATION_ID) {
+  if (String(poi.id) === USER_LOCATION_ID) {
     return getUIText('yourLocation', lang)
   }
 
@@ -384,10 +384,10 @@ export const fetchPOIData = async (): Promise<POI[]> => {
       return {
         ...poi,
         id: String(poi.id),
-        position: poi.position || [parseFloat(poi.latitude), parseFloat(poi.longitude)],
+        position: (poi as any).position || [parseFloat(poi.latitude), parseFloat(poi.longitude)],
         type: POI_CATEGORIES[t as keyof typeof POI_CATEGORIES] ? t : 'attraction'
       }
-    }).filter((poi: POI) => poi.position && !isNaN(poi.position[0]) && !isNaN(poi.position[1]))
+    }).filter((poi: POI) => (poi as any).position && !isNaN((poi as any).position[0]) && !isNaN((poi as any).position[1]))
   } catch (error) {
     console.error("Error loading POI data:", error)
     throw error
@@ -481,32 +481,32 @@ export const getSegmentCost = (
     case 'walk_explicit':
     case 'walk_implicit':
       cost = COST_WALK_BASE
-      const dist = calculateDistance(poi1.position, poi2.position)
+      const dist = calculateDistance((poi1 as any).position, (poi2 as any).position)
       if (isFinite(dist)) {
         cost += dist * COST_WALK_DISTANCE_FACTOR
       }
-      if (previousPoi && previousPoi.type === 'transport' && poi1.type !== 'transport') {
+      if (previousPoi && (previousPoi as any).type === 'transport' && (poi1 as any).type !== 'transport') {
         cost += COST_TRANSFER_PENALTY_CABLE_TO_WALK
-      } else if (previousPoi && previousPoi.type === 'transport' && poi1.type === 'transport' && !areOnSameCableRoute(previousPoi, poi1)) {
+      } else if (previousPoi && (previousPoi as any).type === 'transport' && (poi1 as any).type === 'transport' && !areOnSameCableRoute(previousPoi, poi1)) {
         cost += COST_TRANSFER_BETWEEN_CABLES
       }
       break
     case 'transport_preferred':
       cost = COST_CABLE_CAR_BASE + COST_CABLE_CAR_PREFERRED_BONUS
-      if (previousPoi && previousPoi.type !== 'transport') {
+      if (previousPoi && (previousPoi as any).type !== 'transport') {
         cost += COST_TRANSFER_PENALTY_WALK_TO_CABLE
       }
       break
     case 'transport_fallback':
       cost = COST_CABLE_CAR_BASE + COST_CABLE_CAR_FALLBACK_PENALTY
-      if (previousPoi && previousPoi.type !== 'transport') {
+      if (previousPoi && (previousPoi as any).type !== 'transport') {
         cost += COST_TRANSFER_PENALTY_WALK_TO_CABLE
       }
       break
     case 'transport_standard':
     default:
       cost = COST_CABLE_CAR_BASE
-      if (previousPoi && previousPoi.type !== 'transport') {
+      if (previousPoi && (previousPoi as any).type !== 'transport') {
         cost += COST_TRANSFER_PENALTY_WALK_TO_CABLE
       }
       break
@@ -546,8 +546,8 @@ export const findPathDijkstraInternal = (
     let minDistance = Infinity
 
     for (const poi of allPoiData) {
-      if (poi.area && poi.position) {
-        const dist = calculateDistance(position, poi.position)
+      if (poi.area && (poi as any).position) {
+        const dist = calculateDistance(position, (poi as any).position)
         if (dist < minDistance) {
           minDistance = dist
           closestPoi = poi
@@ -569,12 +569,12 @@ export const findPathDijkstraInternal = (
     }
 
     let currentPOIObject = getPoi(currentIdStr)
-    if (!currentPOIObject?.position) continue
+    if (!(currentPOIObject as any)?.position) continue
 
-    if (currentIdStr === USER_LOCATION_ID && !currentPOIObject.area && currentPOIObject.position) {
+    if (currentIdStr === USER_LOCATION_ID && !currentPOIObject.area && (currentPOIObject as any).position) {
       currentPOIObject = { 
         ...currentPOIObject, 
-        area: findAreaForLocation(currentPOIObject.position) || `${USER_LOCATION_ID}_area_internal` 
+        area: findAreaForLocation((currentPOIObject as any).position) || `${USER_LOCATION_ID}_area_internal` 
       }
     }
 
@@ -594,7 +594,7 @@ export const findPathDijkstraInternal = (
       for (let i = 0; i < pathSoFarToCurrent.length - 1; i++) {
         const currentPoi = getPoi(pathSoFarToCurrent[i])
         const nextPoi = getPoi(pathSoFarToCurrent[i + 1])
-        if (currentPoi?.type === 'transport' && nextPoi?.type === 'transport' &&
+        if ((currentPoi as any)?.type === 'transport' && (nextPoi as any)?.type === 'transport' &&
             isStationOnSpecificRoute(currentPoi, nextPoi, options.strictPreferredRoute)) {
           hasUsedPreferredRoute = true
           break
@@ -638,7 +638,7 @@ export const findPathDijkstraInternal = (
       ;(walkableToString + "," + forceWalkableToString).split(',').map(id => String(id).trim()).filter(id => id)
         .forEach(neighborId => {
           const nPoi = getPoi(neighborId)
-          if (nPoi?.position) {
+          if ((nPoi as any)?.position) {
             if (options.mode === 'stay_in_area' && nPoi.area !== options.areaConstraint) return
             potentialNeighborsWithType.push({ 
               id: neighborId, 
@@ -652,11 +652,11 @@ export const findPathDijkstraInternal = (
 
     if (!hasExplicitWalkLinks) {
       for (const p of allPoiData) {
-        const pId = String(p.id)
-        if (pId !== currentIdStr && p.position) {
-          const dist = calculateDistance(currentPOIObject.position, p.position)
+        const pId = String((p as any).id)
+        if (pId !== currentIdStr && (p as any).position) {
+          const dist = calculateDistance((currentPOIObject as any).position, (p as any).position)
           if (dist < WALKING_THRESHOLD_PATH && areInSameArea(currentPOIObject, p)) {
-            let pActualArea = p.area || (String(p.id) === USER_LOCATION_ID && p.position ? findAreaForLocation(p.position) : null)
+            let pActualArea = p.area || (String((p as any).id) === USER_LOCATION_ID && (p as any).position ? findAreaForLocation((p as any).position) : null)
             if (options.mode === 'stay_in_area' && pActualArea !== options.areaConstraint) continue
             potentialNeighborsWithType.push({ 
               id: pId, 
@@ -670,10 +670,10 @@ export const findPathDijkstraInternal = (
     }
 
     // Handle cable car connections
-    if (currentPOIObject.type === 'transport') {
+    if ((currentPOIObject as any).type === 'transport') {
       for (const otherTransportPOI of allPoiData) {
         const otherTransportId = String(otherTransportPOI.id)
-        if (otherTransportPOI.type === 'transport' && otherTransportId !== currentIdStr) {
+        if ((otherTransportPOI as any).type === 'transport' && otherTransportId !== currentIdStr) {
           const routes1 = String(currentPOIObject.cable_route || '').split(',').map(r => r.trim()).filter(r => r)
           const routes2 = String(otherTransportPOI.cable_route || '').split(',').map(r => r.trim()).filter(r => r)
           const commonRoutes = routes1.filter(r => routes2.includes(r))
@@ -765,7 +765,7 @@ export const findPath = (startId: string, endId: string, allPoiData: POI[], curr
 
   const getPoiName = (poi: POI | null): string => {
     if (!poi) return ''
-    if (poi.id === USER_LOCATION_ID) {
+    if (String(poi.id) === USER_LOCATION_ID) {
       return t('yourLocation')
     }
     return poi.name || `POI ${poi.id}`
@@ -774,12 +774,12 @@ export const findPath = (startId: string, endId: string, allPoiData: POI[], curr
   const startNodeObject = getPoi(startId)
   const endNodeObject = getPoi(endId)
 
-  if (!startNodeObject || !startNodeObject.position) {
+  if (!startNodeObject || !(startNodeObject as any).position) {
     console.error(`Start POI ${startId} not found or has no position.`)
     alert(t('routeErrorStartNotFound', getPoiName(startNodeObject)))
     return null
   }
-  if (!endNodeObject || !endNodeObject.position) {
+  if (!endNodeObject || !(endNodeObject as any).position) {
     console.error(`End POI ${endId} not found or has no position.`)
     alert(t('routeErrorEndNotFound', getPoiName(endNodeObject)))
     return null
@@ -875,25 +875,25 @@ export const findPath = (startId: string, endId: string, allPoiData: POI[], curr
         // Find intermediate points in that area
         const intermediatePOIs = allPoiData.filter(poi =>
           poi.area === intermediateArea &&
-          poi.type === 'transport' &&
+          (poi as any).type === 'transport' &&
           String(poi.cable_route || '').split(',').map(r => r.trim()).includes(alternativeRoute)
         )
 
         // Try to find route via each intermediate point
         for (const intermediatePOI of intermediatePOIs) {
           // Check if intermediate point is operational
-          const intermediateStatus = checkOperationalStatus(intermediatePOI.id, operatingHours)
+          const intermediateStatus = checkOperationalStatus((intermediatePOI as any).id, operatingHours)
           if (!intermediateStatus.operational) continue
 
           // Find route from start to intermediate point
-          const firstLeg = findPathDijkstraInternal(startId, intermediatePOI.id, allPoiData, {
+          const firstLeg = findPathDijkstraInternal(startId, (intermediatePOI as any).id, allPoiData, {
             mode: 'standard',
             strictPreferredRoute: alternativeRoute
           }, operatingHours)
 
           if (firstLeg && !firstLeg.timedOut) {
             // Find route from intermediate point to destination
-            const secondLeg = findPathDijkstraInternal(intermediatePOI.id, endId, allPoiData, {
+            const secondLeg = findPathDijkstraInternal((intermediatePOI as any).id, endId, allPoiData, {
               mode: 'standard'
             }, operatingHours)
 
@@ -934,7 +934,7 @@ export const calculateCableRoutesForPath = (path: string[], allPoiData: POI[]): 
   for (let i = 0; i < path.length - 1; i++) {
     const startP = getPoi(String(path[i]))
     const endP = getPoi(String(path[i + 1]))
-    if (startP?.type === 'transport' && endP?.type === 'transport' && areOnSameCableRoute(startP, endP)) {
+    if ((startP as any)?.type === 'transport' && (endP as any)?.type === 'transport' && areOnSameCableRoute(startP, endP)) {
       const startRoutes = String(startP.cable_route || '').split(',').map(r => r.trim()).filter(r => r)
       const endRoutes = String(endP.cable_route || '').split(',').map(r => r.trim()).filter(r => r)
       const commonRoute = startRoutes.find(r => endRoutes.includes(r))

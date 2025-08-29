@@ -1,9 +1,20 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Import Modern Design System Foundation */
+/* Temporarily disabled due to Tailwind @apply on non-Tailwind classes causing build errors */
+/* @import './styles/design-system.css'; */
+
+/* Import Modern UI Utilities */
+/* Temporarily disabled due to Tailwind @apply on non-Tailwind classes causing build errors */
+/* @import './styles/utilities.css'; */
 
 /* Import Safe Area utilities */
 @import './components/layout/safe-area.css';
+
+/* Import Accessibility styles */
+@import './styles/accessibility.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 @layer base {
   html {
@@ -405,7 +416,12 @@
 
   /* Route instructions panel */
   .route-instructions-panel {
-    @apply absolute bottom-0 left-0 right-0 md:left-0 md:top-0 md:bottom-auto md:right-auto md:w-80 lg:w-96 bg-white shadow-2xl rounded-t-3xl md:rounded-none md:rounded-r-2xl p-0 z-[1300] max-h-[75vh] md:max-h-[calc(100%-2rem)] overflow-hidden transform translate-y-full md:-translate-x-full transition-all duration-300 ease-out;
+    @apply absolute bottom-0 left-0 right-0 md:left-0 md:top-0 md:bottom-auto md:right-auto md:w-80 lg:w-96 rounded-t-3xl md:rounded-none md:rounded-r-2xl p-0 z-[1300] max-h-[75vh] md:max-h-[calc(100%-2rem)] overflow-hidden transform translate-y-full md:-translate-x-full transition-all duration-300 ease-out;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
   }
 
   .route-instructions-panel.visible {
@@ -427,7 +443,12 @@
 
   /* POI Info Panel */
   .poi-panel {
-    @apply absolute bottom-0 left-0 right-0 md:left-0 md:top-0 md:bottom-auto md:right-auto md:w-80 lg:w-96 bg-white shadow-2xl rounded-t-3xl md:rounded-none md:rounded-r-2xl p-0 z-[1301] max-h-[75vh] md:max-h-[calc(100%-2rem)] overflow-hidden transform translate-y-full md:-translate-x-full transition-all duration-300 ease-out;
+    @apply absolute bottom-0 left-0 right-0 md:left-0 md:top-0 md:bottom-auto md:right-auto md:w-80 lg:w-96 rounded-t-3xl md:rounded-none md:rounded-r-2xl p-0 z-[1301] max-h-[75vh] md:max-h-[calc(100%-2rem)] overflow-hidden transform translate-y-full md:-translate-x-full transition-all duration-300 ease-out;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
   }
 
   .poi-panel.visible {

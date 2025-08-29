@@ -11,6 +11,8 @@ export { default as TabletSidebar } from './TabletSidebar'
 export { default as AdaptiveLayout } from './AdaptiveLayout'
 export { default as SafeAreaProvider, SafeAreaTop, SafeAreaBottom, SafeAreaLeft, SafeAreaRight } from './SafeAreaProvider'
 export { default as GridLayout, TwoColumnLayout, ThreeColumnLayout, SidebarLayout } from './GridLayout'
+export { default as ResponsiveGrid } from './ResponsiveGrid'
+export { default as BentoGrid } from './BentoGrid'
 
 // Device detection
 export { default as DeviceProvider, useDevice, MobileOnly, TabletOnly, DesktopOnly, MobileAndTablet, TabletAndDesktop } from './DeviceDetector'
