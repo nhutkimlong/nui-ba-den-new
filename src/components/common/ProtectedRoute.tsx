@@ -29,8 +29,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, redire
   }
 
   if (requiredRole && user?.role !== requiredRole) {
-    // Not enough privileges
-    return <Navigate to={redirectTo} state={{ from: location }} replace />;
+    // Đã đăng nhập nhưng không đủ quyền → chuyển về hồ sơ
+    return <Navigate to="/profile" replace />;
   }
 
   return <>{children}</>;

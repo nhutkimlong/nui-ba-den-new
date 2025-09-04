@@ -38,8 +38,51 @@ const UserAdminPage: React.FC = () => {
 
   const onSave = async () => {
     if (!editing) return
+    // Nếu có SĐT, đồng bộ số lần đăng ký và lần gần nhất từ Google Sheet trước khi lưu
+    const enrichWithClimbStats = async (user: UserRow): Promise<UserRow> => {
+      try {
+        if (!user.phone) return user
+        const url = 'https://script.google.com/macros/s/AKfycbyWYJtTjYvSFT--TPpV6bk4-o6jKtqXBhe5di-h6ozC2sKscM_i8_PCJxzPpL_bEDNT/exec?action=searchPhone&phone=' + encodeURIComponent(user.phone)
+        const res = await fetch(url)
+        const json = await res.json()
+        if (!json || !json.success || !Array.isArray(json.data)) return user
+        const count: number = json.data.length
+        let last = 0
+        const parseSheetDate = (input: string): number => {
+          if (!input) return NaN as unknown as number
+          const [datePart, timePart] = String(input).trim().split(/\s+/)
+          const dateMatch = datePart?.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+          if (dateMatch) {
+            const d = parseInt(dateMatch[1], 10)
+            const m = parseInt(dateMatch[2], 10) - 1
+            const y = parseInt(dateMatch[3], 10)
+            let h = 0, mi = 0, s = 0
+            if (timePart) {
+              const tm = timePart.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/)
+              if (tm) {
+                h = parseInt(tm[1], 10)
+                mi = parseInt(tm[2], 10)
+                s = tm[3] ? parseInt(tm[3], 10) : 0
+              }
+            }
+            return new Date(y, m, d, h, mi, s).getTime()
+          }
+          const t = Date.parse(input)
+          return Number.isNaN(t) ? (NaN as unknown as number) : t
+        }
+        for (const item of json.data) {
+          const raw = item.timestamp || item.registrationDate || ''
+          const t = parseSheetDate(raw)
+          if (!Number.isNaN(t)) last = Math.max(last, t)
+        }
+        return { ...user, climbCount: count, lastClimbAt: last || user.lastClimbAt }
+      } catch {
+        return user
+      }
+    }
+    const payload = await enrichWithClimbStats(editing)
     setLoading(true)
-    const res = await usersApi.save(editing)
+    const res = await usersApi.save(payload)
     setLoading(false)
     if (res.success) {
       setEditing(null)
