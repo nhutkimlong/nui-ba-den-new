@@ -177,60 +177,11 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: process.env.NODE_ENV === 'development',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug', 'console.warn']
-      }
-    },
+    // use esbuild minifier for maximum compatibility
+    minify: 'esbuild',
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Vendor chunks
-          if (id.includes('node_modules')) {
-            // React ecosystem
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor';
-            }
-            // Router
-            if (id.includes('react-router')) {
-              return 'router-vendor';
-            }
-            // Map libraries
-            if (id.includes('leaflet') || id.includes('supercluster')) {
-              return 'map-vendor';
-            }
-            // UI libraries
-            if (id.includes('lucide-react') || id.includes('chart.js')) {
-              return 'ui-vendor';
-            }
-            // Utilities
-            if (id.includes('clsx') || id.includes('tailwind-merge')) {
-              return 'utils-vendor';
-            }
-            // Other vendor libraries
-            return 'vendor';
-          }
-          
-          // App chunks
-          if (id.includes('/pages/')) {
-            return 'pages';
-          }
-          if (id.includes('/components/')) {
-            return 'components';
-          }
-          if (id.includes('/hooks/')) {
-            return 'hooks';
-          }
-          if (id.includes('/services/')) {
-            return 'services';
-          }
-          if (id.includes('/utils/')) {
-            return 'utils';
-          }
-        },
+        // let Vite/Rollup decide optimal code-splitting to avoid ordering issues
         chunkFileNames: (chunkInfo) => {
           const facadeModuleId = chunkInfo.facadeModuleId ? chunkInfo.facadeModuleId.split('/').pop() : 'chunk';
           return `js/[name]-[hash].js`;
