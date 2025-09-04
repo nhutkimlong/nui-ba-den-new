@@ -7,6 +7,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faMountain, faCalendarAlt, faSyncAlt, faHome, faUsers, faBell, faCertificate, faMapMarkerAlt, faSearch, faPlus, faTimes, faSave, faUndo, faInfoCircle, faList, faCheckCircle, faExclamationTriangle, faHistory, faChartLine, faSpinner, faEyeSlash, faTrash, faTools, faBullhorn, faCloudRain } from '@fortawesome/free-solid-svg-icons';
 import { ResponsiveContainer, useDevice } from '../../layout';
 import { useAuth } from '../../../contexts/AuthContext';
+import SwipeableTabs from '../../common/SwipeableTabs';
+import { useToast } from '../../common/Toast';
 import './AdminStyles.css';
 
 Chart.register(...registerables);
@@ -86,6 +88,7 @@ const NOTIFICATION_TYPES: any = {
 const ClimbAdminPage: React.FC = () => {
     const { logout } = useAuth();
     const navigate = useNavigate();
+    const { showToast } = useToast();
     const [stats, setStats] = useState<any>({});
     const [notifications, setNotifications] = useState<any[]>([]);
     const [gpsSettings, setGpsSettings] = useState<any>({});
@@ -234,15 +237,22 @@ const ClimbAdminPage: React.FC = () => {
             active: true
         };
 
-        await fetch(CONFIG.COMBINED_API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'createNotification', data: notification })
-        });
-        loadAllDataFromAPI();
-        notificationFormRef.current.reset();
+        try {
+            const response = await fetch(CONFIG.COMBINED_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'createNotification', data: notification })
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            loadAllDataFromAPI();
+            notificationFormRef.current.reset();
+            showToast({ type: 'success', title: 'Đã tạo thông báo', message: 'Thông báo đã được lưu thành công.' });
+        } catch (error) {
+            console.error('Error creating notification:', error);
+            showToast({ type: 'error', title: 'Lỗi khi tạo thông báo', message: 'Vui lòng thử lại sau.' });
+        }
     };
-    
+
     const handleSaveGpsSettings = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!gpsSettingsFormRef.current) return;
@@ -252,36 +262,44 @@ const ClimbAdminPage: React.FC = () => {
             newSettings[key] = value;
         });
 
-        await fetch(CONFIG.COMBINED_API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'updateGpsSettings', data: newSettings })
-        });
-        loadAllDataFromAPI();
+        try {
+            const response = await fetch(CONFIG.COMBINED_API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'updateGpsSettings', data: newSettings })
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            loadAllDataFromAPI();
+            showToast({ type: 'success', title: 'Đã lưu cài đặt', message: 'Cài đặt GPS đã được cập nhật.' });
+        } catch (error) {
+            console.error('Error saving GPS settings:', error);
+            showToast({ type: 'error', title: 'Lỗi khi lưu cài đặt', message: 'Không thể lưu cài đặt GPS. Vui lòng thử lại.' });
+        }
     };
 
     const deleteNotification = async (notificationId: string) => {
         if (!window.confirm('Bạn có chắc chắn muốn xóa thông báo này?')) return;
-        
+
         try {
             await fetch(CONFIG.COMBINED_API_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    action: 'deleteNotification', 
-                    data: { id: notificationId } 
+                body: JSON.stringify({
+                    action: 'deleteNotification',
+                    data: { id: notificationId }
                 })
             });
             loadAllDataFromAPI();
+            showToast({ type: 'success', title: 'Đã xóa thông báo' });
         } catch (error) {
             console.error('Error deleting notification:', error);
-            alert('Có lỗi xảy ra khi xóa thông báo. Vui lòng thử lại.');
+            showToast({ type: 'error', title: 'Lỗi khi xóa thông báo', message: 'Vui lòng thử lại.' });
         }
     };
 
     const searchUser = async () => {
         const searchPhone = (document.getElementById('searchPhone') as HTMLInputElement)?.value?.trim();
-        
+
         if (!searchPhone) {
             alert('Vui lòng nhập số điện thoại để tìm kiếm');
             return;
@@ -291,7 +309,7 @@ const ClimbAdminPage: React.FC = () => {
         try {
             const response = await fetch(`${CONFIG.GOOGLE_SCRIPT_URL}?action=searchPhone&phone=${encodeURIComponent(searchPhone)}`);
             const result = await response.json();
-            
+
             if (result.success) {
                 setSearchResults(result.data || []);
                 if (result.data && result.data.length === 0) {
@@ -314,80 +332,372 @@ const ClimbAdminPage: React.FC = () => {
 
     const { isMobile } = useDevice();
 
+    // Mobile Layout
+    if (isMobile) {
+        const tabs = [
+            {
+                id: 'stats',
+                label: 'Thống kê',
+                icon: <FontAwesomeIcon icon={faChartLine} className="w-4 h-4" />,
+                content: (
+                    <div className="p-4 space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-white rounded-lg shadow-sm p-4 border border-slate-200">
+                                <p className="text-xs font-medium text-slate-600">Tổng đăng ký</p>
+                                <p className="text-lg font-bold text-slate-900">{stats.yearlyCount || 0}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow-sm p-4 border border-slate-200">
+                                <p className="text-xs font-medium text-slate-600">Hôm nay</p>
+                                <p className="text-lg font-bold text-slate-900">{stats.todayCount || 0}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow-sm p-4 border border-slate-200">
+                                <p className="text-xs font-medium text-slate-600">Tháng này</p>
+                                <p className="text-lg font-bold text-slate-900">{stats.monthlyCount || 0}</p>
+                            </div>
+                            <div className="bg-white rounded-lg shadow-sm p-4 border border-slate-200">
+                                <p className="text-xs font-medium text-slate-600">Thông báo</p>
+                                <p className="text-lg font-bold text-slate-900">{notifications.filter(n => n.active).length}</p>
+                            </div>
+                        </div>
+
+                        {/* Recent Registrations */}
+                        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                            <div className="p-4 border-b border-slate-200">
+                                <h3 className="text-sm font-semibold text-slate-800">Đăng ký gần đây</h3>
+                            </div>
+                            <div className="p-4">
+                                {recentRegistrations.length === 0 ? (
+                                    <p className="text-xs text-slate-500 text-center py-4">Chưa có đăng ký nào</p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {recentRegistrations.slice(0, 5).map((reg, idx) => (
+                                            <div key={idx} className="flex justify-between items-center text-xs">
+                                                <div>
+                                                    <p className="font-medium text-slate-800">{reg.representativeName}</p>
+                                                    <p className="text-slate-500">{reg.phone}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-slate-600">{reg.memberCount} người</p>
+                                                    <p className="text-slate-500">{new Date(reg.timestamp).toLocaleDateString('vi-VN')}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: 'notifications',
+                label: 'Thông báo',
+                icon: <FontAwesomeIcon icon={faBell} className="w-4 h-4" />,
+                content: (
+                    <div className="p-4 space-y-4">
+                        {/* Create Notification Form */}
+                        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                            <div className="p-4 border-b border-slate-200">
+                                <h3 className="text-sm font-semibold text-slate-800">Tạo thông báo mới</h3>
+                            </div>
+                            <div className="p-4">
+                                <form ref={notificationFormRef} onSubmit={handleCreateNotification} className="space-y-3">
+                                    <select name="notificationType" className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                                        <option value="weather">Cảnh báo thời tiết</option>
+                                        <option value="maintenance">Bảo trì</option>
+                                        <option value="announcement">Thông báo chung</option>
+                                        <option value="emergency">Khẩn cấp</option>
+                                    </select>
+                                    <input type="text" name="notificationTitle" placeholder="Tiêu đề" className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200" />
+                                    <textarea name="notificationMessage" placeholder="Nội dung" rows={3} className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200"></textarea>
+                                    <button type="submit" className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm rounded-lg hover:from-blue-700 hover:to-indigo-700 shadow-md">
+                                        Tạo thông báo
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        {/* Active Notifications */}
+                        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                            <div className="p-4 border-b border-slate-200">
+                                <h3 className="text-sm font-semibold text-slate-800">Thông báo đang hoạt động</h3>
+                            </div>
+                            <div className="p-4">
+                                {notifications.filter(n => n.active).length === 0 ? (
+                                    <p className="text-xs text-slate-500 text-center py-4">Chưa có thông báo nào</p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {notifications.filter(n => n.active).map(n => (
+                                            <div key={n.id} className="flex justify-between items-start p-3 bg-slate-50 rounded-lg">
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs font-medium text-slate-800 truncate">{n.title}</p>
+                                                    <p className="text-xs text-slate-600 mt-1 line-clamp-2">{n.message}</p>
+                                                    <p className="text-xs text-slate-500 mt-1">{NOTIFICATION_TYPES[n.type]?.name}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => deleteNotification(n.id)}
+                                                    className="ml-2 p-1 text-red-600 hover:bg-red-50 rounded"
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} className="text-xs" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: 'gps',
+                label: 'Cài đặt GPS',
+                icon: <FontAwesomeIcon icon={faMapMarkerAlt} className="w-4 h-4" />,
+                content: (
+                    <div className="p-4">
+                        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                            <div className="p-4 border-b border-slate-200">
+                                <h3 className="text-sm font-semibold text-slate-800">Cài đặt GPS</h3>
+                            </div>
+                            <div className="p-4">
+                                <form ref={gpsSettingsFormRef} onSubmit={handleSaveGpsSettings} className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-700 mb-1">Bán kính đăng ký (m)</label>
+                                            <input type="number" name="registrationRadius" defaultValue={gpsSettings.registrationRadius || 100} className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-700 mb-1">Bán kính chứng nhận (m)</label>
+                                            <input type="number" name="certificateRadius" defaultValue={gpsSettings.certificateRadius || 50} className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg" />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        <label className="flex items-center">
+                                            <input type="checkbox" name="requireGpsRegistration" defaultChecked={gpsSettings.requireGpsRegistration} className="mr-2" />
+                                            <span className="text-xs text-slate-700">Yêu cầu GPS khi đăng ký</span>
+                                        </label>
+                                        <label className="flex items-center">
+                                            <input type="checkbox" name="requireGpsCertificate" defaultChecked={gpsSettings.requireGpsCertificate} className="mr-2" />
+                                            <span className="text-xs text-slate-700">Yêu cầu GPS khi nhận chứng nhận</span>
+                                        </label>
+                                        <label className="flex items-center">
+                                            <input type="checkbox" name="registrationTimeEnabled" defaultChecked={gpsSettings.registrationTimeEnabled} className="mr-2" />
+                                            <span className="text-xs text-slate-700">Giới hạn thời gian đăng ký</span>
+                                        </label>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-700 mb-1">Giờ bắt đầu</label>
+                                            <input type="time" name="registrationStartTime" defaultValue={gpsSettings.registrationStartTime || '06:00'} className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-slate-700 mb-1">Giờ kết thúc</label>
+                                            <input type="time" name="registrationEndTime" defaultValue={gpsSettings.registrationEndTime || '18:00'} className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg" />
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" className="w-full px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700">
+                                        Lưu cài đặt GPS
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                )
+            },
+            {
+                id: 'search',
+                label: 'Tra cứu',
+                icon: <FontAwesomeIcon icon={faSearch} className="w-4 h-4" />,
+                content: (
+                    <div className="p-4">
+                        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                            <div className="p-4 border-b border-slate-200">
+                                <h3 className="text-sm font-semibold text-slate-800">Tra cứu người leo núi</h3>
+                                <p className="text-xs text-slate-600 mt-1">Tìm kiếm theo số điện thoại</p>
+                            </div>
+                            <div className="p-4">
+                                <form onSubmit={(e) => { e.preventDefault(); searchUser(); }} className="space-y-3">
+                                    <input
+                                        type="tel"
+                                        id="searchPhone"
+                                        placeholder="Nhập số điện thoại"
+                                        className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={isSearching}
+                                        className="w-full px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm rounded-lg hover:from-green-700 hover:to-emerald-700 shadow-md disabled:opacity-50"
+                                    >
+                                        {isSearching ? (
+                                            <>
+                                                <FontAwesomeIcon icon={faSpinner} spin className="mr-2" />
+                                                Đang tìm...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FontAwesomeIcon icon={faSearch} className="mr-2" />
+                                                Tìm kiếm
+                                            </>
+                                        )}
+                                    </button>
+                                </form>
+
+                                {/* Search Results */}
+                                {searchResults.length > 0 && (
+                                    <div className="mt-4 space-y-3">
+                                        <h4 className="text-xs font-semibold text-slate-800">Kết quả tìm kiếm ({searchResults.length})</h4>
+                                        {searchResults.map((result, idx) => (
+                                            <div key={idx} className="p-3 bg-slate-50 rounded-lg">
+                                                <div className="flex justify-between items-start">
+                                                    <div className="flex-1">
+                                                        <p className="text-xs font-medium text-slate-800">{result.representativeName}</p>
+                                                        <p className="text-xs text-slate-600">{result.phone}</p>
+                                                        <p className="text-xs text-slate-500 mt-1">{result.memberCount} người - {new Date(result.timestamp).toLocaleDateString('vi-VN')}</p>
+                                                    </div>
+                                                    <span className={`px-2 py-1 text-xs rounded-full ${result.certificateGenerated ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                                        {result.certificateGenerated ? 'Đã có chứng nhận' : 'Chưa có chứng nhận'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        ];
+
+        return (
+            <ResponsiveContainer maxWidth="7xl" padding="sm">
+                <div className="min-h-screen bg-gray-50">
+                    {/* Mobile Header */}
+                    <div className="bg-white shadow-sm border-b border-gray-200 p-4 mb-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <Link to="/admin" className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                                    <FontAwesomeIcon icon={faArrowLeft} className="text-gray-600" />
+                                </Link>
+                                <div className="flex items-center gap-2">
+                                    <div className="p-2 bg-blue-100 rounded-lg">
+                                        <FontAwesomeIcon icon={faMountain} className="text-blue-600" />
+                                    </div>
+                                    <div>
+                                        <h1 className="text-lg font-bold text-gray-800">Quản lý Leo núi</h1>
+                                        <p className="text-xs text-gray-600">Đăng ký & Chứng nhận</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={loadInitialData}
+                                className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                                title="Làm mới dữ liệu"
+                            >
+                                <FontAwesomeIcon icon={faSyncAlt} className="text-gray-600" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Loading Overlay */}
+                    {isLoading && (
+                        <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+                            <div className="text-center">
+                                <FontAwesomeIcon icon={faSpinner} spin className="text-3xl text-blue-600" />
+                                <p className="mt-2 text-gray-600">Đang tải...</p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Mobile Tabs */}
+                    <div className="px-4">
+                        <SwipeableTabs
+                            tabs={tabs}
+                            defaultTab="stats"
+                        />
+                    </div>
+                </div>
+            </ResponsiveContainer>
+        );
+    }
+
     return (
         <ResponsiveContainer maxWidth="7xl" padding="lg">
             <div className="admin-layout">
                 {/* Header Section */}
                 <div className="admin-card mb-8">
                     <div className="admin-card-header">
-                                                 <div className="flex items-center justify-between flex-col lg:flex-row gap-4">
-                             <div className="flex items-center gap-4 w-full lg:w-auto">
-                                 <Link to="/admin" className="p-3 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all duration-200 flex-shrink-0">
-                                     <FontAwesomeIcon icon={faArrowLeft} className="text-slate-600 text-xl" />
-                                 </Link>
-                                 <div className="flex items-center gap-3 min-w-0">
-                                     <div className="p-3 bg-blue-100 rounded-xl flex-shrink-0">
-                                         <FontAwesomeIcon icon={faMountain} className="text-blue-600 text-2xl" />
-                                     </div>
-                                     <div className="min-w-0">
-                                         <h1 className="text-xl lg:text-2xl font-bold text-slate-800 truncate">Quản lý Đăng ký Leo núi</h1>
-                                         <p className="text-slate-600 text-sm lg:text-base truncate">Quản lý thông báo, tra cứu người leo núi và cài đặt hệ thống</p>
-                                     </div>
-                                 </div>
-                             </div>
-                                                         <div className="flex items-center gap-2 lg:gap-3 flex-wrap">
-                                 <div className="text-right hidden sm:block">
-                                     <p className="text-sm text-slate-500 flex items-center gap-2">
-                                         <FontAwesomeIcon icon={faCalendarAlt} />
-                                         {currentDate}
-                                     </p>
-                                 </div>
-                                 <button 
-                                     onClick={loadInitialData} 
-                                     className="btn-modern btn-modern-secondary text-sm px-3 py-2"
-                                     title="Làm mới dữ liệu"
-                                 >
-                                     <FontAwesomeIcon icon={faSyncAlt} className="mr-1" />
-                                     <span className="hidden sm:inline">Làm mới</span>
-                                 </button>
-                                 <button 
-                                     onClick={() => {
-                                         logout();
-                                         navigate('/admin-login');
-                                     }} 
-                                     className="btn-modern btn-modern-danger text-sm px-3 py-2"
-                                     title="Đăng xuất"
-                                 >
-                                     <FontAwesomeIcon icon={faHome} className="mr-1" />
-                                     <span className="hidden sm:inline">Đăng xuất</span>
-                                 </button>
-                             </div>
+                        <div className="flex items-center justify-between flex-col lg:flex-row gap-4">
+                            <div className="flex items-center gap-4 w-full lg:w-auto">
+                                <Link to="/admin" className="p-3 bg-slate-100 rounded-xl hover:bg-slate-200 transition-all duration-200 flex-shrink-0">
+                                    <FontAwesomeIcon icon={faArrowLeft} className="text-slate-600 text-xl" />
+                                </Link>
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className="p-3 bg-blue-100 rounded-xl flex-shrink-0">
+                                        <FontAwesomeIcon icon={faMountain} className="text-blue-600 text-2xl" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h1 className="text-xl lg:text-2xl font-bold text-slate-800 truncate">Quản lý Đăng ký Leo núi</h1>
+                                        <p className="text-slate-600 text-sm lg:text-base truncate">Quản lý thông báo, tra cứu người leo núi và cài đặt hệ thống</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 lg:gap-3 flex-wrap">
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-sm text-slate-500 flex items-center gap-2">
+                                        <FontAwesomeIcon icon={faCalendarAlt} />
+                                        {currentDate}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={loadInitialData}
+                                    className="btn-modern btn-modern-secondary text-sm px-3 py-2"
+                                    title="Làm mới dữ liệu"
+                                >
+                                    <FontAwesomeIcon icon={faSyncAlt} className="mr-1" />
+                                    <span className="hidden sm:inline">Làm mới</span>
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        logout();
+                                        navigate('/admin-login');
+                                    }}
+                                    className="btn-modern btn-modern-danger text-sm px-3 py-2"
+                                    title="Đăng xuất"
+                                >
+                                    <FontAwesomeIcon icon={faHome} className="mr-1" />
+                                    <span className="hidden sm:inline">Đăng xuất</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                                 {/* Quick Stats */}
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
-                     <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-slate-200">
-                         <p className="text-sm font-medium text-slate-600">Tổng đăng ký</p>
-                         <p className="text-xl lg:text-2xl font-bold text-slate-900">{stats.yearlyCount || '-'}</p>
-                     </div>
-                     <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-slate-200">
-                         <p className="text-sm font-medium text-slate-600">Thông báo đang hoạt động</p>
-                         <p className="text-xl lg:text-2xl font-bold text-slate-900">{notifications.filter(n => n.active).length}</p>
-                     </div>
-                     <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-slate-200">
-                         <p className="text-sm font-medium text-slate-600">Chứng chỉ đã tạo</p>
-                         <p className="text-xl lg:text-2xl font-bold text-slate-900">{stats.totalCertificates || '-'}</p>
-                     </div>
-                     <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-slate-200">
-                         <p className="text-sm font-medium text-slate-600">GPS đang bật</p>
-                         <p className="text-xl lg:text-2xl font-bold text-slate-900">{gpsSettings.requireGpsRegistration || gpsSettings.requireGpsCertificate ? 'Bật' : 'Tắt'}</p>
-                     </div>
-                 </div>
+                {/* Quick Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+                    <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-slate-200">
+                        <p className="text-sm font-medium text-slate-600">Tổng đăng ký</p>
+                        <p className="text-xl lg:text-2xl font-bold text-slate-900">{stats.yearlyCount || '-'}</p>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-slate-200">
+                        <p className="text-sm font-medium text-slate-600">Thông báo đang hoạt động</p>
+                        <p className="text-xl lg:text-2xl font-bold text-slate-900">{notifications.filter(n => n.active).length}</p>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-slate-200">
+                        <p className="text-sm font-medium text-slate-600">Chứng chỉ đã tạo</p>
+                        <p className="text-xl lg:text-2xl font-bold text-slate-900">{stats.totalCertificates || '-'}</p>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 border border-slate-200">
+                        <p className="text-sm font-medium text-slate-600">GPS đang bật</p>
+                        <p className="text-xl lg:text-2xl font-bold text-slate-900">{gpsSettings.requireGpsRegistration || gpsSettings.requireGpsCertificate ? 'Bật' : 'Tắt'}</p>
+                    </div>
+                </div>
 
-                                 {/* Main Content Grid */}
-                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 lg:gap-8">
                     {/* Notification Management */}
                     <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl shadow-sm border border-blue-200 overflow-hidden">
                         <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6">
@@ -413,16 +723,16 @@ const ClimbAdminPage: React.FC = () => {
                                             <p className="font-medium text-slate-800">{n.title}</p>
                                             <p className="text-sm text-slate-600 mt-1">{n.message}</p>
                                             <div className="mt-3 flex justify-end">
-                                                <button 
+                                                <button
                                                     onClick={async () => {
                                                         if (!window.confirm('Bạn có chắc chắn muốn xóa thông báo này?')) return;
                                                         try {
                                                             await fetch(CONFIG.COMBINED_API_URL, {
                                                                 method: 'POST',
                                                                 headers: { 'Content-Type': 'application/json' },
-                                                                body: JSON.stringify({ 
-                                                                    action: 'deleteNotification', 
-                                                                    data: { id: n.id } 
+                                                                body: JSON.stringify({
+                                                                    action: 'deleteNotification',
+                                                                    data: { id: n.id }
                                                                 })
                                                             });
                                                             loadAllDataFromAPI();
@@ -453,9 +763,9 @@ const ClimbAdminPage: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                                            <input 
-                                                type="checkbox" 
-                                                name="requireGpsRegistration" 
+                                            <input
+                                                type="checkbox"
+                                                name="requireGpsRegistration"
                                                 defaultChecked={gpsSettings.requireGpsRegistration}
                                                 className="mr-2"
                                             />
@@ -463,21 +773,21 @@ const ClimbAdminPage: React.FC = () => {
                                         </label>
                                         <div className="ml-6">
                                             <label className="block text-sm text-slate-600 mb-1">Bán kính đăng ký (mét)</label>
-                                            <input 
-                                                type="number" 
-                                                name="registrationRadius" 
+                                            <input
+                                                type="number"
+                                                name="registrationRadius"
                                                 defaultValue={gpsSettings.registrationRadius || 100}
                                                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                                                 placeholder="100"
                                             />
                                         </div>
                                     </div>
-                                    
+
                                     <div>
                                         <label className="block text-sm font-medium text-slate-700 mb-2">
-                                            <input 
-                                                type="checkbox" 
-                                                name="requireGpsCertificate" 
+                                            <input
+                                                type="checkbox"
+                                                name="requireGpsCertificate"
                                                 defaultChecked={gpsSettings.requireGpsCertificate}
                                                 className="mr-2"
                                             />
@@ -485,9 +795,9 @@ const ClimbAdminPage: React.FC = () => {
                                         </label>
                                         <div className="ml-6">
                                             <label className="block text-sm text-slate-600 mb-1">Bán kính chứng nhận (mét)</label>
-                                            <input 
-                                                type="number" 
-                                                name="certificateRadius" 
+                                            <input
+                                                type="number"
+                                                name="certificateRadius"
                                                 defaultValue={gpsSettings.certificateRadius || 50}
                                                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                                                 placeholder="50"
@@ -498,9 +808,9 @@ const ClimbAdminPage: React.FC = () => {
 
                                 <div className="border-t pt-4">
                                     <label className="block text-sm font-medium text-slate-700 mb-2">
-                                        <input 
-                                            type="checkbox" 
-                                            name="registrationTimeEnabled" 
+                                        <input
+                                            type="checkbox"
+                                            name="registrationTimeEnabled"
                                             defaultChecked={gpsSettings.registrationTimeEnabled}
                                             className="mr-2"
                                         />
@@ -509,18 +819,18 @@ const ClimbAdminPage: React.FC = () => {
                                     <div className="ml-6 grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm text-slate-600 mb-1">Giờ bắt đầu</label>
-                                            <input 
-                                                type="time" 
-                                                name="registrationStartTime" 
+                                            <input
+                                                type="time"
+                                                name="registrationStartTime"
                                                 defaultValue={gpsSettings.registrationStartTime || "06:00"}
                                                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                                             />
                                         </div>
                                         <div>
                                             <label className="block text-sm text-slate-600 mb-1">Giờ kết thúc</label>
-                                            <input 
-                                                type="time" 
-                                                name="registrationEndTime" 
+                                            <input
+                                                type="time"
+                                                name="registrationEndTime"
                                                 defaultValue={gpsSettings.registrationEndTime || "18:00"}
                                                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                                             />
@@ -533,10 +843,10 @@ const ClimbAdminPage: React.FC = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm text-slate-600 mb-1">Vĩ độ (Latitude)</label>
-                                            <input 
-                                                type="number" 
+                                            <input
+                                                type="number"
                                                 step="any"
-                                                name="registrationLatitude" 
+                                                name="registrationLatitude"
                                                 defaultValue={gpsSettings.registrationLatitude || 11.374232}
                                                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                                                 placeholder="11.374232"
@@ -544,10 +854,10 @@ const ClimbAdminPage: React.FC = () => {
                                         </div>
                                         <div>
                                             <label className="block text-sm text-slate-600 mb-1">Kinh độ (Longitude)</label>
-                                            <input 
-                                                type="number" 
+                                            <input
+                                                type="number"
                                                 step="any"
-                                                name="registrationLongitude" 
+                                                name="registrationLongitude"
                                                 defaultValue={gpsSettings.registrationLongitude || 106.175094}
                                                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                                                 placeholder="106.175094"
@@ -561,10 +871,10 @@ const ClimbAdminPage: React.FC = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm text-slate-600 mb-1">Vĩ độ (Latitude)</label>
-                                            <input 
-                                                type="number" 
+                                            <input
+                                                type="number"
                                                 step="any"
-                                                name="summitLatitude" 
+                                                name="summitLatitude"
                                                 defaultValue={gpsSettings.summitLatitude || 11.374232}
                                                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                                                 placeholder="11.374232"
@@ -572,10 +882,10 @@ const ClimbAdminPage: React.FC = () => {
                                         </div>
                                         <div>
                                             <label className="block text-sm text-slate-600 mb-1">Kinh độ (Longitude)</label>
-                                            <input 
-                                                type="number" 
+                                            <input
+                                                type="number"
                                                 step="any"
-                                                name="summitLongitude" 
+                                                name="summitLongitude"
                                                 defaultValue={gpsSettings.summitLongitude || 106.175094}
                                                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
                                                 placeholder="106.175094"
@@ -591,153 +901,153 @@ const ClimbAdminPage: React.FC = () => {
                         </div>
                     </div>
 
-                                         {/* User Search */}
-                     <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-                         <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6 relative overflow-hidden">
-                             <div className="absolute inset-0 bg-black/10"></div>
-                             <div className="relative z-10 flex items-center">
-                                 <div className="bg-white/20 rounded-full p-3 mr-4">
-                                     <FontAwesomeIcon icon={faSearch} className="text-white text-xl" />
-                                 </div>
-                                 <div>
-                                     <h3 className="text-xl font-bold text-white">Tra cứu Người leo núi</h3>
-                                     <p className="text-white/80 text-sm mt-1">Tìm kiếm thông tin đăng ký theo số điện thoại</p>
-                                 </div>
-                             </div>
-                         </div>
-                         <div className="p-6">
-                             <div className="relative mb-6">
-                                 <div className="flex space-x-3">
-                                     <div className="flex-1 relative">
-                                         <FontAwesomeIcon 
-                                             icon={faSearch} 
-                                             className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm" 
-                                         />
-                                         <input 
-                                             type="tel" 
-                                             id="searchPhone" 
-                                             className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 bg-slate-50 hover:bg-white" 
-                                             placeholder="Nhập số điện thoại để tìm kiếm..." 
-                                             onKeyPress={(e) => e.key === 'Enter' && searchUser()}
-                                         />
-                                     </div>
-                                     <button 
-                                         onClick={searchUser} 
-                                         disabled={isSearching}
-                                         className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed flex items-center font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-                                     >
-                                         {isSearching ? (
-                                             <>
-                                                 <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
-                                                 Đang tìm...
-                                             </>
-                                         ) : (
-                                             <>
-                                                 <FontAwesomeIcon icon={faSearch} className="mr-2" />
-                                                 Tìm kiếm
-                                             </>
-                                         )}
-                                     </button>
-                                 </div>
-                             </div>
-                             
-                             <div>
-                                 <div className="flex items-center justify-between mb-4">
-                                     <h4 className="text-lg font-semibold text-slate-800">Kết quả tìm kiếm</h4>
-                                     {searchResults.length > 0 && (
-                                         <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                                             {searchResults.length} kết quả
-                                         </span>
-                                     )}
-                                 </div>
-                                 
-                                 <div className="space-y-4">
-                                     {isSearching ? (
-                                         <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-                                             <div className="bg-blue-100 rounded-full p-4 mb-4">
-                                                 <FontAwesomeIcon icon={faSpinner} className="animate-spin text-blue-600 text-2xl" />
-                                             </div>
-                                             <p className="text-lg font-medium">Đang tìm kiếm...</p>
-                                             <p className="text-sm text-slate-400">Vui lòng chờ trong giây lát</p>
-                                         </div>
-                                     ) : searchResults.length > 0 ? (
-                                         searchResults.map((user, index) => (
-                                             <div key={index} className="bg-gradient-to-br from-slate-50 to-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
-                                                 <div className="flex items-start justify-between mb-4">
-                                                     <div className="flex items-center">
-                                                         <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-full p-3 mr-4">
-                                                             <FontAwesomeIcon icon={faUsers} className="text-white text-lg" />
-                                                         </div>
-                                                         <div>
-                                                             <h5 className="text-xl font-bold text-slate-800">{user.leaderName || 'N/A'}</h5>
-                                                             <p className="text-slate-500 text-sm">Người dẫn đoàn</p>
-                                                         </div>
-                                                     </div>
-                                                     <div className="text-right">
-                                                         <div className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                                                             {user.certificateCount || '0'} chứng chỉ
-                                                         </div>
-                                                     </div>
-                                                 </div>
-                                                 
-                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                                     <div className="bg-white rounded-xl p-4 border border-slate-100">
-                                                         <div className="flex items-center mb-2">
-                                                             <FontAwesomeIcon icon={faMapMarkerAlt} className="text-blue-500 mr-2" />
-                                                             <span className="text-sm font-medium text-slate-600">Thông tin liên hệ</span>
-                                                         </div>
-                                                         <p className="text-lg font-semibold text-slate-800">{user.phone || 'N/A'}</p>
-                                                         <p className="text-sm text-slate-500">{user.email || 'N/A'}</p>
-                                                     </div>
-                                                     
-                                                     <div className="bg-white rounded-xl p-4 border border-slate-100">
-                                                         <div className="flex items-center mb-2">
-                                                             <FontAwesomeIcon icon={faUsers} className="text-green-500 mr-2" />
-                                                             <span className="text-sm font-medium text-slate-600">Thông tin đoàn</span>
-                                                         </div>
-                                                         <p className="text-lg font-semibold text-slate-800">{user.memberCount || 'N/A'} người</p>
-                                                         <p className="text-sm text-slate-500">{user.address || 'N/A'}</p>
-                                                     </div>
-                                                 </div>
-                                                 
-                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                     <div className="bg-blue-50 rounded-xl p-3 text-center">
-                                                         <p className="text-xs font-medium text-blue-600 mb-1">Ngày đăng ký</p>
-                                                         <p className="text-sm font-semibold text-slate-800">{user.timestamp || 'N/A'}</p>
-                                                         <p className="text-xs text-slate-500">{user.registrationTime || 'N/A'}</p>
-                                                     </div>
-                                                     
-                                                     <div className="bg-green-50 rounded-xl p-3 text-center">
-                                                         <p className="text-xs font-medium text-green-600 mb-1">Ngày leo núi</p>
-                                                         <p className="text-sm font-semibold text-slate-800">{user.trekDate || 'N/A'}</p>
-                                                     </div>
-                                                     
-                                                     <div className="bg-purple-50 rounded-xl p-3 text-center">
-                                                         <p className="text-xs font-medium text-purple-600 mb-1">Chứng chỉ</p>
-                                                         <p className="text-sm font-semibold text-slate-800">{user.certificateCount || '0'}</p>
-                                                     </div>
-                                                 </div>
-                                             </div>
-                                         ))
-                                     ) : (
-                                         <div className="text-center py-12">
-                                             <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
-                                                 <FontAwesomeIcon icon={faSearch} className="text-blue-500 text-3xl" />
-                                             </div>
-                                             <h5 className="text-lg font-semibold text-slate-700 mb-2">Chưa có kết quả tìm kiếm</h5>
-                                             <p className="text-slate-500 mb-4">Nhập số điện thoại và nhấn tìm kiếm để xem thông tin đăng ký</p>
-                                             <div className="bg-slate-50 rounded-xl p-4 max-w-sm mx-auto">
-                                                 <p className="text-sm text-slate-600">
-                                                     <FontAwesomeIcon icon={faInfoCircle} className="mr-2 text-blue-500" />
-                                                     Ví dụ: 0961563915, 0987654321
-                                                 </p>
-                                             </div>
-                                         </div>
-                                     )}
-                                 </div>
-                             </div>
-                         </div>
-                     </div>
+                    {/* User Search */}
+                    <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                        <div className="bg-gradient-to-r from-orange-500 to-red-500 p-6 relative overflow-hidden">
+                            <div className="absolute inset-0 bg-black/10"></div>
+                            <div className="relative z-10 flex items-center">
+                                <div className="bg-white/20 rounded-full p-3 mr-4">
+                                    <FontAwesomeIcon icon={faSearch} className="text-white text-xl" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-white">Tra cứu Người leo núi</h3>
+                                    <p className="text-white/80 text-sm mt-1">Tìm kiếm thông tin đăng ký theo số điện thoại</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-6">
+                            <div className="relative mb-6">
+                                <div className="flex space-x-3">
+                                    <div className="flex-1 relative">
+                                        <FontAwesomeIcon
+                                            icon={faSearch}
+                                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-sm"
+                                        />
+                                        <input
+                                            type="tel"
+                                            id="searchPhone"
+                                            className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-200 bg-slate-50 hover:bg-white"
+                                            placeholder="Nhập số điện thoại để tìm kiếm..."
+                                            onKeyPress={(e) => e.key === 'Enter' && searchUser()}
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={searchUser}
+                                        disabled={isSearching}
+                                        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:from-slate-400 disabled:to-slate-500 disabled:cursor-not-allowed flex items-center font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                                    >
+                                        {isSearching ? (
+                                            <>
+                                                <FontAwesomeIcon icon={faSpinner} className="animate-spin mr-2" />
+                                                Đang tìm...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FontAwesomeIcon icon={faSearch} className="mr-2" />
+                                                Tìm kiếm
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h4 className="text-lg font-semibold text-slate-800">Kết quả tìm kiếm</h4>
+                                    {searchResults.length > 0 && (
+                                        <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                            {searchResults.length} kết quả
+                                        </span>
+                                    )}
+                                </div>
+
+                                <div className="space-y-4">
+                                    {isSearching ? (
+                                        <div className="flex flex-col items-center justify-center py-12 text-slate-500">
+                                            <div className="bg-blue-100 rounded-full p-4 mb-4">
+                                                <FontAwesomeIcon icon={faSpinner} className="animate-spin text-blue-600 text-2xl" />
+                                            </div>
+                                            <p className="text-lg font-medium">Đang tìm kiếm...</p>
+                                            <p className="text-sm text-slate-400">Vui lòng chờ trong giây lát</p>
+                                        </div>
+                                    ) : searchResults.length > 0 ? (
+                                        searchResults.map((user, index) => (
+                                            <div key={index} className="bg-gradient-to-br from-slate-50 to-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 transform hover:-translate-y-1">
+                                                <div className="flex items-start justify-between mb-4">
+                                                    <div className="flex items-center">
+                                                        <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-full p-3 mr-4">
+                                                            <FontAwesomeIcon icon={faUsers} className="text-white text-lg" />
+                                                        </div>
+                                                        <div>
+                                                            <h5 className="text-xl font-bold text-slate-800">{user.leaderName || 'N/A'}</h5>
+                                                            <p className="text-slate-500 text-sm">Người dẫn đoàn</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                                            {user.certificateCount || '0'} chứng chỉ
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                                    <div className="bg-white rounded-xl p-4 border border-slate-100">
+                                                        <div className="flex items-center mb-2">
+                                                            <FontAwesomeIcon icon={faMapMarkerAlt} className="text-blue-500 mr-2" />
+                                                            <span className="text-sm font-medium text-slate-600">Thông tin liên hệ</span>
+                                                        </div>
+                                                        <p className="text-lg font-semibold text-slate-800">{user.phone || 'N/A'}</p>
+                                                        <p className="text-sm text-slate-500">{user.email || 'N/A'}</p>
+                                                    </div>
+
+                                                    <div className="bg-white rounded-xl p-4 border border-slate-100">
+                                                        <div className="flex items-center mb-2">
+                                                            <FontAwesomeIcon icon={faUsers} className="text-green-500 mr-2" />
+                                                            <span className="text-sm font-medium text-slate-600">Thông tin đoàn</span>
+                                                        </div>
+                                                        <p className="text-lg font-semibold text-slate-800">{user.memberCount || 'N/A'} người</p>
+                                                        <p className="text-sm text-slate-500">{user.address || 'N/A'}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                    <div className="bg-blue-50 rounded-xl p-3 text-center">
+                                                        <p className="text-xs font-medium text-blue-600 mb-1">Ngày đăng ký</p>
+                                                        <p className="text-sm font-semibold text-slate-800">{user.timestamp || 'N/A'}</p>
+                                                        <p className="text-xs text-slate-500">{user.registrationTime || 'N/A'}</p>
+                                                    </div>
+
+                                                    <div className="bg-green-50 rounded-xl p-3 text-center">
+                                                        <p className="text-xs font-medium text-green-600 mb-1">Ngày leo núi</p>
+                                                        <p className="text-sm font-semibold text-slate-800">{user.trekDate || 'N/A'}</p>
+                                                    </div>
+
+                                                    <div className="bg-purple-50 rounded-xl p-3 text-center">
+                                                        <p className="text-xs font-medium text-purple-600 mb-1">Chứng chỉ</p>
+                                                        <p className="text-sm font-semibold text-slate-800">{user.certificateCount || '0'}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-12">
+                                            <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-full p-6 w-24 h-24 mx-auto mb-4 flex items-center justify-center">
+                                                <FontAwesomeIcon icon={faSearch} className="text-blue-500 text-3xl" />
+                                            </div>
+                                            <h5 className="text-lg font-semibold text-slate-700 mb-2">Chưa có kết quả tìm kiếm</h5>
+                                            <p className="text-slate-500 mb-4">Nhập số điện thoại và nhấn tìm kiếm để xem thông tin đăng ký</p>
+                                            <div className="bg-slate-50 rounded-xl p-4 max-w-sm mx-auto">
+                                                <p className="text-sm text-slate-600">
+                                                    <FontAwesomeIcon icon={faInfoCircle} className="mr-2 text-blue-500" />
+                                                    Ví dụ: 0961563915, 0987654321
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Detailed Statistics */}

@@ -7,7 +7,7 @@ interface GestureConfig {
 }
 
 interface GestureContextValue {
-  gestureRef: React.RefObject<HTMLElement>;
+  gestureRef: React.MutableRefObject<HTMLElement | null>;
   isGestureEnabled: boolean;
   enableGestures: () => void;
   disableGestures: () => void;
@@ -43,7 +43,7 @@ export const GestureProvider: React.FC<GestureProviderProps> = ({
   }, []);
 
   const contextValue: GestureContextValue = {
-    gestureRef,
+    gestureRef: gestureRef.ref,
     isGestureEnabled,
     enableGestures,
     disableGestures
@@ -52,7 +52,7 @@ export const GestureProvider: React.FC<GestureProviderProps> = ({
   return (
     <GestureContext.Provider value={contextValue}>
       <div 
-        ref={gestureRef as any}
+        ref={gestureRef.ref as React.RefObject<HTMLDivElement>}
         className={`gesture-container ${className}`}
         style={{ 
           width: '100%', 

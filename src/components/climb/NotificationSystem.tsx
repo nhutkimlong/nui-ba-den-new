@@ -58,12 +58,24 @@ export const NotificationSystem: React.FC<NotificationSystemProps> = ({ notifica
   const [seenNotifications, setSeenNotifications] = useState<string[]>([]);
   const [exitingNotifications, setExitingNotifications] = useState<string[]>([]);
 
+
+
   useEffect(() => {
     // Load seen notifications from localStorage
     const stored = localStorage.getItem('seenNotifications');
     if (stored) {
       setSeenNotifications(JSON.parse(stored));
     }
+
+    // Listen for test notifications
+    const handleForceNotifications = (event: CustomEvent) => {
+      setVisibleNotifications(event.detail);
+    };
+
+    window.addEventListener('forceNotifications', handleForceNotifications as EventListener);
+    return () => {
+      window.removeEventListener('forceNotifications', handleForceNotifications as EventListener);
+    };
   }, []);
 
   useEffect(() => {

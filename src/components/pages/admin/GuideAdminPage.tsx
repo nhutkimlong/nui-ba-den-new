@@ -5,6 +5,7 @@ import './AdminStyles.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faRoute, faBed, faUtensils, faGift, faPlus, faSave, faTimes, faPencilAlt, faTrashAlt, faCircleNotch, faArrowLeft, faBook } from '@fortawesome/free-solid-svg-icons';
 import { ResponsiveContainer, useDevice } from '../../layout';
+import SwipeableTabs from '../../common/SwipeableTabs';
 
 const SHEET_MAP = {
     tours: 'Tours',
@@ -93,7 +94,7 @@ const GuideAdminPage: React.FC = () => {
             else if (currentTab === 'accommodations') prefix = 'ACC';
             else if (currentTab === 'restaurants') prefix = 'RES';
             else if (currentTab === 'specialties') prefix = 'SPE';
-            
+
             const maxId = data.reduce((max, it) => {
                 const m = (it.id || '').match(/\d+/);
                 return m ? Math.max(max, parseInt(m[0])) : max;
@@ -191,6 +192,139 @@ const GuideAdminPage: React.FC = () => {
 
     const { isMobile } = useDevice();
 
+    // Mobile Card Component
+    const MobileCard = ({ item, index }: { item: any; index: number }) => (
+        <div key={item.id || index} className="bg-white rounded-lg shadow-md border border-gray-200 p-4 mb-4">
+            <div className="flex justify-between items-start mb-3">
+                <h3 className="font-semibold text-gray-800 text-sm">
+                    {item.name || item.title || `Item ${index + 1}`}
+                </h3>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => openModal(item)}
+                        className="text-indigo-600 bg-indigo-50 p-2 rounded-md hover:bg-indigo-100 transition"
+                    >
+                        <FontAwesomeIcon icon={faPencilAlt} className="text-xs" />
+                    </button>
+                    <button
+                        onClick={() => deleteItem(item.id)}
+                        className="text-red-600 bg-red-50 p-2 rounded-md hover:bg-red-100 transition"
+                    >
+                        <FontAwesomeIcon icon={faTrashAlt} className="text-xs" />
+                    </button>
+                </div>
+            </div>
+            <div className="space-y-2">
+                {headers.slice(0, 3).map(header => {
+                    let value = item[header];
+                    if (header.toLowerCase() === 'id') return null;
+                    if (header.toLowerCase() === 'image' && value && typeof value === 'string' && value.startsWith('http')) {
+                        return (
+                            <div key={header} className="flex items-center gap-2">
+                                <span className="text-xs font-medium text-gray-500 w-16">{header}:</span>
+                                <img src={value} alt="Image" className="h-8 w-8 object-cover rounded" loading="lazy" />
+                            </div>
+                        );
+                    }
+                    return (
+                        <div key={header} className="flex items-start gap-2">
+                            <span className="text-xs font-medium text-gray-500 w-16 flex-shrink-0">{header}:</span>
+                            <span className="text-xs text-gray-700 line-clamp-2">
+                                {value !== null && typeof value !== 'undefined' ? String(value) : 'N/A'}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+
+    // Mobile Layout
+    if (isMobile) {
+        const tabs = (Object.keys(SHEET_MAP) as Array<keyof typeof SHEET_MAP>).map(tab => ({
+            id: tab,
+            label: SHEET_MAP[tab],
+            icon: <FontAwesomeIcon icon={
+                tab === 'tours' ? faRoute :
+                    tab === 'accommodations' ? faBed :
+                        tab === 'restaurants' ? faUtensils : faGift
+            } className="w-4 h-4" />,
+            content: (
+                <div className="p-4">
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold text-gray-800">
+                            {SHEET_MAP[tab]} ({tab === currentTab ? data.length : 0})
+                        </h3>
+                        <button
+                            onClick={() => {
+                                setCurrentTab(tab);
+                                openModal();
+                            }}
+                            className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-indigo-700 transition"
+                        >
+                            <FontAwesomeIcon icon={faPlus} className="mr-1" />
+                            Thêm
+                        </button>
+                    </div>
+
+                    {isLoading ? (
+                        <div className="text-center py-8">
+                            <FontAwesomeIcon icon={faCircleNotch} spin className="text-2xl text-indigo-600" />
+                            <p className="mt-2 text-gray-600">Đang tải...</p>
+                        </div>
+                    ) : tab === currentTab && data.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                            <p>Chưa có dữ liệu nào.</p>
+                        </div>
+                    ) : tab === currentTab ? (
+                        <div>
+                            {data.map((item, index) => (
+                                <MobileCard key={item.id || index} item={item} index={index} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-8 text-gray-500">
+                            <p>Chọn tab này để xem dữ liệu</p>
+                        </div>
+                    )}
+                </div>
+            )
+        }));
+
+        return (
+            <ResponsiveContainer maxWidth="7xl" padding="sm">
+                <div className="min-h-screen bg-gray-50">
+                    {/* Mobile Header */}
+                    <div className="bg-white shadow-sm border-b border-gray-200 p-4 mb-4">
+                        <div className="flex items-center gap-3">
+                            <Link to="/admin" className="p-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
+                                <FontAwesomeIcon icon={faArrowLeft} className="text-gray-600" />
+                            </Link>
+                            <div className="flex items-center gap-2">
+                                <div className="p-2 bg-emerald-100 rounded-lg">
+                                    <FontAwesomeIcon icon={faBook} className="text-emerald-600" />
+                                </div>
+                                <div>
+                                    <h1 className="text-lg font-bold text-gray-800">Quản lý Cẩm Nang</h1>
+                                    <p className="text-xs text-gray-600">Du lịch Núi Bà Đen</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Mobile Tabs */}
+                    <div className="px-4">
+                        <SwipeableTabs
+                            tabs={tabs}
+                            defaultTab={currentTab}
+                            onTabChange={(tabId) => setCurrentTab(tabId as keyof typeof SHEET_MAP)}
+                        />
+                    </div>
+                </div>
+            </ResponsiveContainer>
+        );
+    }
+
     return (
         <ResponsiveContainer maxWidth="7xl" padding="lg">
             <div className="admin-layout">
@@ -216,107 +350,107 @@ const GuideAdminPage: React.FC = () => {
                     </div>
                 </div>
 
-            <div className="mb-6">
-                <nav className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-lg">
-                    {(Object.keys(SHEET_MAP) as Array<keyof typeof SHEET_MAP>).map(tab => (
-                        <button
-                            key={tab}
-                            onClick={() => setCurrentTab(tab)}
-                            className={`tab-link px-3 lg:px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${currentTab === tab ? 'bg-white text-slate-700 shadow-sm' : 'bg-transparent text-slate-600 hover:bg-white hover:text-slate-700'}`}
-                        >
-                            <FontAwesomeIcon icon={
-                                tab === 'tours' ? faRoute :
-                                tab === 'accommodations' ? faBed :
-                                tab === 'restaurants' ? faUtensils : faGift
-                            } className="mr-1 lg:mr-2" />
-                            <span className="hidden sm:inline">{SHEET_MAP[tab]}</span>
-                        </button>
-                    ))}
-                </nav>
-            </div>
-
-            <div id="tab-content-area">
-                {isLoading ? (
-                    <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-[150]">
-                        <div className="text-center">
-                            <FontAwesomeIcon icon={faCircleNotch} spin className="text-5xl text-indigo-600" />
-                            <p className="mt-4 text-xl text-slate-700">Đang xử lý...</p>
-                        </div>
-                    </div>
-                ) : (
-                    <div>
-                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
-                            <h2 className="text-lg lg:text-xl font-semibold text-gray-700">Danh sách {SHEET_MAP[currentTab]} ({data.length} mục)</h2>
-                            <button onClick={() => openModal()} className="bg-indigo-600 text-white font-medium py-2.5 px-4 lg:px-5 rounded-lg shadow-md hover:bg-indigo-700 transition text-sm lg:text-base">
-                                <FontAwesomeIcon icon={faPlus} className="mr-1 lg:mr-2" />
-                                <span className="hidden sm:inline">Thêm mới</span>
-                                <span className="sm:hidden">Thêm</span>
+                <div className="mb-6">
+                    <nav className="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-lg">
+                        {(Object.keys(SHEET_MAP) as Array<keyof typeof SHEET_MAP>).map(tab => (
+                            <button
+                                key={tab}
+                                onClick={() => setCurrentTab(tab)}
+                                className={`tab-link px-3 lg:px-4 py-2 rounded-md font-medium text-sm transition-all duration-200 ${currentTab === tab ? 'bg-white text-slate-700 shadow-sm' : 'bg-transparent text-slate-600 hover:bg-white hover:text-slate-700'}`}
+                            >
+                                <FontAwesomeIcon icon={
+                                    tab === 'tours' ? faRoute :
+                                        tab === 'accommodations' ? faBed :
+                                            tab === 'restaurants' ? faUtensils : faGift
+                                } className="mr-1 lg:mr-2" />
+                                <span className="hidden sm:inline">{SHEET_MAP[tab]}</span>
                             </button>
+                        ))}
+                    </nav>
+                </div>
+
+                <div id="tab-content-area">
+                    {isLoading ? (
+                        <div className="fixed inset-0 bg-white bg-opacity-75 flex items-center justify-center z-[150]">
+                            <div className="text-center">
+                                <FontAwesomeIcon icon={faCircleNotch} spin className="text-5xl text-indigo-600" />
+                                <p className="mt-4 text-xl text-slate-700">Đang xử lý...</p>
+                            </div>
                         </div>
-                        <div className="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        {headers.map(header => <th key={header} className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{header}</th>)}
-                                        <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">Hành động</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {data.length === 0 ? (
-                                        <tr><td colSpan={headers.length + 1} className="text-center py-10 text-gray-500 px-5 py-3.5">Chưa có dữ liệu nào.</td></tr>
-                                    ) : (
-                                        data.map((item, idx) => (
-                                            <tr key={item.id || idx} className="hover:bg-indigo-50 transition-colors duration-150">
-                                                {headers.map(header => {
-                                                    let value = item[header];
-                                                    let displayValue: React.ReactNode = '';
-                                                    if (typeof value === 'boolean') {
-                                                        displayValue = value ? 'Kích hoạt' : 'Vô hiệu';
-                                                    } else if (header.toLowerCase() === 'image' && value && typeof value === 'string' && value.startsWith('http')) {
-                                                        displayValue = <img src={value} alt="Image" className="h-12 w-12 object-cover rounded-md shadow" loading="lazy" />;
-                                                    } else {
-                                                        displayValue = value !== null && typeof value !== 'undefined' ? String(value).substring(0, 70) + (String(value).length > 70 ? '...' : '') : 'N/A';
-                                                    }
-                                                    return <td key={header} className="px-5 py-3.5 whitespace-nowrap text-sm text-gray-700">{displayValue}</td>;
-                                                })}
-                                                <td className="px-5 py-3.5 whitespace-nowrap text-sm text-gray-700 text-right">
-                                                    <button onClick={() => openModal(item)} className="text-indigo-600 bg-indigo-50 p-2 rounded-md hover:bg-indigo-100 transition mr-2"><FontAwesomeIcon icon={faPencilAlt} /></button>
-                                                    <button onClick={() => deleteItem(item.id)} className="text-red-600 bg-red-50 p-2 rounded-md hover:bg-red-100 transition"><FontAwesomeIcon icon={faTrashAlt} /></button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                    ) : (
+                        <div>
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+                                <h2 className="text-lg lg:text-xl font-semibold text-gray-700">Danh sách {SHEET_MAP[currentTab]} ({data.length} mục)</h2>
+                                <button onClick={() => openModal()} className="bg-indigo-600 text-white font-medium py-2.5 px-4 lg:px-5 rounded-lg shadow-md hover:bg-indigo-700 transition text-sm lg:text-base">
+                                    <FontAwesomeIcon icon={faPlus} className="mr-1 lg:mr-2" />
+                                    <span className="hidden sm:inline">Thêm mới</span>
+                                    <span className="sm:hidden">Thêm</span>
+                                </button>
+                            </div>
+                            <div className="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
+                                <table className="min-w-full divide-y divide-gray-200">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            {headers.map(header => <th key={header} className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{header}</th>)}
+                                            <th className="px-5 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-48">Hành động</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="bg-white divide-y divide-gray-200">
+                                        {data.length === 0 ? (
+                                            <tr><td colSpan={headers.length + 1} className="text-center py-10 text-gray-500 px-5 py-3.5">Chưa có dữ liệu nào.</td></tr>
+                                        ) : (
+                                            data.map((item, idx) => (
+                                                <tr key={item.id || idx} className="hover:bg-indigo-50 transition-colors duration-150">
+                                                    {headers.map(header => {
+                                                        let value = item[header];
+                                                        let displayValue: React.ReactNode = '';
+                                                        if (typeof value === 'boolean') {
+                                                            displayValue = value ? 'Kích hoạt' : 'Vô hiệu';
+                                                        } else if (header.toLowerCase() === 'image' && value && typeof value === 'string' && value.startsWith('http')) {
+                                                            displayValue = <img src={value} alt="Image" className="h-12 w-12 object-cover rounded-md shadow" loading="lazy" />;
+                                                        } else {
+                                                            displayValue = value !== null && typeof value !== 'undefined' ? String(value).substring(0, 70) + (String(value).length > 70 ? '...' : '') : 'N/A';
+                                                        }
+                                                        return <td key={header} className="px-5 py-3.5 whitespace-nowrap text-sm text-gray-700">{displayValue}</td>;
+                                                    })}
+                                                    <td className="px-5 py-3.5 whitespace-nowrap text-sm text-gray-700 text-right">
+                                                        <button onClick={() => openModal(item)} className="text-indigo-600 bg-indigo-50 p-2 rounded-md hover:bg-indigo-100 transition mr-2"><FontAwesomeIcon icon={faPencilAlt} /></button>
+                                                        <button onClick={() => deleteItem(item.id)} className="text-red-600 bg-red-50 p-2 rounded-md hover:bg-red-100 transition"><FontAwesomeIcon icon={faTrashAlt} /></button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {isModalOpen && (
+                    <div className="modal active fixed inset-0 bg-slate-900 bg-opacity-80 h-full w-full p-4 z-[200]">
+                        <div className="modal-content bg-white rounded-xl shadow-2xl w-full max-w-xl lg:max-w-3xl">
+                            <div className="flex justify-between items-center p-6 pb-4 border-b border-slate-200">
+                                <h2 className="text-2xl font-semibold text-slate-800">{modalItem ? 'Sửa mục' : 'Thêm mới'}</h2>
+                                <button onClick={closeModal} className="text-slate-400 hover:text-red-500 transition duration-150 text-4xl leading-none focus:outline-none">&times;</button>
+                            </div>
+                            <form ref={formRef} onSubmit={handleFormSubmit} className="flex flex-col flex-grow overflow-hidden p-6 pt-2">
+                                <input type="hidden" name="id" defaultValue={modalItem?.id || ''} />
+                                <div id="formFieldsContainer" className="space-y-5">
+                                    {renderFormFields()}
+                                </div>
+                                <div className="mt-auto flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-slate-200">
+                                    <button type="button" onClick={closeModal} className="w-full sm:w-auto px-6 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition duration-150 font-medium text-sm">
+                                        <FontAwesomeIcon icon={faTimes} className="mr-2" />Hủy Bỏ
+                                    </button>
+                                    <button type="submit" className="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150 font-medium text-sm">
+                                        <FontAwesomeIcon icon={faSave} className="mr-2" />Lưu Thay Đổi
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 )}
-            </div>
-
-            {isModalOpen && (
-                <div className="modal active fixed inset-0 bg-slate-900 bg-opacity-80 h-full w-full p-4 z-[200]">
-                    <div className="modal-content bg-white rounded-xl shadow-2xl w-full max-w-xl lg:max-w-3xl">
-                        <div className="flex justify-between items-center p-6 pb-4 border-b border-slate-200">
-                            <h2 className="text-2xl font-semibold text-slate-800">{modalItem ? 'Sửa mục' : 'Thêm mới'}</h2>
-                            <button onClick={closeModal} className="text-slate-400 hover:text-red-500 transition duration-150 text-4xl leading-none focus:outline-none">&times;</button>
-                        </div>
-                        <form ref={formRef} onSubmit={handleFormSubmit} className="flex flex-col flex-grow overflow-hidden p-6 pt-2">
-                            <input type="hidden" name="id" defaultValue={modalItem?.id || ''} />
-                            <div id="formFieldsContainer" className="space-y-5">
-                                {renderFormFields()}
-                            </div>
-                            <div className="mt-auto flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6 border-t border-slate-200">
-                                <button type="button" onClick={closeModal} className="w-full sm:w-auto px-6 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition duration-150 font-medium text-sm">
-                                    <FontAwesomeIcon icon={faTimes} className="mr-2" />Hủy Bỏ
-                                </button>
-                                <button type="submit" className="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150 font-medium text-sm">
-                                    <FontAwesomeIcon icon={faSave} className="mr-2" />Lưu Thay Đổi
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
             </div>
         </ResponsiveContainer>
     );

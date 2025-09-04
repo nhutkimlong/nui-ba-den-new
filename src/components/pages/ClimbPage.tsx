@@ -11,6 +11,7 @@ import CommitmentModal from '../climb/CommitmentModal';
 import CropModal from '../climb/CropModal';
 import MobileLoadingSpinner from '../common/MobileLoadingSpinner';
 import Button from '../common/Button';
+import SwipeableTabs from '../common/SwipeableTabs';
 import { ResponsiveContainer } from '../layout';
 import { RegistrationData, MemberData, RepresentativeType } from '../../types/climb';
 import { getCurrentDateTime, getRegistrationTimeStatus, isWithinRegistrationTime } from '../../utils/climbUtils';
@@ -22,9 +23,10 @@ import {
   AlertTriangle,
   Play,
   ClipboardList,
-  RefreshCw
+  RefreshCw,
+  Award
 } from 'lucide-react';
- 
+
 
 const ClimbPage: React.FC = () => {
   const [currentMessage, setCurrentMessage] = useState<{ message: string; type: MessageType; duration?: number } | null>(null);
@@ -36,6 +38,7 @@ const ClimbPage: React.FC = () => {
   const [showCropModal, setShowCropModal] = useState(false);
   const [currentCropMember, setCurrentCropMember] = useState<string>('');
   const [currentDateTime, setCurrentDateTime] = useState(getCurrentDateTime());
+  const [isMobile, setIsMobile] = useState(false);
 
   const { gpsSettings, notifications, loading, error, fetchMembersList, generateCertificates, registerClimbingGroup } = useClimbData();
   const { checkRegistrationLocation, checkSummitLocation } = useGeolocation();
@@ -46,6 +49,17 @@ const ClimbPage: React.FC = () => {
       setCurrentDateTime(getCurrentDateTime());
     }, 60000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const showMessage = (message: string, type: MessageType = 'info', duration: number = 6000) => {
@@ -102,7 +116,7 @@ const ClimbPage: React.FC = () => {
     try {
       showMessage('Đang gửi đăng ký...', 'info', 0);
       const result = await registerClimbingGroup(pendingRegistrationData, signatureData);
-      
+
       if (result.success) {
         showMessage('Đăng ký thành công! Bạn có thể tiến hành leo núi.', 'success');
         setShowRegistrationForm(false);
@@ -144,9 +158,9 @@ const ClimbPage: React.FC = () => {
     try {
       showMessage('Đang tạo chứng nhận...', 'info', 0);
       const result = await generateCertificates(phoneNumber, selectedMembers);
-      
+
       if (result.success) {
-        const message = result.pdfLinks && result.pdfLinks.length > 0 
+        const message = result.pdfLinks && result.pdfLinks.length > 0
           ? `Hoàn tất! Đã tạo ${result.pdfLinks.length} chứng nhận.`
           : result.message || 'Chứng nhận đã được tạo.';
         showMessage(message, 'success', 15000);
@@ -200,112 +214,100 @@ const ClimbPage: React.FC = () => {
     );
   }
 
-  return (
-    <ResponsiveContainer maxWidth="6xl" padding="md">
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-emerald-50 to-teal-50">
-      <NotificationSystem notifications={notifications} />
-      
-      {currentMessage && (
-        <MessageBox
-          message={currentMessage.message}
-          type={currentMessage.type}
-          duration={currentMessage.duration}
-          onClose={hideMessage}
-        />
-      )}
-
-      {getRegistrationTimeStatus(gpsSettings) && (
-        <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-4 mb-6 mx-4 md:mx-0">
-          <div className="flex items-center gap-3">
-            <div className="bg-yellow-100 p-2 rounded-lg">
-              <Clock className="w-5 h-5 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-yellow-800">
-                <strong>Thời gian đăng ký:</strong> {gpsSettings.registrationStartTime} - {gpsSettings.registrationEndTime}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="container mx-auto px-4 py-8 md:px-6 md:py-12 max-w-7xl">
-        {/* Single column layout */}
-        {/* Header */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-8 text-white mb-8">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="bg-white/20 p-3 rounded-xl">
-              <Mountain className="w-8 h-8" />
-            </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-center">
-              Đăng ký Leo núi Núi Bà Đen
-            </h1>
-          </div>
-          <p className="text-lg md:text-xl text-primary-100 max-w-3xl mx-auto text-center">
-            Hệ thống đăng ký và nhận chứng nhận leo núi tự động với xác thực GPS
-          </p>
-        </div>
-
-        {/* Emergency Contact */}
-        <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <div className="bg-red-100 p-2 rounded-lg">
-              <Phone className="w-5 h-5 text-red-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-base font-semibold text-red-800 mb-2">Liên hệ khẩn cấp</h3>
-              <div className="space-y-1 text-red-700 text-sm">
-                <p><strong>Ban Quản lý:</strong> 0276.3.xxx.xxx</p>
-                <p><strong>Cứu hộ:</strong> 0276.3.xxx.xxx</p>
-                <p><strong>Y tế:</strong> 115</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Map */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-600 to-orange-700 p-4 text-white">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-lg">
-                <Route className="w-5 h-5" />
-              </div>
-              <h2 className="text-xl font-bold">Tuyến đường Leo núi</h2>
-            </div>
-          </div>
-          <div className="p-4">
-            <ClimbMap />
-          </div>
-        </div>
-
-
-
-        {/* Registration + Certification (Single column) */}
-        <div className="mt-8 md:mt-12 grid gap-6 grid-cols-1">
-          {/* Registration Section */}
-          <div>
-            {!showRegistrationForm ? (
-              <div className="bg-white rounded-2xl shadow-xl overflow-hidden h-full">
-                {/* Header to match Guide sections */}
-                <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-white">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-white/20 p-2 rounded-lg">
-                      <ClipboardList className="w-5 h-5" />
+  // Mobile version with SwipeableTabs
+  if (isMobile) {
+    const tabs = [
+      {
+        id: 'info',
+        label: 'Thông tin',
+        icon: <Mountain className="w-4 h-4" />,
+        content: (
+          <div className="px-2">
+            <div className="space-y-3">
+              {/* Emergency Contact */}
+              <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-3">
+                <div className="flex items-start gap-2">
+                  <div className="bg-red-100 p-1.5 rounded-lg">
+                    <Phone className="w-4 h-4 text-red-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-semibold text-red-800 mb-1">Liên hệ khẩn cấp</h3>
+                    <div className="space-y-0.5 text-red-700 text-xs">
+                      <p><strong>Ban Quản lý:</strong> 0276.3.xxx.xxx</p>
+                      <p><strong>Cứu hộ:</strong> 0276.3.xxx.xxx</p>
+                      <p><strong>Y tế:</strong> 115</p>
                     </div>
-                    <h2 className="text-2xl font-bold">Bắt đầu đăng ký leo núi</h2>
                   </div>
                 </div>
-                {/* Body */}
-                <div className="p-8 text-center">
-                  <p className="text-gray-700 mb-8 text-lg max-w-xl mx-auto">
+              </div>
+
+              {/* Registration Time */}
+              {getRegistrationTimeStatus(gpsSettings) && (
+                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-yellow-100 p-1.5 rounded-lg">
+                      <Clock className="w-4 h-4 text-yellow-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-yellow-800">
+                        <strong>Thời gian đăng ký:</strong> {gpsSettings.registrationStartTime} - {gpsSettings.registrationEndTime}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 'map',
+        label: 'Bản đồ',
+        icon: <Route className="w-4 h-4" />,
+        content: (
+          <div className="px-2">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="bg-gradient-to-r from-orange-600 to-orange-700 p-3 text-white">
+                <div className="flex items-center gap-2">
+                  <div className="bg-white/20 p-1.5 rounded-lg">
+                    <Route className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-base font-bold">Tuyến đường Leo núi</h3>
+                </div>
+              </div>
+              <div className="p-3">
+                <ClimbMap />
+              </div>
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 'register',
+        label: 'Đăng ký',
+        icon: <ClipboardList className="w-4 h-4" />,
+        content: (
+          <div className="px-2">
+            {!showRegistrationForm ? (
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-3 text-white">
+                  <div className="flex items-center gap-2">
+                    <div className="bg-white/20 p-1.5 rounded-lg">
+                      <ClipboardList className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-base font-bold">Bắt đầu đăng ký leo núi</h3>
+                  </div>
+                </div>
+                <div className="p-4 text-center">
+                  <p className="text-gray-700 mb-4 text-sm">
                     Đăng ký thông tin để được ghi nhận và nhận chứng nhận chính thức
                   </p>
                   <Button
                     onClick={handleStartRegistration}
-                    leftIcon={<Play className="w-5 h-5" />}
-                    size="lg"
+                    leftIcon={<Play className="w-4 h-4" />}
+                    size="sm"
                     fullWidth
-                    className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-lg"
+                    className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800"
                   >
                     Bắt đầu đăng ký
                   </Button>
@@ -320,9 +322,14 @@ const ClimbPage: React.FC = () => {
               />
             )}
           </div>
-
-          {/* Certification Section */}
-          <div>
+        )
+      },
+      {
+        id: 'certificate',
+        label: 'Chứng nhận',
+        icon: <Award className="w-4 h-4" />,
+        content: (
+          <div className="px-2">
             <CompleteCertificationSection
               onVerifyPhone={handleCertificateVerification}
               onGenerateCertificates={handleGenerateCertificates}
@@ -330,30 +337,221 @@ const ClimbPage: React.FC = () => {
               isLoading={false}
             />
           </div>
+        )
+      }
+    ];
+
+    return (
+      <ResponsiveContainer maxWidth="6xl" padding="sm">
+        <div className="min-h-screen bg-gradient-to-br from-primary-50 via-emerald-50 to-teal-50">
+          <NotificationSystem notifications={notifications} />
+
+          {currentMessage && (
+            <MessageBox
+              message={currentMessage.message}
+              type={currentMessage.type}
+              duration={currentMessage.duration}
+              onClose={hideMessage}
+            />
+          )}
+
+          {/* Header Section */}
+          <div className="text-center mb-6 px-4">
+            <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-4 text-white">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="bg-white/20 p-1.5 rounded-lg flex-shrink-0">
+                  <Mountain className="w-5 h-5" />
+                </div>
+                <h1 className="text-xl font-bold">Đăng ký Leo núi Núi Bà Đen</h1>
+              </div>
+              <p className="text-primary-100 text-xs leading-relaxed">
+                Hệ thống đăng ký và nhận chứng nhận leo núi tự động với xác thực GPS
+              </p>
+            </div>
+          </div>
+
+          {/* Tabs Section */}
+          <div className="px-4 pb-6">
+            <SwipeableTabs
+              tabs={tabs}
+              defaultTab="info"
+            />
+          </div>
+
+          {/* Modals */}
+          <RepresentativeModal
+            isOpen={showRepresentativeModal}
+            onClose={() => setShowRepresentativeModal(false)}
+            onConfirm={handleRepresentativeConfirm}
+          />
+
+          <CommitmentModal
+            isOpen={showCommitmentModal}
+            onClose={() => setShowCommitmentModal(false)}
+            onConfirm={handleCommitmentConfirm}
+            registrationData={pendingRegistrationData}
+          />
+
+          <CropModal
+            isOpen={showCropModal}
+            onClose={() => setShowCropModal(false)}
+            onConfirm={handleCropConfirm}
+            memberName={currentCropMember}
+          />
+        </div>
+      </ResponsiveContainer>
+    );
+  }
+
+  return (
+    <ResponsiveContainer maxWidth="6xl" padding="lg">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-emerald-50 to-teal-50">
+        <NotificationSystem notifications={notifications} />
+
+        {currentMessage && (
+          <MessageBox
+            message={currentMessage.message}
+            type={currentMessage.type}
+            duration={currentMessage.duration}
+            onClose={hideMessage}
+          />
+        )}
+
+        {getRegistrationTimeStatus(gpsSettings) && (
+          <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-4 mb-6 mx-4 md:mx-0">
+            <div className="flex items-center gap-3">
+              <div className="bg-yellow-100 p-2 rounded-lg">
+                <Clock className="w-5 h-5 text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-yellow-800">
+                  <strong>Thời gian đăng ký:</strong> {gpsSettings.registrationStartTime} - {gpsSettings.registrationEndTime}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="text-center mb-12">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl p-8 text-white mb-8">
+            <div className="flex items-center justify-center gap-4 mb-4">
+              <div className="bg-white/20 p-3 rounded-xl">
+                <Mountain className="w-8 h-8" />
+              </div>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold">
+                Đăng ký Leo núi Núi Bà Đen
+              </h1>
+            </div>
+            <p className="text-lg md:text-xl text-primary-100 max-w-3xl mx-auto">
+              Hệ thống đăng ký và nhận chứng nhận leo núi tự động với xác thực GPS
+            </p>
+          </div>
         </div>
 
-      </div>
+        <main className="space-y-8">
+          {/* Emergency Contact */}
+          <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <div className="bg-red-100 p-2 rounded-lg">
+                <Phone className="w-5 h-5 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-red-800 mb-2">Liên hệ khẩn cấp</h3>
+                <div className="space-y-1 text-red-700 text-sm">
+                  <p><strong>Ban Quản lý:</strong> 0276.3.xxx.xxx</p>
+                  <p><strong>Cứu hộ:</strong> 0276.3.xxx.xxx</p>
+                  <p><strong>Y tế:</strong> 115</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      {/* Modals */}
-      <RepresentativeModal
-        isOpen={showRepresentativeModal}
-        onClose={() => setShowRepresentativeModal(false)}
-        onConfirm={handleRepresentativeConfirm}
-      />
-      
-      <CommitmentModal
-        isOpen={showCommitmentModal}
-        onClose={() => setShowCommitmentModal(false)}
-        onConfirm={handleCommitmentConfirm}
-        registrationData={pendingRegistrationData}
-      />
-      
-      <CropModal
-        isOpen={showCropModal}
-        onClose={() => setShowCropModal(false)}
-        onConfirm={handleCropConfirm}
-        memberName={currentCropMember}
-      />
+          {/* Map */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-orange-600 to-orange-700 p-6 text-white">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-lg">
+                  <Route className="w-6 h-6" />
+                </div>
+                <h2 className="text-2xl font-bold">Tuyến đường Leo núi</h2>
+              </div>
+            </div>
+            <div className="p-6">
+              <ClimbMap />
+            </div>
+          </div>
+
+          {/* Registration Section */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-white">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-lg">
+                  <ClipboardList className="w-6 h-6" />
+                </div>
+                <h2 className="text-2xl font-bold">Bắt đầu đăng ký leo núi</h2>
+              </div>
+            </div>
+            {!showRegistrationForm ? (
+              <div className="p-8 text-center">
+                <p className="text-gray-700 mb-8 text-lg max-w-2xl mx-auto">
+                  Đăng ký thông tin để được ghi nhận và nhận chứng nhận chính thức
+                </p>
+                <div className="max-w-md mx-auto">
+                  <Button
+                    onClick={handleStartRegistration}
+                    leftIcon={<Play className="w-5 h-5" />}
+                    size="lg"
+                    fullWidth
+                    className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-lg"
+                  >
+                    Bắt đầu đăng ký
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6">
+                <div className="max-w-4xl mx-auto">
+                  <RegistrationForm
+                    onSubmit={handleRegistrationSubmit}
+                    gpsSettings={gpsSettings}
+                    currentDateTime={currentDateTime}
+                    representativeType={selectedRepresentativeType}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Certification Section */}
+          <CompleteCertificationSection
+            onVerifyPhone={handleCertificateVerification}
+            onGenerateCertificates={handleGenerateCertificates}
+            gpsSettings={gpsSettings}
+            isLoading={false}
+          />
+        </main>
+
+        {/* Modals */}
+        <RepresentativeModal
+          isOpen={showRepresentativeModal}
+          onClose={() => setShowRepresentativeModal(false)}
+          onConfirm={handleRepresentativeConfirm}
+        />
+
+        <CommitmentModal
+          isOpen={showCommitmentModal}
+          onClose={() => setShowCommitmentModal(false)}
+          onConfirm={handleCommitmentConfirm}
+          registrationData={pendingRegistrationData}
+        />
+
+        <CropModal
+          isOpen={showCropModal}
+          onClose={() => setShowCropModal(false)}
+          onConfirm={handleCropConfirm}
+          memberName={currentCropMember}
+        />
       </div>
     </ResponsiveContainer>
   );

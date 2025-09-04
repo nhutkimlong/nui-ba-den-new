@@ -172,20 +172,22 @@ const CompleteCertificationSection: React.FC<CompleteCertificationSectionProps> 
 
   return (
     <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-      {/* Header: match 'Bắt đầu đăng ký leo núi' */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-white">
-        <div className="flex items-center gap-3">
-          <div className="bg-white/20 p-2 rounded-lg">
-            <FontAwesomeIcon icon={faUsers} className="w-5 h-5" />
+      {/* Header: responsive design matching 'Bắt đầu đăng ký leo núi' */}
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-4 md:p-6 text-white">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="bg-white/20 p-1.5 md:p-2 rounded-lg">
+            <FontAwesomeIcon icon={faUsers} className="w-4 h-4 md:w-5 md:h-5" />
           </div>
-          <h2 className="text-2xl font-bold">Nhận Chứng nhận Leo núi</h2>
+          <div>
+            <h2 className="text-base md:text-2xl font-bold">Nhận Chứng nhận Leo núi</h2>
+            <p className="text-primary-100 text-xs md:text-sm mt-0.5 md:mt-1 hidden md:block">Xác thực số điện thoại để nhận chứng nhận hoàn thành leo núi</p>
+          </div>
         </div>
       </div>
 
       <div className="p-6">
         {/* Phone Verification Section */}
         <div className="mb-6">
-          {/* Removed guidance header to only show input */}
 
           <div className="max-w-xl mx-auto w-full flex flex-col sm:flex-row items-stretch justify-center gap-3">
             <Input

@@ -35,12 +35,12 @@ describe('Layout System Integration', () => {
       <AdaptiveLayout
         bottomNav={
           <MobileBottomNav
-            activeIndex={0}
-            onItemClick={() => {}}
+            visible={true}
           />
         }
       >
         <ResponsiveGrid
+          items={[]}
           columns={{ mobile: 1, tablet: 2, desktop: 3 }}
           gap={16}
         />
@@ -159,8 +159,7 @@ describe('Layout System Integration', () => {
       <AdaptiveLayout
         bottomNav={
           <MobileBottomNav
-            activeIndex={0}
-            onItemClick={handleNavClick}
+            visible={true}
           />
         }
       >

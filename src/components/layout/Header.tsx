@@ -179,7 +179,7 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
               </div>
               <div>
                 <h1 className={cn(
-                  "text-base sm:text-lg md:text-xl font-bold transition-colors duration-300",
+                  "text-base xs:text-lg sm:text-xl md:text-xl lg:text-2xl font-bold transition-colors duration-300 leading-tight",
                   isScrolled ? "text-gray-800" : "text-primary-600"
                 )}>
                   Khu du lịch quốc gia Núi Bà Đen
@@ -248,23 +248,6 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
             
             {/* Enhanced Mobile & Tablet Controls (below xl) */}
             <div className="flex items-center xl:hidden space-x-2">
-              <button 
-                className={cn(
-                  "language-selector p-2 rounded-full transition-all duration-300 flex items-center space-x-1",
-                  "hover:bg-gray-100 active:scale-95",
-                  isScrolled 
-                    ? "text-gray-700 hover:text-gray-900 hover:bg-gray-100" 
-                    : "text-gray-700 hover:text-primary-600 hover:bg-gray-100"
-                )}
-                onClick={toggleLanguageMenu}
-                aria-label="Chọn ngôn ngữ"
-              >
-                <Globe className="w-5 h-5" />
-                <ChevronDown className={cn(
-                  "w-4 h-4 transition-transform duration-200",
-                  isLanguageMenuOpen && "rotate-180"
-                )} />
-              </button>
               <button
                 onClick={() => {
                   if (onTabletMenuClick) {
@@ -330,6 +313,32 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
                     </Link>
                   </li>
                 ))}
+                
+                {/* Language Selector in Mobile Menu */}
+                <li className="pt-2 border-t border-gray-200 mt-3">
+                  <button 
+                    className={cn(
+                      "w-full flex items-center justify-between px-4 py-3 font-medium transition-all duration-300 rounded-lg",
+                      "hover:bg-gray-50 active:scale-98",
+                      isScrolled
+                        ? "text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+                        : "text-gray-700 hover:text-primary-600 hover:bg-gray-50"
+                    )}
+                    onClick={toggleLanguageMenu}
+                    style={{
+                      animationDelay: `${navigation.length * 50}ms`
+                    }}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <Globe className="w-5 h-5" />
+                      <span>Chọn ngôn ngữ</span>
+                    </div>
+                    <ChevronDown className={cn(
+                      "w-4 h-4 transition-transform duration-200",
+                      isLanguageMenuOpen && "rotate-180"
+                    )} />
+                  </button>
+                </li>
               </ul>
             </div>
           </div>

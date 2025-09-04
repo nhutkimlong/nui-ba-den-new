@@ -115,7 +115,8 @@ export const useGestureNavigation = (config: GestureNavigationConfig = {}) => {
     swipe: {
       threshold: 100,
       velocity: 0.5,
-      direction: 'horizontal',
+      directional: true,
+      preventScroll: false,
       ...gestureConfig.swipe
     },
     ...gestureConfig
@@ -144,7 +145,8 @@ export const useSwipeNavigation = () => {
     swipe: {
       threshold: 80,
       velocity: 0.4,
-      direction: 'horizontal'
+      directional: true,
+      preventScroll: false
     }
   });
 
