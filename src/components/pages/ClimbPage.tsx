@@ -24,7 +24,8 @@ import {
   Play,
   ClipboardList,
   RefreshCw,
-  Award
+  Award,
+  Shield
 } from 'lucide-react';
 
 
@@ -231,31 +232,36 @@ const ClimbPage: React.FC = () => {
                     <Phone className="w-4 h-4 text-red-600" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-sm font-semibold text-red-800 mb-1">Liên hệ khẩn cấp</h3>
-                    <div className="space-y-0.5 text-red-700 text-xs">
-                      <p><strong>Ban Quản lý:</strong> 0276.3.xxx.xxx</p>
-                      <p><strong>Cứu hộ:</strong> 0276.3.xxx.xxx</p>
-                      <p><strong>Y tế:</strong> 115</p>
-                    </div>
+                    <h3 className="text-sm font-semibold text-red-800 mb-1">THÔNG TIN CỨU HỘ KHẨN CẤP</h3>
+                    <p className="text-xs text-red-700 mb-2">Trong trường hợp khẩn cấp trên đường leo núi, vui lòng liên hệ ngay Hotline:</p>
+                    <a
+                      href="tel:02763875678"
+                      className="inline-flex items-center gap-2 bg-red-600 text-white px-3 py-2 rounded-lg text-sm shadow hover:bg-red-700"
+                    >
+                      <Phone className="w-4 h-4 text-white" />
+                      0276.387.5678
+                    </a>
+                    <p className="text-xs text-red-700 mt-2">Luôn mang theo điện thoại, đảm bảo đủ pin và có sóng.</p>
                   </div>
                 </div>
               </div>
 
-              {/* Registration Time */}
-              {getRegistrationTimeStatus(gpsSettings) && (
-                <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="bg-yellow-100 p-1.5 rounded-lg">
-                      <Clock className="w-4 h-4 text-yellow-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-medium text-yellow-800">
-                        <strong>Thời gian đăng ký:</strong> {gpsSettings.registrationStartTime} - {gpsSettings.registrationEndTime}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              {/* Safety Rules */}
+              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-3">
+                <h3 className="text-sm font-semibold text-amber-800 mb-2">Quy định An toàn & Bảo vệ Môi trường</h3>
+                <ul className="text-xs text-amber-800 space-y-1 list-disc pl-4">
+                  <li>Đi đúng đường mòn: Luôn đi theo chỉ dẫn, không đi đường tắt.</li>
+                  <li>Chuẩn bị kỹ lưỡng: Mang đủ nước (1.5-2L+), thức ăn nhẹ, y tế cơ bản.</li>
+                  <li>Trang phục & Trang bị: Quần áo thoải mái, giày chuyên dụng, đèn pin, sạc dự phòng.</li>
+                  <li>Kiểm tra thời tiết: Xem dự báo, chuẩn bị áo mưa/áo khoác nếu cần.</li>
+                  <li>Thông báo lộ trình: Cho người thân biết kế hoạch và thời gian dự kiến.</li>
+                  <li>Giữ gìn vệ sinh: Mang toàn bộ rác xuống núi, không xả rác bừa bãi.</li>
+                  <li>Bảo vệ thiên nhiên: Không bẻ cành, hái hoa, khắc tên, săn bắt.</li>
+                  <li>Phòng chống cháy rừng: Tuyệt đối không đốt lửa, hút thuốc sai quy định.</li>
+                  <li>Giữ liên lạc: Đi theo đoàn, không tách nhóm ở mọi tình huống.</li>
+                  <li>Báo cáo sự cố: Gọi ngay Hotline cứu hộ nếu gặp sự cố hoặc nguy cơ.</li>
+                </ul>
+              </div>
             </div>
           </div>
         )
@@ -451,18 +457,18 @@ const ClimbPage: React.FC = () => {
 
         <main className="space-y-8">
           {/* Emergency Contact */}
-          <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-4">
-            <div className="flex items-start gap-3">
-              <div className="bg-red-100 p-2 rounded-lg">
+          <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-5">
+            <div className="flex items-start gap-4">
+              <div className="bg-red-100 p-2.5 rounded-lg">
                 <Phone className="w-5 h-5 text-red-600" />
               </div>
               <div className="flex-1">
-                <h3 className="text-base font-semibold text-red-800 mb-2">Liên hệ khẩn cấp</h3>
-                <div className="space-y-1 text-red-700 text-sm">
-                  <p><strong>Ban Quản lý:</strong> 0276.3.xxx.xxx</p>
-                  <p><strong>Cứu hộ:</strong> 0276.3.xxx.xxx</p>
-                  <p><strong>Y tế:</strong> 115</p>
-                </div>
+                <h3 className="text-lg font-semibold text-red-800 mb-2">THÔNG TIN CỨU HỘ KHẨN CẤP</h3>
+                <p className="text-sm text-red-700 mb-3">Trong trường hợp khẩn cấp trên đường leo núi, vui lòng liên hệ ngay Hotline:</p>
+                <a href="tel:02763875678" className="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg text-base shadow hover:bg-red-700">
+                  <Phone className="w-5 h-5 text-white" /> 0276.387.5678
+                </a>
+                <p className="text-sm text-red-700 mt-2">Luôn mang theo điện thoại, đảm bảo đủ pin và có sóng.</p>
               </div>
             </div>
           </div>
@@ -479,6 +485,32 @@ const ClimbPage: React.FC = () => {
             </div>
             <div className="p-6">
               <ClimbMap />
+            </div>
+          </div>
+
+          {/* Safety Rules */}
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-amber-500 to-amber-600 p-6 text-white">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-2 rounded-lg">
+                  <Shield className="w-6 h-6" />
+                </div>
+                <h2 className="text-2xl font-bold">Quy định An toàn & Bảo vệ Môi trường</h2>
+              </div>
+            </div>
+            <div className="p-6 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200">
+              <ul className="text-sm text-amber-800 space-y-1.5 list-disc pl-6">
+              <li>Đi đúng đường mòn: Luôn đi theo chỉ dẫn, không đi đường tắt.</li>
+              <li>Chuẩn bị kỹ lưỡng: Mang đủ nước (1.5-2L+), thức ăn nhẹ, y tế cơ bản.</li>
+              <li>Trang phục & Trang bị: Quần áo thoải mái, giày chuyên dụng, đèn pin, sạc dự phòng.</li>
+              <li>Kiểm tra thời tiết: Xem dự báo, chuẩn bị áo mưa/áo khoác nếu cần.</li>
+              <li>Thông báo lộ trình: Cho người thân biết kế hoạch và thời gian dự kiến.</li>
+              <li>Giữ gìn vệ sinh: Mang toàn bộ rác xuống núi, không xả rác bừa bãi.</li>
+              <li>Bảo vệ thiên nhiên: Không bẻ cành, hái hoa, khắc tên, săn bắt.</li>
+              <li>Phòng chống cháy rừng: Tuyệt đối không đốt lửa, hút thuốc sai quy định.</li>
+              <li>Giữ liên lạc: Đi theo đoàn, không tách nhóm ở mọi tình huống.</li>
+              <li>Báo cáo sự cố: Gọi ngay Hotline cứu hộ nếu gặp sự cố hoặc nguy cơ.</li>
+              </ul>
             </div>
           </div>
 

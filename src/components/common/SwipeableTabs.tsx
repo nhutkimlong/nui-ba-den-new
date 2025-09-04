@@ -71,7 +71,7 @@ const SwipeableTabs = ({
             key={tab.id}
             onClick={() => handleTabChange(tab.id)}
             className={cn(
-              "flex items-center justify-center px-3 py-3 text-sm font-medium transition-all duration-200 whitespace-nowrap flex-1 min-w-0",
+              "flex items-center justify-center px-3 py-3 text-sm font-medium transition-all duration-200 whitespace-normal flex-1 min-w-0",
               "hover:bg-gray-50 active:scale-95",
               activeTab === tab.id
                 ? "text-primary-600 border-b-2 border-primary-600 bg-primary-50"
@@ -83,7 +83,7 @@ const SwipeableTabs = ({
                 {tab.icon}
               </span>
             )}
-            <span className="truncate text-xs sm:text-sm">{tab.label}</span>
+            <span className="text-xs sm:text-sm whitespace-normal break-words text-center">{tab.label}</span>
           </button>
         ))}
       </div>

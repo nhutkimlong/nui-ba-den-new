@@ -33,6 +33,16 @@ const CompleteCertificationSection: React.FC<CompleteCertificationSectionProps> 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  // Select all toggle helper
+  const allSelected = members.length > 0 && members.every(m => selectedMembers.has(m.id));
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedMembers(new Set());
+    } else {
+      setSelectedMembers(new Set(members.map(m => m.id)));
+    }
+  };
+
   const handleVerifyPhone = async () => {
     if (!phoneNumber.trim()) {
       setVerificationError('Vui lòng nhập số điện thoại');
@@ -185,25 +195,25 @@ const CompleteCertificationSection: React.FC<CompleteCertificationSectionProps> 
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         {/* Phone Verification Section */}
         <div className="mb-6">
 
-          <div className="max-w-xl mx-auto w-full flex flex-col sm:flex-row items-stretch justify-center gap-3">
+          <div className="max-w-xl mx-auto w-full flex flex-col sm:flex-row items-stretch justify-center gap-2 md:gap-3">
             <Input
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="Nhập số điện thoại..."
-              className="flex-1 min-w-0 h-10"
+              className="flex-1 min-w-0 h-10 text-sm md:text-base"
               onKeyPress={(e) => e.key === 'Enter' && handleVerifyPhone()}
             />
             <Button
               onClick={handleVerifyPhone}
               disabled={loading || !phoneNumber.trim()}
               leftIcon={<FontAwesomeIcon icon={faCheck} className="w-4 h-4" />}
-              size="md"
-              className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 h-10"
+              size="sm"
+              className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 h-10 px-3 md:px-4"
             >
               {loading ? 'Đang xác thực...' : 'Xác thực'}
             </Button>
@@ -216,13 +226,13 @@ const CompleteCertificationSection: React.FC<CompleteCertificationSectionProps> 
 
         {/* GPS Location Check */}
         {gpsSettings.requireGpsCertificate && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 md:p-4 mb-4 md:mb-6">
             <div className="flex items-center gap-3">
               <div className="bg-yellow-100 p-2 rounded-lg">
                 <FontAwesomeIcon icon={faMapPin} className="text-yellow-600 w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-medium text-yellow-800">
+                <p className="text-xs md:text-sm font-medium text-yellow-800">
                   <strong>Yêu cầu GPS:</strong> Bạn phải ở trong bán kính {gpsSettings.certificateRadius}m từ đỉnh núi để nhận chứng nhận
                 </p>
               </div>
@@ -232,14 +242,14 @@ const CompleteCertificationSection: React.FC<CompleteCertificationSectionProps> 
 
         {/* Member Selection Section */}
         {showMemberSelection && (
-          <div className="border-t pt-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="bg-green-100 p-2 rounded-lg">
-                <FontAwesomeIcon icon={faUsers} className="text-green-600 w-5 h-5" />
+          <div className="border-t pt-4 md:pt-6">
+            <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
+              <div className="bg-green-100 p-1.5 md:p-2 rounded-lg">
+                <FontAwesomeIcon icon={faUsers} className="text-green-600 w-4 h-4 md:w-5 md:h-5" />
               </div>
               <div>
-                                 <h3 className="text-lg font-semibold text-gray-800">Chọn thành viên nhận chứng nhận</h3>
-                 <p className="text-sm text-gray-600">
+                                 <h3 className="text-base md:text-lg font-semibold text-gray-800">Chọn thành viên nhận chứng nhận</h3>
+                 <p className="text-xs md:text-sm text-gray-600">
                    Đánh dấu chọn thành viên muốn nhận chứng nhận. Bạn có thể tải và cắt ảnh theo tỉ lệ chuẩn cho từng thành viên (tùy chọn).
                  </p>
               </div>
@@ -253,68 +263,70 @@ const CompleteCertificationSection: React.FC<CompleteCertificationSectionProps> 
                 <p className="text-gray-600">Không tìm thấy thành viên nào</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
+                {/* Select All */}
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                  />
+                  <span className="text-sm text-gray-700">Chọn tất cả</span>
+                </div>
+
                 {members.map((member) => (
                   <div
                     key={member.id}
-                    className={`border-2 rounded-xl p-4 transition-all duration-200 ${
+                    className={`border-2 rounded-xl p-3 md:p-4 transition-all duration-200 ${
                       selectedMembers.has(member.id)
                         ? 'border-green-500 bg-green-50'
                         : 'border-gray-200 bg-gray-50 hover:border-gray-300'
                     }`}
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 md:gap-4">
                       {/* Checkbox */}
                       <div className="flex-shrink-0">
                         <input
                           type="checkbox"
                           checked={selectedMembers.has(member.id)}
                           onChange={() => handleMemberToggle(member.id)}
-                          className="w-5 h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                          className="w-4 h-4 md:w-5 md:h-5 text-green-600 border-gray-300 rounded focus:ring-green-500"
                         />
                       </div>
 
                       {/* Thông tin thành viên */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                           <div>
-                            <h3 className="font-semibold text-gray-900 text-lg">
+                            <h3 className="font-semibold text-gray-900 text-base md:text-lg">
                               {member.name || 'Thành viên không tên'}
                             </h3>
-                                                         <p className="text-sm text-gray-600">
-                               Thành viên đoàn leo núi
-                             </p>
                           </div>
 
                           {/* Phần tải ảnh */}
-                          <div className="flex-shrink-0 ml-4">
+                          <div className="flex-shrink-0 ml-0 md:ml-4">
                             {selectedMembers.has(member.id) && (
-                              <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-2 md:justify-end">
                                 {/* Preview ảnh */}
                                 {photoPreviews[member.id] ? (
                                   <div className="relative">
                                     <img
                                       src={photoPreviews[member.id]}
                                       alt={`Ảnh ${member.name}`}
-                                      className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200"
+                                      className="w-12 h-12 md:w-16 md:h-16 object-cover rounded-lg border-2 border-gray-200"
                                     />
-                                    <button
-                                      onClick={() => removePhoto(member.id)}
-                                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
-                                    >
-                                      <FontAwesomeIcon icon={faTimes} className="w-3 h-3" />
-                                    </button>
                                   </div>
                                 ) : (
-                                  <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
-                                    <FontAwesomeIcon icon={faImage} className="text-gray-400 w-6 h-6" />
+                                  <div className="w-12 h-12 md:w-16 md:h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+                                    <FontAwesomeIcon icon={faImage} className="text-gray-400 w-5 h-5 md:w-6 md:h-6" />
                                   </div>
                                 )}
 
                                                                  {/* Nút tải ảnh */}
                                  <button
                                    onClick={() => triggerFileInput(member.id)}
-                                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                   className={`px-2 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm font-medium transition-colors ${
                                      photoPreviews[member.id]
                                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
                                        : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
@@ -323,6 +335,14 @@ const CompleteCertificationSection: React.FC<CompleteCertificationSectionProps> 
                                    <FontAwesomeIcon icon={faCamera} className="mr-1" />
                                    {photoPreviews[member.id] ? 'Đổi ảnh' : 'Tải & Cắt ảnh'}
                                  </button>
+                                 {photoPreviews[member.id] && (
+                                   <button
+                                     onClick={() => removePhoto(member.id)}
+                                     className="px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg text-xs md:text-sm font-medium bg-red-100 text-red-700 hover:bg-red-200"
+                                   >
+                                     Xóa ảnh
+                                   </button>
+                                 )}
 
                                 {/* Hidden file input */}
                                 <input
@@ -345,11 +365,11 @@ const CompleteCertificationSection: React.FC<CompleteCertificationSectionProps> 
 
             {/* Nút tạo chứng nhận */}
             {members.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-gray-200">
                 <button
                   onClick={handleGenerateCertificates}
                   disabled={selectedMembers.size === 0 || loading}
-                  className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-3 ${
+                  className={`w-full py-3 md:py-4 px-4 md:px-6 rounded-xl font-semibold text-base md:text-lg transition-all duration-200 flex items-center justify-center gap-2 md:gap-3 ${
                     selectedMembers.size === 0 || loading
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
@@ -369,7 +389,7 @@ const CompleteCertificationSection: React.FC<CompleteCertificationSectionProps> 
                 </button>
 
                 {selectedMembers.size > 0 && (
-                  <p className="text-center text-sm text-gray-600 mt-3">
+                  <p className="text-center text-xs md:text-sm text-gray-600 mt-2 md:mt-3">
                     Đã chọn {selectedMembers.size} thành viên để tạo chứng nhận
                   </p>
                 )}

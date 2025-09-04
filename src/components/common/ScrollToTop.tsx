@@ -3,6 +3,7 @@ import { ChevronUp } from 'lucide-react'
 
 const ScrollToTop = () => {
   const [isVisible, setIsVisible] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(true)
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -17,6 +18,15 @@ const ScrollToTop = () => {
     return () => window.removeEventListener('scroll', toggleVisibility)
   }, [])
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024)
+    }
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -26,7 +36,7 @@ const ScrollToTop = () => {
 
   return (
     <>
-      {isVisible && (
+      {isVisible && isDesktop && (
         <button
           onClick={scrollToTop}
           className="scroll-top-button is-visible"

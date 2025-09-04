@@ -14,7 +14,6 @@ import {
   List, 
   Shield, 
   Mountain,
-  CheckCircle,
   AlertCircle
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
@@ -47,6 +46,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSafetyRules, setShowSafetyRules] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,67 +62,23 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const progressSteps = [
-    { id: 1, title: 'Thông tin cá nhân', completed: !!formData.leaderName && !!formData.phoneNumber && !!formData.birthday },
-    { id: 2, title: 'Thông tin liên hệ', completed: !!formData.cccd && !!formData.address && !!formData.email },
-    { id: 3, title: 'Thông tin leo núi', completed: !!formData.groupSize && !!formData.climbDate },
-    { id: 4, title: 'Cam kết an toàn', completed: formData.safetyCommit }
-  ];
-
-  const completedSteps = progressSteps.filter(step => step.completed).length;
-  const progressPercentage = (completedSteps / progressSteps.length) * 100;
-
   return (
-    <div className="max-w-4xl w-full mx-auto px-3 md:px-6">
+    <div className="md:max-w-6xl max-w-none w-full md:mx-auto mx-0 px-0 sm:px-2 md:px-8">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-t-2xl p-4 md:p-5 text-white">
-        <div className="flex items-center gap-3 md:gap-4 mb-2.5 md:mb-4">
-          <div className="bg-white/20 p-3 rounded-xl">
-            <Mountain className="w-8 h-8" />
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-t-xl md:rounded-t-2xl p-3 md:p-5 text-white overflow-hidden">
+        <div className="flex items-center gap-2.5 md:gap-4">
+          <div className="bg-white/20 p-1.5 md:p-3 rounded-xl">
+            <Mountain className="w-5 h-5 md:w-8 md:h-8" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl md:text-2xl font-bold truncate">Đăng ký leo núi</h1>
-            <p className="text-primary-100 text-xs md:text-sm">Hoàn thành thông tin để nhận chứng nhận leo núi</p>
-          </div>
-        </div>
-        
-        {/* Progress Bar */}
-        <div className="space-y-2 md:space-y-3">
-          <div className="flex justify-between text-xs md:text-sm">
-            <span>Tiến độ hoàn thành</span>
-            <span>{completedSteps}/{progressSteps.length}</span>
-          </div>
-          <div className="w-full bg-white/20 rounded-full h-1.5 md:h-2">
-            <div 
-              className="bg-white h-1.5 md:h-2 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${progressPercentage}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-[10px] md:text-xs text-primary-100">
-            {progressSteps.map((step) => (
-              <div key={step.id} className="flex flex-col items-center gap-1">
-                <div className={cn(
-                  "w-6 h-6 rounded-full flex items-center justify-center",
-                  step.completed 
-                    ? "bg-white text-primary-600" 
-                    : "bg-white/20 text-white"
-                )}>
-                  {step.completed ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <span className="text-xs font-medium">{step.id}</span>
-                  )}
-                </div>
-                <span className="text-center max-w-16 truncate">{step.title}</span>
-              </div>
-            ))}
+            <h1 className="text-base md:text-2xl font-bold truncate">Đăng ký leo núi</h1>
           </div>
         </div>
       </div>
 
       {/* Form Section */}
-      <div className="bg-white rounded-b-2xl shadow-xl">
-        <form onSubmit={handleSubmit} className="p-4 md:p-5 space-y-5 md:space-y-5">
+      <div className="bg-white rounded-b-xl md:rounded-b-2xl shadow-xl">
+        <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-6">
           {/* Personal Information Section */}
           <div className="space-y-4 md:space-y-5">
             <div className="flex items-center gap-2 md:gap-2.5 pb-1 border-b border-gray-200">
@@ -130,7 +86,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               <h2 className="text-lg md:text-lg font-semibold text-gray-800">Thông tin cá nhân</h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
                 label="Họ tên Trưởng đoàn"
                 required
@@ -185,7 +141,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               <h2 className="text-lg md:text-lg font-semibold text-gray-800">Thông tin liên hệ</h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
                 label="Địa chỉ"
                 required
@@ -216,7 +172,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               <h2 className="text-lg md:text-lg font-semibold text-gray-800">Thông tin leo núi</h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
                 label="Số lượng thành viên"
                 type="number"
@@ -258,8 +214,8 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   <List className="w-4 h-4" />
                 </div>
                 <textarea
-                  rows={3}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none text-sm"
+                  rows={4}
+                  className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none text-sm"
                   placeholder="Nhập mỗi tên trên một dòng (tùy chọn)"
                   value={formData.memberList}
                   onChange={(e) => handleInputChange('memberList', e.target.value)}
@@ -276,21 +232,40 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
               <h2 className="text-xl font-semibold text-gray-800">Cam kết an toàn</h2>
             </div>
             
-            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-                <div className="space-y-3">
-                  <p className="text-sm text-yellow-800 font-medium">
-                    Quy định An toàn & Bảo vệ Môi trường
-                  </p>
-                  <ul className="text-xs text-yellow-700 space-y-1">
-                    <li>• Tuân thủ các quy định an toàn khi leo núi</li>
-                    <li>• Không vứt rác, bảo vệ môi trường tự nhiên</li>
-                    <li>• Không leo núi khi thời tiết xấu</li>
-                    <li>• Mang đầy đủ trang thiết bị an toàn</li>
+            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setShowSafetyRules((v) => !v)}
+                aria-expanded={showSafetyRules}
+                className="w-full flex items-center justify-between p-4"
+              >
+                <div className="flex items-start gap-3 text-left">
+                  <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm text-yellow-800 font-medium">
+                      Quy định An toàn & Bảo vệ Môi trường
+                    </p>
+                    <p className="text-xs text-yellow-700">Chạm để {showSafetyRules ? 'thu gọn' : 'xem chi tiết'}</p>
+                  </div>
+                </div>
+                <svg className={`w-4 h-4 text-yellow-700 transition-transform ${showSafetyRules ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z" clipRule="evenodd"/></svg>
+              </button>
+              {showSafetyRules && (
+                <div className="px-4 pb-4">
+                  <ul className="text-xs text-yellow-800 space-y-1.5 list-disc pl-5">
+                    <li>Đi đúng đường mòn: Luôn đi theo chỉ dẫn, không đi đường tắt.</li>
+                    <li>Chuẩn bị kỹ lưỡng: Mang đủ nước (1.5-2L+), thức ăn nhẹ, y tế cơ bản.</li>
+                    <li>Trang phục & Trang bị: Quần áo thoải mái, giày chuyên dụng, đèn pin, sạc dự phòng.</li>
+                    <li>Kiểm tra thời tiết: Xem dự báo, chuẩn bị áo mưa/áo khoác nếu cần.</li>
+                    <li>Thông báo lộ trình: Cho người thân biết kế hoạch và thời gian dự kiến.</li>
+                    <li>Giữ gìn vệ sinh: Mang toàn bộ rác xuống núi, không xả rác bừa bãi.</li>
+                    <li>Bảo vệ thiên nhiên: Không bẻ cành, hái hoa, khắc tên, săn bắt.</li>
+                    <li>Phòng chống cháy rừng: Tuyệt đối không đốt lửa, hút thuốc sai quy định.</li>
+                    <li>Giữ liên lạc: Đi theo đoàn, không tách nhóm ở mọi tình huống.</li>
+                    <li>Báo cáo sự cố: Gọi ngay Hotline cứu hộ nếu gặp sự cố hoặc nguy cơ.</li>
                   </ul>
                 </div>
-              </div>
+              )}
             </div>
             
             <div className="flex items-start gap-3">
@@ -309,7 +284,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
           </div>
 
           {/* Submit Button */}
-          <div className="pt-4 border-t border-gray-200">
+          <div className="pt-6 border-t border-gray-200">
             <Button
               type="submit"
               variant="primary"

@@ -206,64 +206,64 @@ export const CropModal: React.FC<CropModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md md:max-w-4xl mx-3 md:mx-4 max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-6 text-white">
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 p-4 md:p-6 text-white">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/20 p-2 rounded-lg">
-                <Crop className="w-6 h-6" />
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="bg-white/20 p-1.5 md:p-2 rounded-lg">
+                <Crop className="w-5 h-5 md:w-6 md:h-6" />
               </div>
               <div>
-                <h2 className="text-xl font-bold">Cắt ảnh cho {memberName}</h2>
-                <p className="text-primary-100 text-sm">
+                <h2 className="text-lg md:text-xl font-bold">Cắt ảnh cho {memberName}</h2>
+                <p className="text-primary-100 text-xs md:text-sm">
                   Cắt ảnh theo tỷ lệ chuẩn cho chứng nhận
                 </p>
               </div>
             </div>
             <button
               onClick={handleClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="p-1.5 md:p-2 hover:bg-white/20 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4 md:w-5 md:h-5" />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+        <div className="p-4 md:p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
           {!imageSrc ? (
             /* Loading or No Image Section */
-            <div className="text-center py-12">
+            <div className="text-center py-10 md:py-12">
               <div className="mb-6">
-                <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Image className="w-12 h-12 text-gray-400" />
+                <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <Image className="w-10 h-10 md:w-12 md:h-12 text-gray-400" />
                 </div>
-                <h4 className="text-lg font-semibold text-gray-800 mb-2">Đang tải ảnh...</h4>
-                <p className="text-gray-600 text-sm">
+                <h4 className="text-base md:text-lg font-semibold text-gray-800 mb-2">Đang tải ảnh...</h4>
+                <p className="text-gray-600 text-xs md:text-sm">
                   Vui lòng chờ trong giây lát
                 </p>
               </div>
             </div>
           ) : (
             /* Image Cropping Section */
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Error Display */}
               {error && (
-                <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-4">
+                <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-3 md:p-4">
                   <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                    <AlertCircle className="w-4 h-4 md:w-5 md:h-5 text-red-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="font-medium text-red-800">Lỗi</p>
-                      <p className="text-sm text-red-700">{error}</p>
+                      <p className="text-xs md:text-sm text-red-700">{error}</p>
                     </div>
                   </div>
                 </div>
               )}
 
               {/* Image Container */}
-              <div className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-xl p-4">
-                <div className="max-h-96 overflow-hidden rounded-lg">
+              <div className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-xl p-3 md:p-4">
+                <div className="max-h-72 md:max-h-96 overflow-hidden rounded-lg">
                   <img
                     ref={imageRef}
                     src={imageSrc}
@@ -279,7 +279,7 @@ export const CropModal: React.FC<CropModalProps> = ({
                   variant="outline"
                   onClick={handleClose}
                   leftIcon={<RotateCcw className="w-4 h-4" />}
-                  className="text-gray-600"
+                  className="text-gray-600 px-3 py-2 md:px-4"
                 >
                   Hủy bỏ
                 </Button>
@@ -289,7 +289,7 @@ export const CropModal: React.FC<CropModalProps> = ({
                   disabled={!cropperInstance || loading}
                   loading={loading}
                   leftIcon={<CheckCircle className="w-4 h-4" />}
-                  className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800"
+                  className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 px-4 py-2"
                 >
                   {loading ? 'Đang xử lý...' : 'Xác nhận cắt'}
                 </Button>
