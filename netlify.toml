@@ -16,8 +16,10 @@
   publish = "dist"
 
 [build.environment]
-  # Node.js version
-  NODE_VERSION = "18"
+  # Node.js version (match vite requirement)
+  NODE_VERSION = "22"
+  # Disable husky during CI to avoid prepare hook errors
+  HUSKY = "0"
 
 # Function configurations
 [functions]
