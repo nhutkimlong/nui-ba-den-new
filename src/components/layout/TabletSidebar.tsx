@@ -104,30 +104,10 @@ const TabletSidebar = ({ isOpen, onClose, collapsible = true }: TabletSidebarPro
     { name: 'Bản đồ số', href: '/map', icon: Map },
     { name: 'Cẩm nang du lịch', href: '/guide', icon: BookOpen },
     { name: 'Đăng ký leo núi', href: '/climb', icon: Mountain },
-    { name: 'Liên hệ', href: '#footer', icon: Phone, isContact: true },
+    { name: 'Cá nhân', href: '/personal', icon: Settings },
   ]
 
-  const handleContactClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    onClose()
-    
-    // Haptic feedback
-    if ('vibrate' in navigator) {
-      navigator.vibrate(15)
-    }
-    
-    setTimeout(() => {
-      const footer = document.getElementById('footer')
-      if (footer) {
-        footer.scrollIntoView({ behavior: 'smooth' })
-      } else {
-        window.scrollTo({
-          top: document.body.scrollHeight,
-          behavior: 'smooth'
-        })
-      }
-    }, 300)
-  }
+  const handleContactClick = (_e: React.MouseEvent) => {}
 
   const handleNavClick = () => {
     onClose()
@@ -238,7 +218,7 @@ const TabletSidebar = ({ isOpen, onClose, collapsible = true }: TabletSidebarPro
                 <li key={item.href}>
                   <Link
                     to={item.href}
-                    onClick={item.isContact ? handleContactClick : handleNavClick}
+                    onClick={handleNavClick}
                     className={cn(
                       "flex items-center rounded-xl transition-all duration-300 group relative overflow-hidden",
                       "hover:bg-gray-50 active:scale-98",

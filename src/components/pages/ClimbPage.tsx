@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { useClimbData } from '../../hooks/useClimbData';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { NotificationSystem } from '../climb/NotificationSystem';
@@ -43,6 +44,7 @@ const ClimbPage: React.FC = () => {
 
   const { gpsSettings, notifications, loading, error, fetchMembersList, generateCertificates, registerClimbingGroup } = useClimbData();
   const { checkRegistrationLocation, checkSummitLocation } = useGeolocation();
+  const { user, updateProfile } = useAuth();
 
   // Update current date time every minute
   useEffect(() => {
@@ -120,6 +122,13 @@ const ClimbPage: React.FC = () => {
 
       if (result.success) {
         showMessage('Đăng ký thành công! Bạn có thể tiến hành leo núi.', 'success');
+        // Update user's climb count
+        try {
+          await updateProfile({
+            climbCount: (user?.climbCount || 0) + 1,
+            lastClimbAt: Date.now(),
+          });
+        } catch {}
         setShowRegistrationForm(false);
         setShowCommitmentModal(false);
         setPendingRegistrationData(null);

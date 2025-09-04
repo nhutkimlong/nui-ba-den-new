@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import { Map, Home, BookOpen, Mountain, Phone } from 'lucide-react'
+import { Map, Home, BookOpen, Mountain, User } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/utils/cn'
 import { useEffect, useState, useRef, useCallback } from 'react'
 
@@ -20,12 +21,13 @@ const MobileBottomNav = ({ visible = false }: MobileBottomNavProps) => {
   const touchStartY = useRef<number>(0)
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null)
 
+  const { isAuthenticated } = useAuth()
   const items = [
     { to: '/', label: 'Trang chủ', icon: Home },
     { to: '/map', label: 'Bản đồ', icon: Map },
     { to: '/guide', label: 'Cẩm nang', icon: BookOpen },
     { to: '/climb', label: 'Leo núi', icon: Mountain },
-    { to: '#footer', label: 'Liên hệ', icon: Phone, isContact: true },
+    { to: isAuthenticated ? '/profile' : '/personal', label: isAuthenticated ? 'Hồ sơ' : 'Cá nhân', icon: User },
   ]
 
   // Update active index based on current route
@@ -132,18 +134,7 @@ const MobileBottomNav = ({ visible = false }: MobileBottomNavProps) => {
       if (newIndex !== currentIndex) {
         triggerHapticFeedback('medium')
         const targetItem = items[newIndex]
-        if (targetItem.isContact) {
-          if (location.pathname !== '/') {
-            setPendingScrollToFooter(true)
-            navigate('/')
-          } else {
-            const footer = document.getElementById('footer')
-            if (footer) footer.scrollIntoView({ behavior: 'smooth' })
-            else window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-          }
-        } else {
-          navigate(targetItem.to)
-        }
+        navigate(targetItem.to)
       }
     }
 
@@ -155,17 +146,7 @@ const MobileBottomNav = ({ visible = false }: MobileBottomNavProps) => {
   const handleClick = (item: any, e: React.MouseEvent) => {
     triggerHapticFeedback('light')
     
-    if (item.isContact) {
-      e.preventDefault()
-      if (location.pathname !== '/') {
-        setPendingScrollToFooter(true)
-        navigate('/')
-      } else {
-        const footer = document.getElementById('footer')
-        if (footer) footer.scrollIntoView({ behavior: 'smooth' })
-        else window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
-      }
-    }
+    // No special handling
   }
 
   const handlePointerDown = (itemTo: string) => {

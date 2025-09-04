@@ -17,12 +17,15 @@ import {
   MapPage,
   GuidePage,
   ClimbPage,
-  AdminLoginPage,
+  LoginPage,
+  RegisterPage,
+  ProfilePage,
+  PersonalPage,
   AdminPage,
-  DataEditorPage,
   ClimbAdminPage,
   GuideAdminPage,
   PoiAdminPage,
+  UserAdminPage,
   preloadRoute
 } from './routes/LazyRoutes';
 
@@ -71,28 +74,41 @@ function App() {
               <Route path="climb" element={<ClimbPage />} />
               <Route path="guide" element={<GuidePage />} />
               <Route path="map" element={<MapPage />} />
-              <Route path="admin-login" element={<AdminLoginPage />} />
+              <Route path="personal" element={<PersonalPage />} />
+              <Route path="login" element={<LoginPage />} />
+              <Route path="register" element={<RegisterPage />} />
+              <Route path="profile" element={
+                <ProtectedRoute redirectTo="/login">
+                  <ProfilePage />
+                </ProtectedRoute>
+              } />
+              {/* AdminLoginPage removed; using /login */}
               <Route path="admin" element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="admin" redirectTo="/login">
                   <AdminPage />
                 </ProtectedRoute>
               } />
               <Route path="admin/climb" element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="admin" redirectTo="/login">
                   <ClimbAdminPage />
                 </ProtectedRoute>
               } />
               <Route path="admin/guide" element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="admin" redirectTo="/login">
                   <GuideAdminPage />
                 </ProtectedRoute>
               } />
               <Route path="admin/poi" element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredRole="admin" redirectTo="/login">
                   <PoiAdminPage />
                 </ProtectedRoute>
               } />
-              <Route path="data-editor" element={<DataEditorPage />} />
+              <Route path="admin/users" element={
+                <ProtectedRoute requiredRole="admin" redirectTo="/login">
+                  <UserAdminPage />
+                </ProtectedRoute>
+              } />
+              {/* DataEditorPage removed */}
             </Route>
           </Routes>
         </ToastProvider>

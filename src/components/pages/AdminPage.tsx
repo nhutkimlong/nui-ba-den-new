@@ -62,7 +62,20 @@ const AdminPage: React.FC = () => {
       link: '/admin/poi',
       count: stats.totalPOIs
     }
+    ,
+    {
+      title: 'Quản lý Người dùng',
+      description: 'Quản lý tài khoản, thông tin và quyền truy cập',
+      icon: faUsers,
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'bg-purple-50',
+      iconColor: 'text-purple-600',
+      link: '/admin/users',
+      count: usersCountPlaceholder()
+    }
   ];
+
+  function usersCountPlaceholder() { return 0 }
 
   useEffect(() => {
     loadDashboardData();
@@ -139,7 +152,7 @@ const AdminPage: React.FC = () => {
             <button
               onClick={() => {
                 logout();
-                navigate('/admin-login');
+                navigate('/login');
               }}
               className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors duration-200"
             >

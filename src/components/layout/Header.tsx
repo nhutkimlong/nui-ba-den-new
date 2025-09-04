@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { X, Globe, Menu, ChevronDown } from 'lucide-react'
+import { X, Globe, Menu, ChevronDown, UserCircle2, LogIn, LogOut } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/utils/cn'
 
 type HeaderProps = {
@@ -13,6 +14,8 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+  const { isAuthenticated, user, logout } = useAuth()
   const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('up')
   const lastScrollY = useRef(0)
   const location = useLocation()
@@ -22,7 +25,6 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
     { name: 'Bản đồ số', href: '/map' },
     { name: 'Cẩm nang du lịch', href: '/guide' },
     { name: 'Đăng ký leo núi', href: '/climb' },
-    { name: 'Liên hệ', href: '#footer', isContact: true },
   ]
 
   const languages = [
@@ -103,6 +105,13 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
     }
   }
 
+  const toggleProfileMenu = () => {
+    setIsProfileMenuOpen(!isProfileMenuOpen)
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10)
+    }
+  }
+
   const translatePage = (langCode: string) => {
     // Set the cookie for Google Translate
     document.cookie = `googtrans=/${langCode}; path=/; domain=.${window.location.hostname}`
@@ -112,37 +121,7 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
     window.location.reload()
   }
 
-  const handleContactClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    
-    // Try to find the footer element with a small delay to ensure DOM is loaded
-    const findAndScrollToFooter = () => {
-      const footer = document.getElementById('footer')
-      if (footer) {
-        console.log('Footer found, scrolling to it...')
-        footer.scrollIntoView({ behavior: 'smooth' })
-      } else {
-        console.log('Footer not found, scrolling to bottom of page...')
-        // Fallback: scroll to bottom of page
-        window.scrollTo({
-          top: document.body.scrollHeight,
-          behavior: 'smooth'
-        })
-      }
-    }
-    
-    // Try immediately first
-    findAndScrollToFooter()
-    
-    // If footer not found, try again after a short delay
-    setTimeout(findAndScrollToFooter, 100)
-  }
-
-  const handleNavigationClick = (item: any, e: React.MouseEvent) => {
-    if (item.isContact) {
-      handleContactClick(e)
-    }
-  }
+  const handleNavigationClick = (_item: any, _e: React.MouseEvent) => {}
 
   return (
     <>
@@ -240,6 +219,25 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
                     <ChevronDown className={cn(
                       "w-4 h-4 transition-transform duration-200",
                       isLanguageMenuOpen && "rotate-180"
+                    )} />
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className={cn(
+                      "ml-1 p-2 rounded-full transition-all duration-300 flex items-center space-x-1",
+                      "hover:bg-gray-100 active:scale-95",
+                      isScrolled 
+                        ? "text-gray-700 hover:text-gray-900 hover:bg-gray-100" 
+                        : "text-gray-700 hover:text-primary-600 hover:bg-gray-100"
+                    )}
+                    onClick={toggleProfileMenu}
+                    aria-label="Mở menu cá nhân"
+                  >
+                    <UserCircle2 className="w-5 h-5" />
+                    <ChevronDown className={cn(
+                      "w-4 h-4 transition-transform duration-200",
+                      isProfileMenuOpen && "rotate-180"
                     )} />
                   </button>
                 </li>
@@ -396,6 +394,59 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
             
             {/* Subtle gradient overlay at bottom */}
             <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-100 to-transparent rounded-b-3xl pointer-events-none" />
+          </div>
+        </div>
+      )}
+
+      {/* Profile Menu Popup */}
+      {isProfileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-[1200] p-4 animate-fade-in"
+          onClick={toggleProfileMenu}
+        >
+          <div 
+            className="bg-white rounded-3xl p-6 max-w-sm w-full mx-4 shadow-2xl animate-slide-up border border-gray-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-800">
+                Tài khoản
+              </h3>
+              <button 
+                onClick={toggleProfileMenu}
+                className="p-2 rounded-full hover:bg-gray-100 transition-all duration-200 active:scale-95 text-gray-500 hover:text-gray-700"
+                aria-label="Đóng menu cá nhân"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {isAuthenticated ? (
+                <>
+                  <div className="px-4 py-2 text-sm text-gray-600">Xin chào, <span className="font-semibold text-gray-800">{(user?.name || 'bạn').split(' ').slice(-1)[0]}</span></div>
+                  <a href="/profile" className="flex items-center px-4 py-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all">
+                    <UserCircle2 className="w-5 h-5 mr-3 text-gray-600" />
+                    <span className="font-medium text-gray-800">Hồ sơ của tôi</span>
+                  </a>
+                  <button onClick={() => { logout(); setIsProfileMenuOpen(false); }} className="w-full text-left flex items-center px-4 py-3 rounded-xl hover:bg-red-50 border border-transparent hover:border-red-200 transition-all">
+                    <LogOut className="w-5 h-5 mr-3 text-red-600" />
+                    <span className="font-medium text-red-700">Đăng xuất</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <a href="/login" className="flex items-center px-4 py-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all">
+                    <LogIn className="w-5 h-5 mr-3 text-gray-600" />
+                    <span className="font-medium text-gray-800">Đăng nhập</span>
+                  </a>
+                  <a href="/register" className="flex items-center px-4 py-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all">
+                    <UserCircle2 className="w-5 h-5 mr-3 text-gray-600" />
+                    <span className="font-medium text-gray-800">Đăng ký</span>
+                  </a>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

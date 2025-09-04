@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { RegistrationData, GpsSettings, RepresentativeType } from '../../types/climb';
 import Button from '../common/Button';
 import Input from '../common/Input';
@@ -47,6 +48,21 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSafetyRules, setShowSafetyRules] = useState(false);
+
+  // Prefill from user profile if available
+  const { user } = useAuth();
+  useEffect(() => {
+    if (!user) return;
+    setFormData(prev => ({
+      ...prev,
+      leaderName: prev.leaderName || user.name || '',
+      phoneNumber: prev.phoneNumber || user.phone || '',
+      birthday: prev.birthday || user.birthday || '',
+      cccd: prev.cccd || user.cccd || '',
+      address: prev.address || user.address || '',
+      email: prev.email || user.email || '',
+    }));
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

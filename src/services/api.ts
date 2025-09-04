@@ -90,11 +90,21 @@ async function apiCall<T>(
 
 // Authentication API
 export const authApi = {
-  // Login with password
-  async login(password: string): Promise<ApiResponse<{ token: string; message: string }>> {
+  // Login with email/password or admin password fallback
+  async login(params: { email?: string; password: string }): Promise<ApiResponse<{ token: string; user?: any; message?: string }>> {
+    const { email, password } = params;
     return apiCall('/auth', {
       method: 'POST',
-      body: JSON.stringify({ password, action: 'login' }),
+      body: JSON.stringify({ action: 'login', email, password }),
+    });
+  },
+
+  // Register with name, email, password
+  async register(params: { name: string; email: string; password: string }): Promise<ApiResponse<{ token: string; user: any }>> {
+    const { name, email, password } = params;
+    return apiCall('/auth', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'register', name, email, password }),
     });
   },
 
@@ -109,19 +119,42 @@ export const authApi = {
     });
   },
 
-  // Change password
-  async changePassword(
-    currentPassword: string, 
-    newPassword: string
-  ): Promise<ApiResponse<{ message: string }>> {
+  // Get profile from backend by email
+  async getProfileByEmail(email: string): Promise<ApiResponse<{ user: any }>> {
     return apiCall('/auth', {
       method: 'POST',
-      body: JSON.stringify({ 
-        currentPassword, 
-        newPassword, 
-        action: 'changePassword' 
-      }),
+      body: JSON.stringify({ action: 'getProfile', email }),
     });
+  },
+
+  // Change password
+  async changePassword(params: { currentPassword: string; newPassword: string; email?: string }): Promise<ApiResponse<{ message: string }>> {
+    const { currentPassword, newPassword, email } = params;
+    return apiCall('/auth', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'changePassword', currentPassword, newPassword, email }),
+    });
+  },
+
+  // Update profile (accepts partial fields + email identifier)
+  async updateProfile(params: Record<string, any> & { email: string }): Promise<ApiResponse<{ user: any }>> {
+    return apiCall('/auth', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'updateProfile', ...params }),
+    });
+  },
+};
+
+// Users API (admin)
+export const usersApi = {
+  async list(): Promise<ApiResponse<{ users: any[] }>> {
+    return apiCall('/auth', { method: 'POST', body: JSON.stringify({ action: 'listUsers' }) });
+  },
+  async save(user: any): Promise<ApiResponse<{ success: boolean }>> {
+    return apiCall('/auth', { method: 'POST', body: JSON.stringify({ action: 'saveUser', user }) });
+  },
+  async delete(id: string): Promise<ApiResponse<{ success: boolean }>> {
+    return apiCall('/auth', { method: 'POST', body: JSON.stringify({ action: 'deleteUser', id }) });
   },
 };
 
