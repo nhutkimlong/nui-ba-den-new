@@ -911,26 +911,10 @@
   }
 }
 
-/* Date picker improvements */
+/* Date picker: keep native behavior (avoid overlaying indicator over entire input) */
 input[type="date"] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
   background-color: transparent;
   color: inherit;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator {
-  background: transparent;
-  bottom: 0;
-  color: transparent;
-  cursor: pointer;
-  height: auto;
-  left: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
-  width: auto;
 }
 
 @media (max-width: 768px) {
