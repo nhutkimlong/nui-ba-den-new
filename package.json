@@ -88,6 +88,7 @@
   "engines": {
     "node": ">=22.12.0"
   },
+  "packageManager": "npm@10.9.3",
   "netlify": {
     "functions": {
       "directory": "netlify/functions"

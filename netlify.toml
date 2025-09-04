@@ -20,6 +20,8 @@
   NODE_VERSION = "22"
   # Disable husky during CI to avoid prepare hook errors
   HUSKY = "0"
+  # Ensure devDependencies (like vite) are installed during build
+  NPM_FLAGS = "--include=dev"
 
 # Function configurations
 [functions]
@@ -53,14 +55,7 @@
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
 
 # Environment variables (these should be set in Netlify dashboard)
-[context.production.environment]
-  NODE_ENV = "production"
 
-[context.deploy-preview.environment]
-  NODE_ENV = "preview"
-
-[context.branch-deploy.environment]
-  NODE_ENV = "development"
 
 # Edge functions (if needed in the future)
 # [[edge_functions]]
