@@ -37,12 +37,17 @@ const MobileActionsBar: React.FC<Props> = ({
       className="
         md:hidden fixed left-0 right-0 z-[1200]
         px-3 pb-[max(env(safe-area-inset-bottom),0px)]
+        safe-bottom
       "
       role="tablist"
       aria-label="Thanh chức năng"
-      style={{ bottom: 'calc(72px + max(env(safe-area-inset-bottom, 0px), 0px))' }}
+      style={{ bottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }}
     >
-      <div className="bg-white/90 backdrop-blur border border-gray-200 shadow-lg rounded-2xl px-2 py-1">
+      <div className="bg-white/90 backdrop-blur border border-gray-200 shadow-lg rounded-2xl px-2 py-1"
+        style={{
+          paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)'
+        }}
+      >
         <div className="grid grid-cols-5 gap-1">
           <Item
             icon={<Search className="w-5 h-5 text-gray-700" />}

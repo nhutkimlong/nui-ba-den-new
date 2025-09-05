@@ -1,4 +1,5 @@
 import { BlobServiceClient } from '@azure/storage-blob';
+import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -146,7 +147,7 @@ export default async function handler(request, context) {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, HEAD, POST, PUT, DELETE, OPTIONS',
     'Content-Type': 'application/json'
   };
 
@@ -197,6 +198,37 @@ export default async function handler(request, context) {
       });
     }
 
+    // Handle HEAD request - return headers only with caching
+    if (method === 'HEAD') {
+      try {
+        let data;
+        if (connectionString) {
+          try {
+            data = await readJsonFile(file);
+          } catch (azureError) {
+            console.warn(`Azure Blob Storage failed for ${file}, falling back to local file:`, azureError.message);
+            data = readLocalJsonFile(file);
+          }
+        } else {
+          console.log(`Azure not configured, using local file for ${file}`);
+          data = readLocalJsonFile(file);
+        }
+
+        const body = JSON.stringify(data);
+        const etag = 'W/"' + createHash('sha1').update(body).digest('base64') + '"';
+        const cacheHeaders = {
+          ...headers,
+          'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400',
+          'ETag': etag,
+          'Vary': 'Accept-Encoding'
+        };
+
+        return new Response('', { status: 200, headers: cacheHeaders });
+      } catch (error) {
+        return new Response('', { status: 404, headers });
+      }
+    }
+
     // Handle GET request - read file
     if (method === 'GET') {
       try {
@@ -215,10 +247,29 @@ export default async function handler(request, context) {
           console.log(`Azure not configured, using local file for ${file}`);
           data = readLocalJsonFile(file);
         }
-        
-        return new Response(JSON.stringify(data), {
+
+        // Strong caching with ETag support
+        const body = JSON.stringify(data);
+        const etag = 'W/"' + createHash('sha1').update(body).digest('base64') + '"';
+        const reqETag = request.headers.get('if-none-match');
+
+        const cacheHeaders = {
+          ...headers,
+          'Cache-Control': 'public, max-age=300, stale-while-revalidate=86400',
+          'ETag': etag,
+          'Vary': 'Accept-Encoding'
+        };
+
+        if (reqETag && reqETag === etag) {
+          return new Response('', {
+            status: 304,
+            headers: cacheHeaders
+          });
+        }
+
+        return new Response(body, {
           status: 200,
-          headers
+          headers: cacheHeaders
         });
       } catch (error) {
         return new Response(JSON.stringify({ error: `File ${file} not found` }), {

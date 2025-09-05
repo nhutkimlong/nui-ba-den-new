@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { offlineStorageService } from '@/services/offlineStorageService';
 import SwipeableTabs from '../common/SwipeableTabs';
 import { Route, Hotel, Utensils, Flame, MapPin, Phone, Tags, Store, Star, Clock, Users, ChevronLeft, ChevronRight, Loader2, AlertCircle } from 'lucide-react';
 import { ResponsiveContainer, GridLayout, useDevice } from '../layout';
@@ -45,6 +46,10 @@ interface Specialty {
 
 type GuideItem = Tour | Accommodation | Restaurant | Specialty;
 
+// Simple in-memory cache to avoid re-fetching per tab/mount on mobile
+const guideMemoryCache: Record<string, any[]> = {};
+const guideFetchInFlight: Record<string, Promise<any[]> | null> = {};
+
 // --- CUSTOM HOOK for data fetching and pagination ---
 const useGuideSection = <T extends GuideItem>(file: string) => {
     const [allItems, setAllItems] = useState<T[]>([]);
@@ -67,30 +72,82 @@ const useGuideSection = <T extends GuideItem>(file: string) => {
 
     useEffect(() => {
         const fetchData = async () => {
-            // Only fetch if we haven't loaded this file before or if file changed
-            if (hasLoaded && allItems.length > 0) {
+            if (!file) return;
+            setError(null);
+            setCurrentPage(1);
+
+            // 0) Use in-memory cache immediately to avoid spinner when switching tabs
+            if (guideMemoryCache[file] && guideMemoryCache[file].length > 0) {
+                setAllItems(guideMemoryCache[file] as any);
+                setHasLoaded(true);
+                setLoading(false);
+                const storeTmp = { 'Tours.json': 'tours', 'Accommodations.json': 'accommodations', 'Restaurants.json': 'restaurants', 'Specialties.json': 'tours' } as Record<string,string>;
+                void refreshGuideInBackground(file, storeTmp[file] || 'tours', (items) => {
+                    guideMemoryCache[file] = items;
+                    setAllItems(items as any);
+                });
                 return;
             }
-            
+
             setLoading(true);
-            setError(null);
-            setAllItems([]); // Clear previous data
-            setCurrentPage(1); // Reset to first page
-            
+
             try {
-                console.log(`Fetching data for file: ${file}`); // Debug log
-                const response = await fetch(`/.netlify/functions/data-blobs?file=${file}`);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                // 1) Offline-first by file mapping -> store names
+                const storeMapLocal: Record<string, string> = {
+                    'Tours.json': 'tours',
+                    'Accommodations.json': 'accommodations',
+                    'Restaurants.json': 'restaurants',
+                    'Specialties.json': 'tours' // fallback store if not defined
+                };
+                const store = storeMapLocal[file] || 'tours';
+
+                // Read cache first
+                let cached: any[] = [];
+                try {
+                    if (store === 'tours') cached = await offlineStorageService.getTours();
+                    else if (store === 'accommodations') cached = await offlineStorageService.getAll('accommodations').then(r => r.map(i => i.data));
+                    else if (store === 'restaurants') cached = await offlineStorageService.getAll('restaurants').then(r => r.map(i => i.data));
+                } catch {}
+                if (cached && cached.length > 0) {
+                    setAllItems(cached as any);
+                    setHasLoaded(true);
+                    guideMemoryCache[file] = cached;
+                    // background refresh
+                    void refreshGuideInBackground(file, store, (items) => {
+                        guideMemoryCache[file] = items;
+                        setAllItems(items as any);
+                    });
+                    return;
                 }
-                const data = await response.json();
-                console.log(`Data received for ${file}:`, data); // Debug log
-                
-                if (!Array.isArray(data)) {
-                    throw new Error("Invalid data format from API.");
+
+                // 2) Network fetch as fallback
+                if (guideFetchInFlight[file]) {
+                    const data = await guideFetchInFlight[file]!;
+                    setAllItems(data as any);
+                    setHasLoaded(true);
+                    setLoading(false);
+                    return;
                 }
+
+                guideFetchInFlight[file] = fetch(`/.netlify/functions/data-blobs?file=${file}`, { cache: 'no-cache' })
+                  .then(async (res) => {
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    const json = await res.json();
+                    if (!Array.isArray(json)) throw new Error('Invalid data format from API.');
+                    return json as any[];
+                  })
+                  .finally(() => { guideFetchInFlight[file] = null; });
+
+                const data = await guideFetchInFlight[file]!;
+
                 setAllItems(data);
                 setHasLoaded(true);
+                guideMemoryCache[file] = data;
+                // Store to IndexedDB
+                try {
+                    if (store === 'tours') await offlineStorageService.storeTours(data);
+                    // TODO: add similar store methods for other collections if needed
+                } catch {}
             } catch (e: any) {
                 console.error(`Failed to fetch ${file}:`, e);
                 setError(e.message);
@@ -99,10 +156,29 @@ const useGuideSection = <T extends GuideItem>(file: string) => {
             }
         };
 
-        if (file) {
-            fetchData();
-        }
-    }, [file, hasLoaded, allItems.length]);
+        fetchData();
+    }, [file]);
+
+    const refreshGuideInBackground = async (file: string, store: string, update: (items: any[]) => void) => {
+        try {
+            const head = await fetch(`/.netlify/functions/data-blobs?file=${file}`, { method: 'HEAD' });
+            const lastModified = head.headers.get('last-modified');
+            const items: any[] = await offlineStorageService.getAll(store).catch(() => []);
+            const newest = items.reduce((m: number, c: any) => Math.max(m, (c as any).lastModified || 0), 0);
+            if (lastModified) {
+                const serverTime = Date.parse(lastModified);
+                if (!isNaN(serverTime) && serverTime <= newest) return;
+            }
+            const res = await fetch(`/.netlify/functions/data-blobs?file=${file}`, { cache: 'no-cache' });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!Array.isArray(data)) return;
+            update(data);
+            try {
+                if (store === 'tours') await offlineStorageService.storeTours(data);
+            } catch {}
+        } catch {}
+    };
 
     const paginatedItems = useMemo(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;

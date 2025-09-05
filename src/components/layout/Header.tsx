@@ -18,7 +18,9 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
   const { isAuthenticated, user, logout } = useAuth()
   const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('up')
   const lastScrollY = useRef(0)
+  const [headerOpacity, setHeaderOpacity] = useState(0.98)
   const location = useLocation()
+  const isMapPage = location.pathname.startsWith('/map')
 
   const navigation = [
     { name: 'Trang chủ', href: '/' },
@@ -41,44 +43,65 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
   // Enhanced scroll handling with smooth hide/show animations
   useEffect(() => {
     let ticking = false
-    
+
     const handleScroll = () => {
       if (ticking) return
-      
+
+      // If any popup/menu is open, keep header visible and ignore auto-hide
+      if (isMobileMenuOpen || isLanguageMenuOpen || isProfileMenuOpen) {
+        setIsHeaderVisible(true)
+        lastScrollY.current = window.scrollY
+        return
+      }
+
       requestAnimationFrame(() => {
         const currentY = window.scrollY
         const scrollThreshold = 10
         const hideThreshold = 100
-        
-        // Update scrolled state for background effect
+
+        // Set scrolled state directly from position
         setIsScrolled(currentY > scrollThreshold)
-        
-        // Determine scroll direction
-        const direction = currentY > lastScrollY.current ? 'down' : 'up'
-        setScrollDirection(direction)
-        
-        // Show/hide header based on scroll behavior
-        if (currentY < hideThreshold) {
-          // Always show header near top
-          setIsHeaderVisible(true)
-        } else if (direction === 'down' && currentY > lastScrollY.current + 5) {
-          // Hide when scrolling down significantly
-          setIsHeaderVisible(false)
-        } else if (direction === 'up' && lastScrollY.current > currentY + 5) {
-          // Show when scrolling up significantly
-          setIsHeaderVisible(true)
+
+        // Skip visual fade on map page; keep solid header
+        if (!isMapPage) {
+          // Smoothly interpolate header background opacity and blur
+          const clamped = Math.max(0, Math.min(currentY, 240))
+          const nextOpacity = 0.65 + (clamped / 240) * 0.33 // 0.65 -> 0.98
+          setHeaderOpacity(Number(nextOpacity.toFixed(3)))
+        } else {
+          setHeaderOpacity(0.98)
         }
-        
+
+        // Determine direction from delta only
+        const direction: 'up' | 'down' = currentY > lastScrollY.current ? 'down' : 'up'
+        setScrollDirection(direction)
+
+        // Compute visibility purely from current position and direction
+        const nextVisible = currentY < hideThreshold
+          ? true
+          : direction === 'down'
+            ? false
+            : true
+        setIsHeaderVisible(nextVisible)
+
         lastScrollY.current = currentY
         ticking = false
       })
-      
+
       ticking = true
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, [isMobileMenuOpen, isLanguageMenuOpen, isProfileMenuOpen, isMapPage])
+
+  // Ensure header is visible whenever a menu opens
+  useEffect(() => {
+    if (isMobileMenuOpen || isLanguageMenuOpen || isProfileMenuOpen) {
+      setIsHeaderVisible(true)
+      setHeaderOpacity(0.98)
+    }
+  }, [isMobileMenuOpen, isLanguageMenuOpen, isProfileMenuOpen])
 
   useEffect(() => {
     setIsMobileMenuOpen(false)
@@ -126,20 +149,27 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
   return (
     <>
       <header className={cn(
-        "sticky top-0 z-50 pt-safe transition-all duration-500 ease-out will-change-transform",
-        // Solid background effects
-        isScrolled 
-          ? "bg-white shadow-lg border-b border-gray-200" 
-          : "bg-white/95 border-b border-gray-100 shadow-sm",
+        "z-50 pt-safe transition-all duration-500 ease-out will-change-transform",
+        // Sticky only from md and up; on mobile it scrolls with content (2D feel)
+        "md:sticky md:top-0",
+        // Base borders/shadows; color via inline style for smooth opacity
+        isScrolled ? "shadow-lg border-b border-gray-200" : "shadow-sm border-b border-gray-100",
         // Smooth hide/show animation
-        isHeaderVisible ? "translate-y-0" : "-translate-y-full",
+        // Hide/show animation only when sticky (md+)
+        isHeaderVisible ? "md:translate-y-0" : "md:-translate-y-full",
         // Mobile hide override
-        hideOnMobile && !isHeaderVisible && "-translate-y-full md:translate-y-0"
-      )}>
+        hideOnMobile && !isHeaderVisible && "md:-translate-y-full md:translate-y-0"
+      )}
+      style={{
+        backgroundColor: isMapPage ? 'white' : `rgba(255,255,255,${headerOpacity})`,
+        backdropFilter: isMapPage ? 'none' : `saturate(180%) blur(${Math.round((headerOpacity - 0.65) / 0.33 * 8)}px)`,
+        WebkitBackdropFilter: isMapPage ? 'none' : `saturate(180%) blur(${Math.round((headerOpacity - 0.65) / 0.33 * 8)}px)`,
+        transition: isMapPage ? 'none' : 'background-color 200ms ease, backdrop-filter 200ms ease'
+      }}>
         <div className="container mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
-            {/* Enhanced Logo with modern styling */}
-            <div className="flex items-center space-x-3">
+            {/* Enhanced Logo with modern styling (click to go home) */}
+            <Link to="/" aria-label="Về trang chủ" className="flex items-center space-x-3 group">
               <div className="relative">
                 <img 
                   src="/assets/images/android-chrome-512x512.png" 
@@ -159,18 +189,18 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
               <div>
                 <h1 className={cn(
                   "text-base xs:text-lg sm:text-xl md:text-xl lg:text-2xl font-bold transition-colors duration-300 leading-tight",
-                  isScrolled ? "text-gray-800" : "text-primary-600"
+                  "text-primary-600"
                 )}>
                   Khu du lịch quốc gia Núi Bà Đen
                 </h1>
                 <p className={cn(
                   "text-xs hidden sm:block transition-colors duration-300",
-                  isScrolled ? "text-gray-600" : "text-primary-700"
+                  "text-primary-700"
                 )}>
                   Tây Ninh, Việt Nam
                 </p>
               </div>
-            </div>
+            </Link>
             
             {/* Enhanced Desktop Navigation (xl and up) */}
             <nav className="hidden xl:block">
@@ -311,6 +341,37 @@ const Header = ({ hideOnMobile = false, onTabletMenuClick }: HeaderProps) => {
                     </Link>
                   </li>
                 ))}
+
+                {/* Account actions below navigation items */}
+                <li className="pt-2 border-t border-gray-200 mt-2">
+                  {isAuthenticated ? (
+                    <div className="px-4 py-2 text-sm text-gray-700">
+                      Xin chào, <span className="font-semibold text-gray-900">{(user?.name || 'bạn').split(' ').slice(-1)[0]}</span>
+                    </div>
+                  ) : null}
+                  {isAuthenticated ? (
+                    <>
+                      <Link to="/profile" className="block px-4 py-3 rounded-lg hover:bg-gray-50 text-gray-800 font-medium">
+                        Hồ sơ của tôi
+                      </Link>
+                      <button
+                        onClick={() => { logout(); setIsProfileMenuOpen(false); setIsMobileMenuOpen(false); }}
+                        className="w-full text-left block px-4 py-3 rounded-lg hover:bg-red-50 text-red-700 font-medium"
+                      >
+                        Đăng xuất
+                      </button>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2 px-4 py-2">
+                      <Link to="/login" className="flex-1 text-center px-3 py-2 rounded-full bg-gray-100 text-gray-800 font-medium">
+                        Đăng nhập
+                      </Link>
+                      <Link to="/register" className="flex-1 text-center px-3 py-2 rounded-full bg-primary-600 text-white font-medium">
+                        Đăng ký
+                      </Link>
+                    </div>
+                  )}
+                </li>
                 
                 {/* Language Selector in Mobile Menu */}
                 <li className="pt-2 border-t border-gray-200 mt-3">

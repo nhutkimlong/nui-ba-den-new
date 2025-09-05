@@ -2,7 +2,6 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import AdaptiveLayout from '@/components/layout/AdaptiveLayout';
 import ResponsiveGrid from '@/components/layout/ResponsiveGrid';
-import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import TabletSidebar from '@/components/layout/TabletSidebar';
 
 // Mock device detection
@@ -33,11 +32,7 @@ describe('Layout System Integration', () => {
 
     render(
       <AdaptiveLayout
-        bottomNav={
-          <MobileBottomNav
-            visible={true}
-          />
-        }
+        bottomNav={undefined}
       >
         <ResponsiveGrid
           items={[]}
@@ -49,7 +44,7 @@ describe('Layout System Integration', () => {
 
     // Check layout structure
     expect(screen.getByRole('main')).toHaveClass('layout-mobile');
-    expect(screen.getByRole('navigation')).toBeInTheDocument();
+    // Bottom navigation removed; ensure main/grid still render
     expect(screen.getByRole('grid')).toBeInTheDocument();
     
     // Check navigation items
@@ -149,28 +144,15 @@ describe('Layout System Integration', () => {
   });
 
   it('should handle navigation interactions', () => {
-    const handleNavClick = vi.fn();
-    const navItems = [
-      { id: 'home', label: 'Home', icon: '🏠' },
-      { id: 'map', label: 'Map', icon: '🗺️' }
-    ];
-
     render(
       <AdaptiveLayout
-        bottomNav={
-          <MobileBottomNav
-            visible={true}
-          />
-        }
+        bottomNav={undefined}
       >
         <div>Content</div>
       </AdaptiveLayout>
     );
 
-    const mapButton = screen.getByText('Map');
-    fireEvent.click(mapButton);
-    
-    expect(handleNavClick).toHaveBeenCalledWith(1);
+    // No bottom nav interactions to test anymore
   });
 
   it('should maintain layout consistency across components', () => {

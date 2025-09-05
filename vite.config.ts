@@ -19,6 +19,7 @@ export default defineConfig({
       injectRegister: 'auto',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       workbox: {
+        navigationPreload: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg}'],
         runtimeCaching: [
           {
@@ -55,7 +56,7 @@ export default defineConfig({
             }
           },
           {
-            urlPattern: /^https:\/\/api\./i,
+            urlPattern: /\/\.netlify\/functions\/data-blobs/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
@@ -63,7 +64,8 @@ export default defineConfig({
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 5
               },
-              networkTimeoutSeconds: 10
+              networkTimeoutSeconds: 10,
+              cacheableResponse: { statuses: [0, 200] }
             }
           }
         ]

@@ -9,7 +9,6 @@ const ProfilePage = () => {
   const [birthday, setBirthday] = useState(user?.birthday || '')
   const [cccd, setCccd] = useState(user?.cccd || '')
   const [address, setAddress] = useState(user?.address || '')
-  const [avatar, setAvatar] = useState<string | undefined>(user?.avatar)
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -70,7 +69,7 @@ const ProfilePage = () => {
   const onSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     setErr(null)
-    const ok = await updateProfile({ name, phone, birthday, cccd, address, avatar })
+    const ok = await updateProfile({ name, phone, birthday, cccd, address })
     setMsg(ok ? 'Cập nhật hồ sơ thành công' : 'Không thể cập nhật hồ sơ')
   }
 
@@ -105,21 +104,7 @@ const ProfilePage = () => {
           <div className="md:col-span-2">
             <h2 className="text-lg font-semibold text-gray-800 mb-2">Thông tin cơ bản</h2>
           </div>
-          <div className="md:col-span-2 flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center">
-              {avatar ? <img src={avatar} alt="avatar" className="w-full h-full object-cover" /> : <span className="text-gray-400 text-xl">🙂</span>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Ảnh đại diện</label>
-              <input type="file" accept="image/*" onChange={async (e) => {
-                const file = e.target.files?.[0]
-                if (!file) return
-                const reader = new FileReader()
-                reader.onload = () => setAvatar(reader.result as string)
-                reader.readAsDataURL(file)
-              }} />
-            </div>
-          </div>
+          {/* Avatar section removed per requirements */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
             <input value={name} onChange={(e) => setName(e.target.value)} type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500" required />

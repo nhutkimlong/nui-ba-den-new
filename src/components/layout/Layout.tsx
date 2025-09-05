@@ -5,7 +5,6 @@ import Header from './Header'
 import Footer from './Footer'
 import ScrollToTop from '../common/ScrollToTop'
 import InstallPrompt from './InstallPrompt'
-import MobileBottomNav from './MobileBottomNav'
 import TabletSidebar from './TabletSidebar'
 import { DeviceProvider, useDevice } from './DeviceDetector'
 import SafeAreaProvider from './SafeAreaProvider'
@@ -26,16 +25,27 @@ const LayoutContent = () => {
   }, [])
 
   const isMapPage = location.pathname.startsWith('/map')
+  // Disable page scroll on map page to ensure gestures (press/drag) don't scroll the document
+  useEffect(() => {
+    if (!isMapPage) return
+    const previousOverflow = document.body.style.overflow
+    const previousTouch = document.body.style.touchAction
+    document.body.style.overflow = 'hidden'
+    document.body.style.touchAction = 'none'
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.body.style.touchAction = previousTouch
+    }
+  }, [isMapPage])
+  const isHomePage = location.pathname === '/'
   return (
     <SafeAreaProvider>
       <div className="min-h-[100dvh] flex flex-col">
-        {/* Header - Hide on mobile map page */}
-        {!(isMobile && isMapPage) && (
-          <Header 
-            hideOnMobile={isMobile && isMapPage ? true : isScrolled}
-            onTabletMenuClick={isTablet ? () => setIsTabletSidebarOpen(true) : undefined}
-          />
-        )}
+        {/* Header - Always show (including on map) */}
+        <Header 
+          hideOnMobile={isScrolled}
+          onTabletMenuClick={isTablet ? () => setIsTabletSidebarOpen(true) : undefined}
+        />
         
         {/* Main content */}
         <main className={cn(
@@ -46,8 +56,8 @@ const LayoutContent = () => {
           <Outlet />
         </main>
         
-        {/* Footer - Hide on map page */}
-        {!isMapPage && <Footer />}
+        {/* Footer - Only show on home page for optimization */}
+        {isHomePage && <Footer />}
         
         {/* Tablet Sidebar */}
         <TabletSidebar 
@@ -58,8 +68,7 @@ const LayoutContent = () => {
         {/* Install Prompt */}
         <InstallPrompt />
         
-        {/* Mobile Bottom Navigation */}
-        <MobileBottomNav visible={isMobile && isMapPage ? true : isScrolled} />
+        {/* Mobile Bottom Navigation removed */}
         
         {/* Scroll to Top */}
         <ScrollToTop />

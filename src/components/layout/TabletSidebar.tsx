@@ -1,19 +1,21 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { X, Menu, Home, Map, BookOpen, Mountain, Phone, Settings, ChevronLeft, ChevronRight } from 'lucide-react'
+import { X, Menu, Home, Map, BookOpen, Mountain, Phone, Settings, ChevronLeft, ChevronRight, Globe, UserCircle2, LogIn, LogOut } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/utils/cn'
 
 interface TabletSidebarProps {
   isOpen: boolean
   onClose: () => void
-  collapsible?: boolean
 }
 
-const TabletSidebar = ({ isOpen, onClose, collapsible = true }: TabletSidebarProps) => {
+const TabletSidebar = ({ isOpen, onClose }: TabletSidebarProps) => {
   const location = useLocation()
   const [isTablet, setIsTablet] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const isCollapsed = false
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const { isAuthenticated, user, logout } = useAuth()
   const [dragStartX, setDragStartX] = useState(0)
   const [dragCurrentX, setDragCurrentX] = useState(0)
   const sidebarRef = useRef<HTMLDivElement>(null)
@@ -23,10 +25,7 @@ const TabletSidebar = ({ isOpen, onClose, collapsible = true }: TabletSidebarPro
       const mql = window.matchMedia('(min-width: 768px) and (max-width: 1024px)')
       setIsTablet(mql.matches)
       
-      // Auto-collapse on smaller tablet screens
-      if (mql.matches && window.innerWidth < 900) {
-        setIsCollapsed(true)
-      }
+      // No collapsed mode
     }
     
     checkTablet()
@@ -34,58 +33,12 @@ const TabletSidebar = ({ isOpen, onClose, collapsible = true }: TabletSidebarPro
     return () => window.removeEventListener('resize', checkTablet)
   }, [])
 
-  // Gesture handling for swipe to close
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (!isOpen) return
-    setIsDragging(true)
-    setDragStartX(e.touches[0].clientX)
-    setDragCurrentX(e.touches[0].clientX)
-  }
+  // Gestures disabled
+  const handleTouchStart = (_e: React.TouchEvent) => {}
+  const handleTouchMove = (_e: React.TouchEvent) => {}
+  const handleTouchEnd = () => {}
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !isOpen) return
-    const currentX = e.touches[0].clientX
-    setDragCurrentX(currentX)
-    
-    // Only allow dragging to the left (closing direction)
-    const deltaX = currentX - dragStartX
-    if (deltaX < 0 && sidebarRef.current) {
-      const translateX = Math.max(deltaX, -320) // Max drag distance
-      sidebarRef.current.style.transform = `translateX(${translateX}px)`
-    }
-  }
-
-  const handleTouchEnd = () => {
-    if (!isDragging || !isOpen) return
-    
-    const deltaX = dragCurrentX - dragStartX
-    const threshold = -80 // Threshold for closing
-    
-    if (deltaX < threshold) {
-      onClose()
-      // Haptic feedback
-      if ('vibrate' in navigator) {
-        navigator.vibrate(20)
-      }
-    }
-    
-    // Reset transform
-    if (sidebarRef.current) {
-      sidebarRef.current.style.transform = ''
-    }
-    
-    setIsDragging(false)
-    setDragStartX(0)
-    setDragCurrentX(0)
-  }
-
-  const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed)
-    // Haptic feedback
-    if ('vibrate' in navigator) {
-      navigator.vibrate(10)
-    }
-  }
+  const toggleCollapse = () => {}
 
   useEffect(() => {
     if (isOpen) {
@@ -99,12 +52,24 @@ const TabletSidebar = ({ isOpen, onClose, collapsible = true }: TabletSidebarPro
     }
   }, [isOpen])
 
+  const personalHref = isAuthenticated ? '/profile' : '/personal'
   const navigation = [
     { name: 'Trang chủ', href: '/', icon: Home },
     { name: 'Bản đồ số', href: '/map', icon: Map },
     { name: 'Cẩm nang du lịch', href: '/guide', icon: BookOpen },
     { name: 'Đăng ký leo núi', href: '/climb', icon: Mountain },
-    { name: 'Cá nhân', href: '/personal', icon: Settings },
+    { name: 'Cá nhân', href: personalHref, icon: Settings },
+  ]
+
+  const languages = [
+    { code: 'vi', name: 'Tiếng Việt', flag: 'https://flagcdn.com/24x18/vn.png' },
+    { code: 'en', name: 'English', flag: 'https://flagcdn.com/24x18/gb.png' },
+    { code: 'fr', name: 'Français', flag: 'https://flagcdn.com/24x18/fr.png' },
+    { code: 'de', name: 'Deutsch', flag: 'https://flagcdn.com/24x18/de.png' },
+    { code: 'ja', name: '日本語', flag: 'https://flagcdn.com/24x18/jp.png' },
+    { code: 'ko', name: '한국어', flag: 'https://flagcdn.com/24x18/kr.png' },
+    { code: 'zh-CN', name: '中文', flag: 'https://flagcdn.com/24x18/cn.png' },
+    { code: 'ru', name: 'Русский', flag: 'https://flagcdn.com/24x18/ru.png' },
   ]
 
   const handleContactClick = (_e: React.MouseEvent) => {}
@@ -115,6 +80,12 @@ const TabletSidebar = ({ isOpen, onClose, collapsible = true }: TabletSidebarPro
     if ('vibrate' in navigator) {
       navigator.vibrate(10)
     }
+  }
+
+  const translatePage = (langCode: string) => {
+    document.cookie = `googtrans=/${langCode}; path=/; domain=.${window.location.hostname}`
+    document.cookie = `googtrans=/${langCode}; path=/; domain=${window.location.hostname}`
+    window.location.reload()
   }
 
   if (!isTablet) return null
@@ -133,10 +104,10 @@ const TabletSidebar = ({ isOpen, onClose, collapsible = true }: TabletSidebarPro
       <div 
         ref={sidebarRef}
         className={cn(
-          "fixed top-0 left-0 h-full z-[1300] lg:hidden transform transition-all duration-500 ease-out will-change-transform",
+          "fixed top-0 right-0 h-full z-[1300] lg:hidden transform transition-all duration-500 ease-out will-change-transform",
           "bg-white/95 border-r border-gray-200 shadow-2xl",
-          isOpen ? "translate-x-0" : "-translate-x-full",
-          isCollapsed ? "w-20" : "w-80"
+          isOpen ? "translate-x-0" : "translate-x-full",
+          "w-80"
         )}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -157,39 +128,16 @@ const TabletSidebar = ({ isOpen, onClose, collapsible = true }: TabletSidebarPro
                 />
                 <div className="absolute inset-0 rounded-full bg-primary-500/10 animate-pulse-soft" />
               </div>
-              <h2 className="font-bold text-lg text-white drop-shadow-sm">
+              <h2 className="font-bold text-lg text-primary-600 drop-shadow-sm">
                 Núi Bà Đen
               </h2>
             </div>
           )}
           
-          {isCollapsed && (
-            <img 
-              src="/assets/images/android-chrome-512x512.png" 
-              alt="Logo Núi Bà Đen" 
-              className="w-8 h-8 rounded-full border border-white/20 shadow-md"
-            />
-          )}
+          {/* no collapsed mode */}
           
           <div className="flex items-center space-x-2">
-            {/* Collapse Toggle Button */}
-            {collapsible && (
-              <button
-                onClick={toggleCollapse}
-                className={cn(
-                  "p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200",
-                  "active:scale-95",
-                  isCollapsed && "absolute -right-12 bg-white/10 border border-white/20"
-                )}
-                aria-label={isCollapsed ? "Mở rộng menu" : "Thu gọn menu"}
-              >
-                {isCollapsed ? (
-                  <ChevronRight className="w-5 h-5" />
-                ) : (
-                  <ChevronLeft className="w-5 h-5" />
-                )}
-              </button>
-            )}
+            {/* Collapse control removed */}
             
             {/* Close Button */}
             {!isCollapsed && (
@@ -204,7 +152,8 @@ const TabletSidebar = ({ isOpen, onClose, collapsible = true }: TabletSidebarPro
           </div>
         </div>
 
-        {/* Enhanced Navigation */}
+        {/* Enhanced Navigation */
+        }
         <nav className="flex-1 p-4 overflow-y-auto custom-scrollbar">
           <ul className={cn(
             "space-y-2 transition-all duration-300",
@@ -280,6 +229,69 @@ const TabletSidebar = ({ isOpen, onClose, collapsible = true }: TabletSidebarPro
               )
             })}
           </ul>
+          {/* Account & Language sections for tablet */}
+          {!isCollapsed && (
+            <div className="mt-4 space-y-3">
+              {/* Account block */}
+              <div className="rounded-xl border border-gray-200 bg-white p-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    {isAuthenticated ? (
+                      <>Xin chào, <span className="font-semibold text-gray-900">{(user?.name || 'bạn').split(' ').slice(-1)[0]}</span></>
+                    ) : (
+                      <>Tài khoản</>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  {isAuthenticated ? (
+                    <>
+                      <Link to="/profile" onClick={handleNavClick} className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium">
+                        <UserCircle2 className="w-4 h-4" /> Hồ sơ
+                      </Link>
+                      <button onClick={() => { logout(); onClose() }} className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-50 text-red-700 font-medium">
+                        <LogOut className="w-4 h-4" /> Đăng xuất
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link to="/login" onClick={handleNavClick} className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-gray-100 text-gray-800 font-medium">
+                        <LogIn className="w-4 h-4" /> Đăng nhập
+                      </Link>
+                      <Link to="/register" onClick={handleNavClick} className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-primary-600 text-white font-medium">
+                        <UserCircle2 className="w-4 h-4" /> Đăng ký
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Language selector */}
+              <div className="rounded-xl border border-gray-200 bg-white">
+                <button
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-50"
+                  onClick={() => setIsLanguageOpen(!isLanguageOpen)}
+                >
+                  <span className="inline-flex items-center gap-2 text-gray-800 font-medium"><Globe className="w-5 h-5" /> Chọn ngôn ngữ</span>
+                  <span className="text-sm text-gray-500">{isLanguageOpen ? 'Ẩn' : 'Hiện'}</span>
+                </button>
+                {isLanguageOpen && (
+                  <div className="px-2 pb-2 grid grid-cols-2 gap-2">
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => translatePage(lang.code)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-50 border border-gray-200 text-gray-700"
+                      >
+                        <img src={lang.flag} alt={lang.code.toUpperCase()} className="w-5 h-4 rounded-sm border" />
+                        <span className="text-sm font-medium">{lang.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </nav>
 
         {/* Enhanced Footer */}

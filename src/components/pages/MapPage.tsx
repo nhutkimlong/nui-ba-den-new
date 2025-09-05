@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet'
 // @ts-ignore - types may be missing from package
-import MarkerClusterGroup from 'react-leaflet-cluster'
+const MarkerClusterGroup = React.lazy(() => import('react-leaflet-cluster'))
+import 'leaflet/dist/leaflet.css'
 import { Search, MapPin, Route, Navigation, X, Globe, Phone, Mail, Facebook, ExternalLink } from 'lucide-react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faOm, faSearch, faLandmark, faUtensils, faBus, faParking, faBell, faClipboardList, faCableCar, faPersonWalking } from '@fortawesome/free-solid-svg-icons'
@@ -89,7 +90,7 @@ const MapZoomController = ({ currentRoute, poiData, onMapReady }: { currentRoute
         // Fit map to route bounds with padding
         map.fitBounds(bounds, {
           padding: [20, 20], // Add padding around the route
-          maxZoom: 18, // Don't zoom too close
+          maxZoom: 20, // Don't zoom too close
           animate: true,
           duration: 1 // Animation duration in seconds
         })
@@ -563,7 +564,9 @@ const MapPage = () => {
       }
 
       // Use the findRoute function from the hook for normal routes
-      const routeResult = await findRoute(startPoint.id, endPoint.id)
+      const startId = String(startPoint.id).trim()
+      const endId = String(endPoint.id).trim()
+      const routeResult = await findRoute(startId, endId)
       
       if (routeResult) {
         // Add start and end names to the route result
@@ -594,12 +597,22 @@ const MapPage = () => {
   // Helper function to find route with specific descent choice
   const findRouteWithDescentChoice = async (choice: 'cable_car' | 'alpine_coaster') => {
     try {
+      // Resolve the freshest start/end from state and validate
+      const s = startPoint ? resolvePOI(startPoint) : null
+      const e = endPoint ? resolvePOI(endPoint) : null
+      if (!s || !e) {
+        alert('Vui lòng chọn đầy đủ điểm bắt đầu và điểm kết thúc')
+        return
+      }
+      const sId = String(s.id).trim()
+      const eId = String(e.id).trim()
+
       if (choice === 'alpine_coaster') {
         // Force route to include Alpine Coaster segment 24 -> 18 by composing two legs
         // 1) From start to Coaster start (24)
-        const firstLeg = await findRoute(startPoint!.id, COASTER_START_ID)
+        const firstLeg = await findRoute(sId, COASTER_START_ID)
         // 2) From Coaster end (18) to destination
-        const secondLeg = await findRoute(COASTER_END_ID, endPoint!.id)
+        const secondLeg = await findRoute(COASTER_END_ID, eId)
 
         if (firstLeg && secondLeg) {
           const combinedPath = [
@@ -611,8 +624,8 @@ const MapPage = () => {
             path: combinedPath,
             cableRoutes: [...new Set([...(firstLeg.cableRoutes || []), ...(secondLeg.cableRoutes || [])])],
             cost: (firstLeg.cost || 0) + (secondLeg.cost || 0),
-            startName: getPoiName(startPoint!, currentLang),
-            endName: getPoiName(endPoint!, currentLang),
+            startName: getPoiName(s, currentLang),
+            endName: getPoiName(e, currentLang),
             descentChoice: choice
           }
 
@@ -627,12 +640,12 @@ const MapPage = () => {
       }
 
       // Default: normal route
-      const routeResult = await findRoute(startPoint!.id, endPoint!.id)
+      const routeResult = await findRoute(sId, eId)
       if (routeResult) {
         const enhancedRoute = {
           ...routeResult,
-          startName: getPoiName(startPoint!, currentLang),
-          endName: getPoiName(endPoint!, currentLang),
+          startName: getPoiName(s, currentLang),
+          endName: getPoiName(e, currentLang),
           descentChoice: choice
         }
         setCurrentRoute(enhancedRoute)
@@ -658,6 +671,22 @@ const MapPage = () => {
     setIsPoiExpanded(true)
   }, [])
 
+  // Resolve a POI coming from UI into canonical POI from data (ensures stable id)
+  const resolvePOI = useCallback((p: any) => {
+    if (!p) return p
+    const idStr = String(p.id ?? '').trim()
+    if (idStr) {
+      const byId = filteredPOIs.find(po => String((po as any).id) === idStr) || poiData.find(po => String((po as any).id) === idStr)
+      if (byId) return byId
+    }
+    const name = getPoiName(p, currentLang)
+    if (name) {
+      const byName = poiData.find(po => getPoiName(po as any, currentLang) === name)
+      if (byName) return byName
+    }
+    return { ...p, id: idStr || String(p.id ?? '') }
+  }, [poiData, filteredPOIs, currentLang])
+
   // Handle get directions
   const handleGetDirections = useCallback((poi: any, direction: 'from' | 'to') => {
     // Clear existing route when starting new directions
@@ -675,8 +704,10 @@ const MapPage = () => {
 
     if (direction === 'from') {
       // Set start point for "Từ đây"
-      setStartPoint(poi)
-      setStartPointText(getPoiName(poi, currentLang))
+      const resolvedStart = resolvePOI(poi)
+      const sanitizedStart = { ...resolvedStart, id: String(resolvedStart.id).trim() }
+      setStartPoint(sanitizedStart)
+      setStartPointText(getPoiName(sanitizedStart, currentLang))
       // Close POI panel when setting start point
       setIsPOIPanelVisible(false)
       setSelectedPOI(null)
@@ -692,7 +723,8 @@ const MapPage = () => {
         // Use setTimeout to ensure state updates are processed first
         setTimeout(() => {
           // Check if this is a descent route from Chùa Bà to Chân núi
-          if (poi.area === 'Chùa Bà' && endPoint.area === 'Chân núi') {
+          const resolvedEndLocal = resolvePOI(endPoint)
+          if (sanitizedStart.area === 'Chùa Bà' && resolvedEndLocal.area === 'Chân núi') {
             console.log('DEBUG: Found descent route from Chua Ba to Chan Nui')
             const descentOptions = checkDescentOptionsFromChuaBa(operatingHours)
             console.log('DEBUG: Descent options:', descentOptions)
@@ -720,7 +752,9 @@ const MapPage = () => {
           }
 
           // Use the findRoute function from the hook for normal routes
-          findRoute(poi.id, endPoint.id).then(routeResult => {
+          const startId = String(sanitizedStart.id).trim()
+          const endId = String(resolvedEndLocal.id).trim()
+          findRoute(startId, endId).then(routeResult => {
             if (routeResult) {
               // Add start and end names to the route result
               const enhancedRoute = {
@@ -751,8 +785,10 @@ const MapPage = () => {
       }
     } else {
       // Set end point for "Đến đây" and automatically find route
-      setEndPoint(poi)
-      setEndPointText(getPoiName(poi, currentLang))
+      const resolvedEnd = resolvePOI(poi)
+      const sanitizedEnd = { ...resolvedEnd, id: String(resolvedEnd.id).trim() }
+      setEndPoint(sanitizedEnd)
+      setEndPointText(getPoiName(sanitizedEnd, currentLang))
       // Close POI panel when setting end point
       setIsPOIPanelVisible(false)
       setSelectedPOI(null)
@@ -768,7 +804,8 @@ const MapPage = () => {
         // Use setTimeout to ensure state updates are processed first
         setTimeout(() => {
           // Check if this is a descent route from Chùa Bà to Chân núi
-          if (startPoint.area === 'Chùa Bà' && poi.area === 'Chân núi') {
+          const resolvedStartLocal = resolvePOI(startPoint)
+          if (resolvedStartLocal.area === 'Chùa Bà' && sanitizedEnd.area === 'Chân núi') {
             console.log('DEBUG: Found descent route from Chua Ba to Chan Nui')
             const descentOptions = checkDescentOptionsFromChuaBa(operatingHours)
             console.log('DEBUG: Descent options:', descentOptions)
@@ -1446,6 +1483,13 @@ const MapPage = () => {
             zoom={15}
             className="w-full h-full"
             zoomControl={false}
+            maxZoom={20}
+            preferCanvas
+            
+            
+            wheelPxPerZoomLevel={120}
+            zoomAnimation
+            fadeAnimation
             style={{ height: '100%', width: '100%' }}
           >
           {/* Map Zoom Controller */}
@@ -1459,23 +1503,34 @@ const MapPage = () => {
           <div className="absolute top-0 left-0 right-0 h-0 pointer-events-none" />
           {tileProvider === 'google' ? (
             <TileLayer
-              url="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+              url="https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+              subdomains={["0","1","2","3"]}
               attribution="© Google"
+              maxZoom={20}
+              keepBuffer={2}
+              crossOrigin
+              detectRetina
             />
           ) : (
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              subdomains={["a","b","c"]}
               attribution="© OpenStreetMap contributors"
+              maxZoom={20}
+              keepBuffer={2}
+              crossOrigin
+              detectRetina
             />
           )}
           
 
           {/* POI Markers with clustering */}
+          <Suspense fallback={null}>
           <MarkerClusterGroup
             showCoverageOnHover={false}
             spiderfyOnEveryZoom={false}
             maxClusterRadius={48}
-            disableClusteringAtZoom={18}
+            disableClusteringAtZoom={20}
             iconCreateFunction={(cluster: any) => {
               const count = cluster.getChildCount()
               return L.divIcon({
@@ -1501,6 +1556,7 @@ const MapPage = () => {
               onMarkerClick={handlePOIClick}
             />
           </MarkerClusterGroup>
+          </Suspense>
 
                      {/* Route polyline */}
            {currentRoute?.path && currentRoute.path.length > 1 && (
@@ -1740,7 +1796,7 @@ const MapPage = () => {
                  const bounds = L.latLngBounds(routeCoordinates)
                  mapRef.current.fitBounds(bounds, {
                    padding: [20, 20],
-                   maxZoom: 18,
+                   maxZoom: 20,
                    animate: true,
                    duration: 1
                  })

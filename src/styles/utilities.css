@@ -144,7 +144,8 @@
 /* === Layout Utilities === */
 
 .container-modern {
-  @apply container mx-auto px-4 sm:px-6 lg:px-8;
+  /* Match ultra-compact gutters */
+  @apply container mx-auto px-1 sm:px-3 lg:px-8;
 }
 
 .section-modern {

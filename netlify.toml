@@ -83,6 +83,7 @@
   for = "*.webp"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+    Content-Type = "image/webp"
 
 # HTML files should not be cached
 [[headers]]

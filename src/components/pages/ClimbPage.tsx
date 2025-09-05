@@ -174,11 +174,16 @@ const ClimbPage: React.FC = () => {
           ? `Hoàn tất! Đã tạo ${result.pdfLinks.length} chứng nhận.`
           : result.message || 'Chứng nhận đã được tạo.';
         showMessage(message, 'success', 15000);
+        // Return the result so child component can display success modal & links
+        return result;
       } else {
         showMessage(result.message || 'Không thể tạo chứng nhận.', 'error');
+        return result;
       }
     } catch (error) {
       showMessage(`Lỗi tạo chứng nhận: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`, 'error');
+      // Propagate error so caller can handle failure state
+      throw error;
     }
   };
 

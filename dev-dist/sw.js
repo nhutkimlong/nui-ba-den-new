@@ -67,8 +67,9 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-f001acab'], (function (workbox) { 'use strict';
+define(['./workbox-eb15e375'], (function (workbox) { 'use strict';
 
+  workbox.enable();
   self.skipWaiting();
   workbox.clientsClaim();
 
@@ -82,7 +83,7 @@ define(['./workbox-f001acab'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "index.html",
-    "revision": "0.dsim1uj3fcg"
+    "revision": "0.658mnv2ppeg"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
@@ -109,12 +110,14 @@ define(['./workbox-f001acab'], (function (workbox) { 'use strict';
       maxAgeSeconds: 2592000
     })]
   }), 'GET');
-  workbox.registerRoute(/^https:\/\/api\./i, new workbox.NetworkFirst({
+  workbox.registerRoute(/\/\.netlify\/functions\/data-blobs/i, new workbox.NetworkFirst({
     "cacheName": "api-cache",
     "networkTimeoutSeconds": 10,
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 50,
       maxAgeSeconds: 300
+    }), new workbox.CacheableResponsePlugin({
+      statuses: [0, 200]
     })]
   }), 'GET');
 

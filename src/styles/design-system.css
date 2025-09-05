@@ -320,7 +320,7 @@
 .bento-grid {
   display: grid;
   gap: var(--space-4);
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
 .bento-item {
@@ -441,15 +441,17 @@
   max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
-  padding-left: var(--space-4);
-  padding-right: var(--space-4);
+  /* Ultra-compact gutters on mobile to maximize space (no overflow) */
+  padding-left: var(--space-1);
+  padding-right: var(--space-1);
 }
 
 @media (min-width: 640px) {
   .container-fluid,
   .container {
-    padding-left: var(--space-6);
-    padding-right: var(--space-6);
+    /* Compact gutters on tablet */
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
   }
 }
 
@@ -501,9 +503,21 @@
 
 /* === Custom Scrollbar === */
 
+/* Hide scrollbar on mobile and tablet, keep thin on desktop */
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+@media (max-width: 1024px) {
+  .custom-scrollbar {
+    scrollbar-width: none;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
 }
 
 .custom-scrollbar::-webkit-scrollbar {

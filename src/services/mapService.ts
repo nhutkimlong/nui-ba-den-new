@@ -1,5 +1,6 @@
 // Map Service - Chuyển đổi từ map.js
 import { POI, OperatingHoursData } from '@/types'
+import { offlineStorageService } from './offlineStorageService'
 
 // Constants from original map.js
 export const DEFAULT_ZOOM = 15
@@ -7,8 +8,8 @@ export const LABEL_VISIBILITY_ZOOM = 17
 export const LOCAL_DATA_API_POI = '/.netlify/functions/data-blobs?file=POI.json'
 export const LOCAL_DATA_API_GIO = '/.netlify/functions/data-blobs?file=GioHoatDong.json'
 export const USER_LOCATION_ID = 'user_location'
-export const WALKING_THRESHOLD_PATH = 50
-export const MAX_DIST_AREAS = 150
+export const WALKING_THRESHOLD_PATH = 120
+export const MAX_DIST_AREAS = 250
 export const CONTACT_HOTLINE = '02763823378'
 
 // Cable station IDs
@@ -237,7 +238,8 @@ export const areInSameArea = (poi1: POI, poi2: POI): boolean => {
 }
 
 export const areOnSameCableRoute = (station1: POI, station2: POI): boolean => {
-  if (!station1?.cable_route || !station2?.cable_route || station1.category !== 'transport' || station2.category !== 'transport') return false
+  const isTransport = (p: any) => (p?.category === 'transport' || p?.type === 'transport')
+  if (!station1?.cable_route || !station2?.cable_route || !isTransport(station1) || !isTransport(station2)) return false
   const routes1 = String(station1.cable_route).split(',').map(r => r.trim()).filter(r => r)
   const routes2 = String(station2.cable_route).split(',').map(r => r.trim()).filter(r => r)
   return routes1.length > 0 && routes2.length > 0 && routes1.some(route => routes2.includes(route))
@@ -245,7 +247,8 @@ export const areOnSameCableRoute = (station1: POI, station2: POI): boolean => {
 
 export const isStationOnSpecificRoute = (station1: POI, station2: POI, targetRouteName: string): boolean => {
   if (!station1 || !station2 || !targetRouteName) return false
-  if (station1.category !== 'transport' || station2.category !== 'transport') return false
+  const isTransport = (p: any) => (p?.category === 'transport' || p?.type === 'transport')
+  if (!isTransport(station1) || !isTransport(station2)) return false
 
   const routes1 = String(station1.cable_route || '').split(',').map(r => r.trim()).filter(r => r)
   const routes2 = String(station2.cable_route || '').split(',').map(r => r.trim()).filter(r => r)
@@ -373,11 +376,23 @@ export const checkOperationalStatus = (
 // API functions
 export const fetchPOIData = async (): Promise<POI[]> => {
   try {
-    const response = await fetch(LOCAL_DATA_API_POI)
+    // 1) Try offline-first from IndexedDB
+    const cached = await offlineStorageService.getPOIs()
+    if (cached && cached.length > 0) {
+      // Sync in background
+      void refreshPOIsInBackground()
+      return cached as POI[]
+    }
+
+    // 2) Fallback to network
+    const response = await fetch(LOCAL_DATA_API_POI, { cache: 'no-cache' })
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
     const data = await response.json()
+    // Store to IndexedDB for future offline
+    try { await offlineStorageService.storePOIs(data) } catch {}
+
     return data.map((poi: any) => {
       let t = poi.category?.toLowerCase().trim()
       if (t === 'religion') t = 'religious'
@@ -394,13 +409,33 @@ export const fetchPOIData = async (): Promise<POI[]> => {
   }
 }
 
+// Background refresh with If-Modified-Since
+const refreshPOIsInBackground = async () => {
+  try {
+    const head = await fetch(LOCAL_DATA_API_POI, { method: 'HEAD' })
+    const lastModified = head.headers.get('last-modified')
+    const cached = await offlineStorageService.getAll('pois')
+    const newest = cached.reduce((m, c) => Math.max(m, c.lastModified || 0), 0)
+    if (lastModified) {
+      const serverTime = Date.parse(lastModified)
+      if (!isNaN(serverTime) && serverTime <= newest) return
+    }
+    const res = await fetch(LOCAL_DATA_API_POI, { cache: 'no-cache' })
+    if (!res.ok) return
+    const data = await res.json()
+    await offlineStorageService.storePOIs(data)
+  } catch {}
+}
+
 export const fetchOperatingHours = async (): Promise<OperatingHoursData[]> => {
   try {
-    const response = await fetch(LOCAL_DATA_API_GIO)
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    return await response.json()
+    // Try cache first
+    const stored = await offlineStorageService.getAll('pois') // store hours separately if needed
+    // No dedicated store for hours; keep simple network fetch with conditional refresh
+    const response = await fetch(LOCAL_DATA_API_GIO, { cache: 'no-cache' })
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+    const data = await response.json()
+    return data
   } catch (error) {
     console.error("Error loading operating hours:", error)
     return []
@@ -522,6 +557,17 @@ export const findPathDijkstraInternal = (
   options: any = {},
   operatingHours: OperatingHoursData[] = []
 ): any => {
+  const isTransport = (p: any) => (p?.category === 'transport' || p?.type === 'transport')
+  const getPositionArray = (poi: any): [number, number] | null => {
+    if (!poi) return null
+    if (Array.isArray(poi.position) && poi.position.length === 2) {
+      return poi.position as [number, number]
+    }
+    if (typeof poi.latitude === 'number' && typeof poi.longitude === 'number') {
+      return [poi.latitude, poi.longitude]
+    }
+    return null
+  }
   const distances: Record<string, number> = {}
   const previousNodes: Record<string, string | null> = {}
   const pq = new MinPriorityQueue()
@@ -546,8 +592,9 @@ export const findPathDijkstraInternal = (
     let minDistance = Infinity
 
     for (const poi of allPoiData) {
-      if (poi.area && (poi as any).position) {
-        const dist = calculateDistance(position, (poi as any).position)
+      const poiPos = getPositionArray(poi as any)
+      if (poi.area && poiPos) {
+        const dist = calculateDistance(position, poiPos)
         if (dist < minDistance) {
           minDistance = dist
           closestPoi = poi
@@ -569,12 +616,13 @@ export const findPathDijkstraInternal = (
     }
 
     let currentPOIObject = getPoi(currentIdStr)
-    if (!(currentPOIObject as any)?.position) continue
+    const currentPos = getPositionArray(currentPOIObject as any)
+    if (!currentPos) continue
 
-    if (currentIdStr === USER_LOCATION_ID && !currentPOIObject.area && (currentPOIObject as any).position) {
+    if (currentIdStr === USER_LOCATION_ID && !currentPOIObject.area && currentPos) {
       currentPOIObject = { 
         ...currentPOIObject, 
-        area: findAreaForLocation((currentPOIObject as any).position) || `${USER_LOCATION_ID}_area_internal` 
+        area: findAreaForLocation(currentPos) || `${USER_LOCATION_ID}_area_internal` 
       }
     }
 
@@ -638,7 +686,8 @@ export const findPathDijkstraInternal = (
       ;(walkableToString + "," + forceWalkableToString).split(',').map(id => String(id).trim()).filter(id => id)
         .forEach(neighborId => {
           const nPoi = getPoi(neighborId)
-          if ((nPoi as any)?.position) {
+          const nPos = getPositionArray(nPoi as any)
+          if (nPos) {
             if (options.mode === 'stay_in_area' && nPoi.area !== options.areaConstraint) return
             potentialNeighborsWithType.push({ 
               id: neighborId, 
@@ -653,10 +702,11 @@ export const findPathDijkstraInternal = (
     if (!hasExplicitWalkLinks) {
       for (const p of allPoiData) {
         const pId = String((p as any).id)
-        if (pId !== currentIdStr && (p as any).position) {
-          const dist = calculateDistance((currentPOIObject as any).position, (p as any).position)
+        const pPos = getPositionArray(p as any)
+        if (pId !== currentIdStr && pPos) {
+          const dist = calculateDistance(currentPos, pPos)
           if (dist < WALKING_THRESHOLD_PATH && areInSameArea(currentPOIObject, p)) {
-            let pActualArea = p.area || (String((p as any).id) === USER_LOCATION_ID && (p as any).position ? findAreaForLocation((p as any).position) : null)
+            let pActualArea = p.area || (String((p as any).id) === USER_LOCATION_ID && pPos ? findAreaForLocation(pPos) : null)
             if (options.mode === 'stay_in_area' && pActualArea !== options.areaConstraint) continue
             potentialNeighborsWithType.push({ 
               id: pId, 
@@ -670,10 +720,10 @@ export const findPathDijkstraInternal = (
     }
 
     // Handle cable car connections
-    if ((currentPOIObject as any).type === 'transport') {
+    if (isTransport(currentPOIObject)) {
       for (const otherTransportPOI of allPoiData) {
         const otherTransportId = String(otherTransportPOI.id)
-        if ((otherTransportPOI as any).type === 'transport' && otherTransportId !== currentIdStr) {
+        if (isTransport(otherTransportPOI) && otherTransportId !== currentIdStr) {
           const routes1 = String(currentPOIObject.cable_route || '').split(',').map(r => r.trim()).filter(r => r)
           const routes2 = String(otherTransportPOI.cable_route || '').split(',').map(r => r.trim()).filter(r => r)
           const commonRoutes = routes1.filter(r => routes2.includes(r))
@@ -771,15 +821,24 @@ export const findPath = (startId: string, endId: string, allPoiData: POI[], curr
     return poi.name || `POI ${poi.id}`
   }
 
+  // Some POI objects use latitude/longitude instead of a nested position field
+  const hasCoordinates = (poi: POI | null): boolean => {
+    if (!poi) return false
+    const anyPoi: any = poi as any
+    const hasLatLng = typeof anyPoi.latitude === 'number' && typeof anyPoi.longitude === 'number'
+    const hasPositionArray = Array.isArray(anyPoi.position) && anyPoi.position.length === 2
+    return hasLatLng || hasPositionArray
+  }
+
   const startNodeObject = getPoi(startId)
   const endNodeObject = getPoi(endId)
 
-  if (!startNodeObject || !(startNodeObject as any).position) {
+  if (!startNodeObject || !hasCoordinates(startNodeObject)) {
     console.error(`Start POI ${startId} not found or has no position.`)
     alert(t('routeErrorStartNotFound', getPoiName(startNodeObject)))
     return null
   }
-  if (!endNodeObject || !(endNodeObject as any).position) {
+  if (!endNodeObject || !hasCoordinates(endNodeObject)) {
     console.error(`End POI ${endId} not found or has no position.`)
     alert(t('routeErrorEndNotFound', getPoiName(endNodeObject)))
     return null
@@ -803,7 +862,7 @@ export const findPath = (startId: string, endId: string, allPoiData: POI[], curr
     }
   }
 
-  // Handle inter-area movement
+  // Handle inter-area movement with fallback when areas missing or differ
   let preferredRoute = null
   let fallbackRoute = null
   let alternativeRoute = null
@@ -833,6 +892,23 @@ export const findPath = (startId: string, endId: string, allPoiData: POI[], curr
     preferredRoute = CABLE_ROUTE_NAME_TAM_AN
     fallbackRoute = CABLE_ROUTE_NAME_CHUA_HANG
     alternativeRoute = CABLE_ROUTE_NAME_VAN_SON
+  } else {
+    // If one or both POIs lack explicit area, infer via nearest-area heuristic
+    const inferArea = (poi: any): string | null => {
+      const pos = (typeof poi.latitude === 'number' && typeof poi.longitude === 'number') ? [poi.latitude, poi.longitude] : (Array.isArray((poi as any).position) ? (poi as any).position : null)
+      if (!pos) return null
+      // Reuse internal helper
+      // @ts-ignore
+      return (typeof findAreaForLocation === 'function') ? (findAreaForLocation as any)(pos) : null
+    }
+    const inferredStart = startArea || inferArea(startNodeObject as any)
+    const inferredEnd = endArea || inferArea(endNodeObject as any)
+    if (inferredStart && inferredEnd && inferredStart !== inferredEnd) {
+      // Choose a reasonable preferred cable route when moving between typical areas
+      if (inferredStart === 'Chân núi' && inferredEnd === 'Chùa Bà') preferredRoute = CABLE_ROUTE_NAME_CHUA_HANG
+      if (inferredStart === 'Chân núi' && inferredEnd === 'Đỉnh núi') preferredRoute = CABLE_ROUTE_NAME_VAN_SON
+      if (inferredStart === 'Chùa Bà' && inferredEnd === 'Đỉnh núi') preferredRoute = CABLE_ROUTE_NAME_TAM_AN
+    }
   }
 
   // Try to find route in priority order
@@ -916,10 +992,12 @@ export const findPath = (startId: string, endId: string, allPoiData: POI[], curr
     }
   }
 
-  // If no route found with preferred routes, find normal route
-  return findPathDijkstraInternal(startId, endId, allPoiData, {
-    mode: 'standard'
-  }, operatingHours)
+  // If no route found with preferred routes, find normal route (no strict area constraint)
+  const standard = findPathDijkstraInternal(startId, endId, allPoiData, { mode: 'standard' }, operatingHours)
+  if (standard && !standard.timedOut) return standard
+  // Final fallback: try allowing walking-only connections across nearby areas
+  const relaxed = findPathDijkstraInternal(startId, endId, allPoiData, { mode: 'stay_in_area', areaConstraint: undefined }, operatingHours)
+  return relaxed
 }
 
 // Function to calculate cable routes used in a path
@@ -931,10 +1009,11 @@ export const calculateCableRoutesForPath = (path: string[], allPoiData: POI[]): 
     return allPoiData.find(poi => String(poi.id) === String(id)) || null
   }
 
+  const isTransport = (p: any) => (p?.category === 'transport' || p?.type === 'transport')
   for (let i = 0; i < path.length - 1; i++) {
     const startP = getPoi(String(path[i]))
     const endP = getPoi(String(path[i + 1]))
-    if ((startP as any)?.type === 'transport' && (endP as any)?.type === 'transport' && areOnSameCableRoute(startP, endP)) {
+    if (isTransport(startP) && isTransport(endP) && areOnSameCableRoute(startP, endP)) {
       const startRoutes = String(startP.cable_route || '').split(',').map(r => r.trim()).filter(r => r)
       const endRoutes = String(endP.cable_route || '').split(',').map(r => r.trim()).filter(r => r)
       const commonRoute = startRoutes.find(r => endRoutes.includes(r))

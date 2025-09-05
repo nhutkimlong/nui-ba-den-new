@@ -10,7 +10,7 @@ interface UserProfile {
   birthday?: string;
   cccd?: string;
   address?: string;
-  avatar?: string; // data URL or remote URL
+  // avatar removed
   climbCount?: number;
   lastClimbAt?: number;
 }
@@ -108,7 +108,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('adminToken', token);
       localStorage.setItem('adminLoginTime', Date.now().toString());
       if (u) {
-        const profile: UserProfile = { id: u.id, name: u.name, email: u.email, role: u.role, phone: u.phone, birthday: u.birthday, cccd: u.cccd, address: u.address, avatar: u.avatar, climbCount: u.climbCount, lastClimbAt: u.lastClimbAt };
+        const profile: UserProfile = { id: u.id, name: u.name, email: u.email, role: u.role, phone: u.phone, birthday: u.birthday, cccd: u.cccd, address: u.address, climbCount: u.climbCount, lastClimbAt: u.lastClimbAt };
         localStorage.setItem('userProfile', JSON.stringify(profile));
         setUser(profile);
       }
@@ -168,7 +168,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           birthday: updated.birthday,
           cccd: updated.cccd,
           address: updated.address,
-          avatar: updated.avatar,
+          // avatar removed
           climbCount: updated.climbCount,
           lastClimbAt: updated.lastClimbAt,
         };

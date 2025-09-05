@@ -37,6 +37,17 @@
     overflow-x: hidden;
   }
 
+  /* Reduce mobile tap highlight and improve perceived click precision */
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Sensible defaults for images to improve rendering and avoid layout shifts */
+  img {
+    height: auto;
+    content-visibility: auto;
+  }
+
   /* Improve tap targets on mobile */
   button, a, input, select, textarea {
     touch-action: manipulation;
@@ -83,11 +94,12 @@
   }
   
   .container {
-    @apply mx-auto px-4 max-w-7xl;
+    /* Maximize width like SearchBar: full width on mobile, cap on larger screens */
+    @apply mx-auto max-w-none px-1 sm:px-3 lg:px-8 sm:max-w-7xl;
   }
   
   .page-content-container {
-    @apply mx-auto max-w-7xl px-4 py-6;
+    @apply mx-auto max-w-none sm:max-w-7xl px-1 sm:px-3 lg:px-8 py-6;
   }
   
   .hero-bg {
@@ -218,7 +230,7 @@
 
   /* Map Styles */
   .map-container {
-    @apply flex flex-col w-full max-w-7xl mx-auto bg-white h-full overflow-hidden;
+    @apply flex flex-col w-full max-w-none sm:max-w-7xl mx-auto bg-white h-full overflow-hidden;
   }
 
   .map-container .leaflet-container {
@@ -266,6 +278,8 @@
     @apply relative bg-gray-200 flex-1 overflow-hidden;
     min-height: 400px;
     height: 100%;
+    /* Prevent page from scrolling due to map gestures */
+    overscroll-behavior: none;
   }
 
   .map-area .leaflet-container {
@@ -387,6 +401,11 @@
     @apply bg-gray-200;
     height: 100% !important;
     width: 100% !important;
+    /* Improve mobile panning performance */
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    touch-action: pan-x pan-y pinch-zoom;
   }
 
   .leaflet-container img,
@@ -396,10 +415,12 @@
 
   .leaflet-tile-pane {
     z-index: 200;
+    will-change: transform;
   }
 
   .leaflet-overlay-pane {
     z-index: 400;
+    will-change: transform;
   }
 
   .leaflet-marker-pane {
