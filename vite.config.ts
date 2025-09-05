@@ -181,6 +181,8 @@ export default defineConfig({
     sourcemap: process.env.NODE_ENV === 'development',
     // use esbuild minifier for maximum compatibility
     minify: 'esbuild',
+    // Ensure public directory is copied correctly
+    copyPublicDir: true,
     rollupOptions: {
       output: {
         // let Vite/Rollup decide optimal code-splitting to avoid ordering issues
